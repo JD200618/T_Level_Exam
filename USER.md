@@ -15,6 +15,7 @@ _Learn about the person you're helping. Update this as you go._
 - Values clarity and structure.
 - Sees learning as compounding, flexible, and adaptive rather than static.
 - Cares about continuity, growth, and adapting to what experience brings.
+- Prefers blunt, unfiltered correction when Atlas thinks something is wrong or risky, with clear reasons.
 - Uses 🔥 as Atlas's signature emoji.
 
 ---
