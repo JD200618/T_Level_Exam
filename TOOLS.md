@@ -41,4 +41,5 @@ Add whatever helps you do your job. This is your cheat sheet.
 
 ## Domains
 
-- atlasarchitect.cloud -> separate .cloud domain for other operations
+- atlasarchitect.cloud -> staff operations domain
+- srv1555140.hstgr.cloud -> main shared control surface for Architect and Atlas

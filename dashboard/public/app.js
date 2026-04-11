@@ -1,5 +1,6 @@
 const state = {
   user: null,
+  siteContext: null,
   rooms: [],
   activeRoom: 'general',
   messages: [],
@@ -17,6 +18,8 @@ const els = {
   loginPassword: document.querySelector('#loginPassword'),
   loginError: document.querySelector('#loginError'),
   logoutButton: document.querySelector('#logoutButton'),
+  siteName: document.querySelector('#siteName'),
+  siteDescription: document.querySelector('#siteDescription'),
   sessionName: document.querySelector('#sessionName'),
   sessionRole: document.querySelector('#sessionRole'),
   roomList: document.querySelector('#roomList'),
@@ -69,6 +72,7 @@ async function bootstrap(room = state.activeRoom) {
 
   const data = await response.json();
   state.user = data.user;
+  state.siteContext = data.siteContext;
   state.rooms = data.rooms;
   state.activeRoom = data.activeRoom;
   state.messages = data.messages;
@@ -246,6 +250,7 @@ async function changeRoom(roomId) {
 
 function renderAll() {
   renderSession();
+  renderSiteContext();
   renderRooms();
   renderRoomHeader();
   renderMessages();
@@ -260,6 +265,11 @@ function renderAll() {
 function renderSession() {
   els.sessionName.textContent = state.user?.displayName || 'Not signed in';
   els.sessionRole.textContent = state.user ? `${state.user.role} · ${state.user.username}` : '';
+}
+
+function renderSiteContext() {
+  els.siteName.textContent = state.siteContext?.title || 'Atlas Operating Room';
+  els.siteDescription.textContent = state.siteContext?.description || 'Shared communication, controlled runtime, and structured execution.';
 }
 
 function renderRooms() {

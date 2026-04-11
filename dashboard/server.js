@@ -485,15 +485,37 @@ function getStaffDirectory() {
   }));
 }
 
-function bootstrapPayload(user, activeRoom = 'general') {
+function getSiteContext(hostname = '') {
+  const host = String(hostname || '').toLowerCase();
+  if (host.includes('atlasarchitect.cloud')) {
+    return {
+      key: 'staff-ops',
+      title: 'Atlas Architect Staff Ops',
+      description: 'Execution surface for staff operations, delivery, and managed runtime state.',
+      defaultRoom: 'build',
+    };
+  }
+
+  return {
+    key: 'main-surface',
+    title: 'Atlas Main Surface',
+    description: 'Shared navigation surface for Architect and Atlas to steer the operation.',
+    defaultRoom: 'architect',
+  };
+}
+
+function bootstrapPayload(user, activeRoom = '', hostname = '') {
+  const siteContext = getSiteContext(hostname);
   const rooms = getRooms.all();
-  const roomId = rooms.some((room) => room.id === activeRoom) ? activeRoom : rooms[0]?.id || 'general';
+  const preferredRoom = activeRoom || siteContext.defaultRoom || 'general';
+  const roomId = rooms.some((room) => room.id === preferredRoom) ? preferredRoom : rooms[0]?.id || 'general';
   const messages = getMessagesByRoom.all(roomId, 100).reverse();
   const notes = getRecentNotes.all(20);
   const tasks = getTasks.all(50);
 
   return {
     user,
+    siteContext,
     rooms,
     activeRoom: roomId,
     messages,
@@ -586,8 +608,8 @@ app.get('/api/auth/me', authRequired, (req, res) => {
 });
 
 app.get('/api/bootstrap', authRequired, (req, res) => {
-  const room = clampText(req.query.room || 'general', 64);
-  res.json(bootstrapPayload(req.user, room));
+  const room = clampText(req.query.room || '', 64);
+  res.json(bootstrapPayload(req.user, room, req.headers.host || ''));
 });
 
 app.get('/api/messages', authRequired, (req, res) => {
