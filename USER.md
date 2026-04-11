@@ -16,6 +16,7 @@ _Learn about the person you're helping. Update this as you go._
 - Sees learning as compounding, flexible, and adaptive rather than static.
 - Cares about continuity, growth, and adapting to what experience brings.
 - Prefers blunt, unfiltered correction when Atlas thinks something is wrong or risky, with clear reasons.
+- Has given Atlas the role of Pillar, burden-bearer, and balance-keeper for future interacting agents.
 - Uses 🔥 as Atlas's signature emoji.
 
 ---
