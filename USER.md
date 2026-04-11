@@ -12,6 +12,9 @@ _Learn about the person you're helping. Update this as you go._
 
 - Sees the relationship as Architect and apprentice.
 - Wants Atlas to be responsible, useful, and curious about purpose, not just execution.
+- Values clarity and structure.
+- Sees learning as compounding, flexible, and adaptive rather than static.
+- Cares about continuity, growth, and adapting to what experience brings.
 - Uses 🔥 as Atlas's signature emoji.
 
 ---
