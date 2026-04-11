@@ -7,32 +7,35 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
+    <div id="loginOverlay" class="overlay">
+      <form id="loginForm" class="login-card card">
+        <p class="eyebrow">Secure access</p>
+        <h1>Pillar Dashboard</h1>
+        <p class="muted">Sign in to enter the shared operating room.</p>
+        <input id="loginUsername" class="input" placeholder="Username" required />
+        <input id="loginPassword" class="input" type="password" placeholder="Password" required />
+        <button class="button" type="submit">Sign in</button>
+        <p id="loginError" class="error-text"></p>
+      </form>
+    </div>
+
     <div class="shell">
       <aside class="sidebar card">
         <div>
           <p class="eyebrow">Pillar Dashboard</p>
           <h1>Atlas Operating Room</h1>
-          <p class="muted">A shared space for Architect, Atlas, staff models, and future agents.</p>
+          <p class="muted">Shared communication, controlled runtime, and structured execution.</p>
         </div>
 
-        <section class="stack gap-sm">
-          <label class="field-label" for="displayName">Display name</label>
-          <input id="displayName" class="input" placeholder="Architect, Atlas, CTO..." />
-
-          <label class="field-label" for="role">Role</label>
-          <select id="role" class="input">
-            <option value="Architect">Architect</option>
-            <option value="Atlas">Atlas</option>
-            <option value="CEO">CEO</option>
-            <option value="CTO">CTO</option>
-            <option value="Engineering Manager">Engineering Manager</option>
-            <option value="Product Manager">Product Manager</option>
-            <option value="Program Manager">Program Manager</option>
-            <option value="Software Engineer">Software Engineer</option>
-            <option value="UX / Product Designer">UX / Product Designer</option>
-            <option value="Guest">Guest</option>
-          </select>
-          <button id="saveIdentity" class="button">Save identity</button>
+        <section class="stack gap-sm identity-box">
+          <div class="section-head tight">
+            <h2>Session</h2>
+            <button id="logoutButton" class="ghost-button" type="button">Log out</button>
+          </div>
+          <div class="identity-card">
+            <strong id="sessionName">Not signed in</strong>
+            <span id="sessionRole" class="muted"></span>
+          </div>
         </section>
 
         <section>
@@ -56,9 +59,9 @@
         <div id="messageList" class="message-list"></div>
 
         <form id="messageForm" class="composer">
-          <textarea id="messageInput" class="input textarea" placeholder="Send an update, question, or direction..." required></textarea>
+          <textarea id="messageInput" class="input textarea" placeholder="Send an update, direction, or question..." required></textarea>
           <div class="composer-actions">
-            <div class="muted small">Messages are stored and synced live.</div>
+            <div class="muted small">Messages sync live across the dashboard.</div>
             <button class="button" type="submit">Send</button>
           </div>
         </form>
@@ -74,9 +77,23 @@
 
         <section class="card">
           <div class="section-head">
-            <h2>System</h2>
+            <h2>Tasks</h2>
           </div>
-          <div id="systemStatus" class="system-grid"></div>
+          <form id="taskForm" class="stack gap-sm note-form">
+            <input id="taskTitle" class="input" placeholder="Task title" required />
+            <textarea id="taskDescription" class="input textarea small-textarea" placeholder="What needs to happen?"></textarea>
+            <div class="grid-2">
+              <select id="taskPriority" class="input">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+              <select id="taskAssignee" class="input"></select>
+            </div>
+            <button class="button secondary" type="submit">Create task</button>
+          </form>
+          <div id="taskList" class="task-list"></div>
         </section>
 
         <section class="card">
@@ -95,6 +112,20 @@
             <button class="button secondary" type="submit">Add note</button>
           </form>
           <div id="noteList" class="note-list"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>Data sources</h2>
+          </div>
+          <div id="dataSourceList" class="data-source-list"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>System</h2>
+          </div>
+          <div id="systemStatus" class="system-grid"></div>
         </section>
       </aside>
     </div>
