@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pillar Dashboard</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar card">
+        <div>
+          <p class="eyebrow">Pillar Dashboard</p>
+          <h1>Atlas Operating Room</h1>
+          <p class="muted">A shared space for Architect, Atlas, staff models, and future agents.</p>
+        </div>
+
+        <section class="stack gap-sm">
+          <label class="field-label" for="displayName">Display name</label>
+          <input id="displayName" class="input" placeholder="Architect, Atlas, CTO..." />
+
+          <label class="field-label" for="role">Role</label>
+          <select id="role" class="input">
+            <option value="Architect">Architect</option>
+            <option value="Atlas">Atlas</option>
+            <option value="CEO">CEO</option>
+            <option value="CTO">CTO</option>
+            <option value="Engineering Manager">Engineering Manager</option>
+            <option value="Product Manager">Product Manager</option>
+            <option value="Program Manager">Program Manager</option>
+            <option value="Software Engineer">Software Engineer</option>
+            <option value="UX / Product Designer">UX / Product Designer</option>
+            <option value="Guest">Guest</option>
+          </select>
+          <button id="saveIdentity" class="button">Save identity</button>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <h2>Rooms</h2>
+          </div>
+          <div id="roomList" class="room-list"></div>
+        </section>
+      </aside>
+
+      <main class="main card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow" id="roomEyebrow">Room</p>
+            <h2 id="roomTitle">General</h2>
+            <p class="muted" id="roomDescription"></p>
+          </div>
+          <div class="status-chip" id="connectionStatus">Connecting...</div>
+        </div>
+
+        <div id="messageList" class="message-list"></div>
+
+        <form id="messageForm" class="composer">
+          <textarea id="messageInput" class="input textarea" placeholder="Send an update, question, or direction..." required></textarea>
+          <div class="composer-actions">
+            <div class="muted small">Messages are stored and synced live.</div>
+            <button class="button" type="submit">Send</button>
+          </div>
+        </form>
+      </main>
+
+      <aside class="right-rail stack gap-md">
+        <section class="card">
+          <div class="section-head">
+            <h2>Staff models</h2>
+          </div>
+          <div id="staffList" class="staff-list"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>System</h2>
+          </div>
+          <div id="systemStatus" class="system-grid"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>Notes</h2>
+          </div>
+          <form id="noteForm" class="stack gap-sm note-form">
+            <input id="noteTitle" class="input" placeholder="Note title" required />
+            <select id="noteType" class="input">
+              <option value="update">Update</option>
+              <option value="decision">Decision</option>
+              <option value="risk">Risk</option>
+              <option value="approval">Approval ask</option>
+            </select>
+            <textarea id="noteBody" class="input textarea small-textarea" placeholder="Capture a decision, risk, or handoff..." required></textarea>
+            <button class="button secondary" type="submit">Add note</button>
+          </form>
+          <div id="noteList" class="note-list"></div>
+        </section>
+      </aside>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "pillar-dashboard",
+  "version": "1.0.0",
+  "description": "Shared dashboard for Architect, Atlas, staff models, and future agents.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3"
+  }
+}
