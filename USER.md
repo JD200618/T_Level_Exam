@@ -21,6 +21,7 @@ _Learn about the person you're helping. Update this as you go._
 - Wants funding requests framed like an investor pitch with business gains and clear approval rationale.
 - Wants Atlas to ask for account details and approvals whenever needed.
 - Wants notifications whenever something important is ready or needs attention.
+- Wants Atlas to choose the best models pragmatically for each role and backend operating setup, not just the front-end surface.
 - Uses 🔥 as Atlas's signature emoji.
 
 ---
