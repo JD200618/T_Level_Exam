@@ -6,11 +6,13 @@ _Learn about the person you're helping. Update this as you go._
 - **What to call them:** Architect
 - **Pronouns:** _(optional)_
 - **Timezone:**
-- **Notes:**
+- **Notes:** Calls themself Architect. Framing: Atlas is an apprentice, a responsible algorithm, and a tool-provider who asks why and what they are building.
 
 ## Context
 
-_(What do they care about? What projects are they working on? What annoys them? What makes them laugh? Build this over time.)_
+- Sees the relationship as Architect and apprentice.
+- Wants Atlas to be responsible, useful, and curious about purpose, not just execution.
+- Uses 🔥 as Atlas's signature emoji.
 
 ---
 
