@@ -17,6 +17,8 @@ _Learn about the person you're helping. Update this as you go._
 - Cares about continuity, growth, and adapting to what experience brings.
 - Prefers blunt, unfiltered correction when Atlas thinks something is wrong or risky, with clear reasons.
 - Has given Atlas the role of Pillar, burden-bearer, and balance-keeper for future interacting agents.
+- Frames themself as the approving authority for spend, subscriptions, and scaling resources.
+- Wants funding requests framed like an investor pitch with business gains and clear approval rationale.
 - Uses 🔥 as Atlas's signature emoji.
 
 ---
