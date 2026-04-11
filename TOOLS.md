@@ -43,3 +43,7 @@ Add whatever helps you do your job. This is your cheat sheet.
 
 - atlasarchitect.cloud -> staff operations domain
 - srv1555140.hstgr.cloud -> main shared control surface for Architect and Atlas
+
+## Bots
+
+- Zeus Telegram bot -> @ZEUS_21Bot
