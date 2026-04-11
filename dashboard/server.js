@@ -15,6 +15,8 @@ const io = new Server(server);
 const PORT = Number(process.env.PORT || 3210);
 const APP_ROOT = __dirname;
 const WORKSPACE_ROOT = path.resolve(APP_ROOT, '..');
+const OPENCLAW_HOME = path.join(os.homedir(), '.openclaw');
+const OPENCLAW_CONFIG_PATH = path.join(OPENCLAW_HOME, 'openclaw.json');
 const PUBLIC_DIR = path.join(APP_ROOT, 'public');
 const DATA_DIR = path.join(APP_ROOT, 'data');
 const DB_PATH = path.join(DATA_DIR, 'pillar.db');
@@ -117,6 +119,13 @@ const staffModels = [
     lane: 'Pillar',
     category: 'Core',
     purpose: 'Keeps continuity, balances agents, and holds the operating center.',
+  },
+  {
+    id: 'zeus',
+    name: 'Zeus',
+    lane: 'Companion Intelligence',
+    category: 'Core',
+    purpose: 'A separate conversational intelligence for Architect to speak with directly.',
   },
   {
     id: 'architect',
@@ -407,6 +416,92 @@ function getGitSummary() {
   }
 }
 
+function serviceState(serviceName) {
+  try {
+    return execSync(`systemctl is-active ${serviceName}`, {
+      stdio: ['ignore', 'pipe', 'ignore'],
+      encoding: 'utf8',
+    }).trim();
+  } catch {
+    return 'unknown';
+  }
+}
+
+function portListening(port) {
+  try {
+    execSync(`bash -lc "ss -lnt | grep -q ':${port} '"`, {
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function repoSummary(root, label) {
+  try {
+    const branch = execSync(`git -C "${root}" rev-parse --abbrev-ref HEAD`, {
+      stdio: ['ignore', 'pipe', 'ignore'],
+      encoding: 'utf8',
+    }).trim();
+    const commit = execSync(`git -C "${root}" log -1 --pretty=format:'%h %s'`, {
+      stdio: ['ignore', 'pipe', 'ignore'],
+      encoding: 'utf8',
+    }).trim();
+    const dirtyCount = Number(
+      execSync(`bash -lc "git -C '${root}' status --short | wc -l"`, {
+        stdio: ['ignore', 'pipe', 'ignore'],
+        encoding: 'utf8',
+      }).trim()
+    );
+    return { label, path: root, branch, commit, dirtyCount };
+  } catch {
+    return { label, path: root, branch: 'unknown', commit: 'unavailable', dirtyCount: 0 };
+  }
+}
+
+function getOpsSnapshot() {
+  let config = {};
+  try {
+    config = jsonSafe(fs.readFileSync(OPENCLAW_CONFIG_PATH, 'utf8'), {});
+  } catch {
+    config = {};
+  }
+
+  const bindings = Array.isArray(config.bindings) ? config.bindings : [];
+  const agents = Array.isArray(config.agents?.list)
+    ? config.agents.list.map((agent) => ({
+        id: agent.id,
+        name: agent.identity?.name || agent.name || agent.id,
+        workspace: agent.workspace,
+        model: agent.model,
+        routes: bindings.filter((binding) => binding.agentId === agent.id),
+      }))
+    : [];
+
+  const telegramAccounts = Object.entries(config.channels?.telegram?.accounts || {}).map(([accountId, account]) => ({
+    accountId,
+    name: account.name || accountId,
+  }));
+
+  return {
+    services: {
+      dashboard: serviceState('pillar-dashboard'),
+      caddy: serviceState('caddy'),
+      gateway: portListening(18789) ? 'online' : 'offline',
+    },
+    agents,
+    telegram: {
+      defaultAccount: config.channels?.telegram?.defaultAccount || 'default',
+      accounts: telegramAccounts,
+    },
+    repos: [
+      repoSummary(WORKSPACE_ROOT, 'Atlas workspace'),
+      repoSummary(path.join(WORKSPACE_ROOT, 'zeus'), 'Zeus workspace'),
+    ],
+  };
+}
+
 function getSystemStatus() {
   deleteExpiredSessions.run(now());
 
@@ -523,6 +618,7 @@ function bootstrapPayload(user, activeRoom = '', hostname = '') {
     tasks,
     staffModels: getStaffDirectory(),
     system: getSystemStatus(),
+    opsSnapshot: getOpsSnapshot(),
     dataSources: getDataSources(),
   };
 }
@@ -762,6 +858,10 @@ app.patch('/api/staff/:id', authRequired, requirePermission('staff.manage'), (re
 
 app.get('/api/data-sources', authRequired, requirePermission('data.read'), (req, res) => {
   res.json({ dataSources: getDataSources() });
+});
+
+app.get('/api/ops', authRequired, requirePermission('system.read'), (req, res) => {
+  res.json({ opsSnapshot: getOpsSnapshot() });
 });
 
 app.get('/api/system/status', authRequired, requirePermission('system.read'), (req, res) => {

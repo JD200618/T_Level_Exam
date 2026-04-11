@@ -8,6 +8,7 @@ const state = {
   tasks: [],
   staffModels: [],
   system: null,
+  opsSnapshot: null,
   dataSources: [],
 };
 
@@ -42,6 +43,7 @@ const els = {
   noteType: document.querySelector('#noteType'),
   noteBody: document.querySelector('#noteBody'),
   noteList: document.querySelector('#noteList'),
+  opsSnapshot: document.querySelector('#opsSnapshot'),
   dataSourceList: document.querySelector('#dataSourceList'),
   systemStatus: document.querySelector('#systemStatus'),
 };
@@ -80,6 +82,7 @@ async function bootstrap(room = state.activeRoom) {
   state.tasks = data.tasks;
   state.staffModels = data.staffModels;
   state.system = data.system;
+  state.opsSnapshot = data.opsSnapshot;
   state.dataSources = data.dataSources;
   renderAll();
 }
@@ -257,6 +260,7 @@ function renderAll() {
   renderStaff();
   renderTasks();
   renderNotes();
+  renderOpsSnapshot();
   renderDataSources();
   renderSystem();
   populateAssigneeOptions();
@@ -446,6 +450,58 @@ function renderNotes() {
     `;
     els.noteList.appendChild(item);
   });
+}
+
+function renderOpsSnapshot() {
+  els.opsSnapshot.innerHTML = '';
+  if (!state.opsSnapshot) {
+    els.opsSnapshot.appendChild(emptyState('No operations snapshot yet.'));
+    return;
+  }
+
+  const services = document.createElement('article');
+  services.className = 'data-source-card';
+  services.innerHTML = `
+    <div class="note-meta">
+      <strong>Services</strong>
+      <span>runtime</span>
+    </div>
+    <p>Dashboard: ${state.opsSnapshot.services.dashboard} · Caddy: ${state.opsSnapshot.services.caddy} · Gateway: ${state.opsSnapshot.services.gateway}</p>
+  `;
+  els.opsSnapshot.appendChild(services);
+
+  const agents = document.createElement('article');
+  agents.className = 'data-source-card';
+  agents.innerHTML = `
+    <div class="note-meta">
+      <strong>Agents</strong>
+      <span>${state.opsSnapshot.agents.length}</span>
+    </div>
+    <pre>${state.opsSnapshot.agents.map((agent) => `${agent.name} (${agent.id}) → ${agent.routes.map((route) => `${route.match.channel}:${route.match.accountId}`).join(', ') || 'no route'}`).join('\n')}</pre>
+  `;
+  els.opsSnapshot.appendChild(agents);
+
+  const repos = document.createElement('article');
+  repos.className = 'data-source-card';
+  repos.innerHTML = `
+    <div class="note-meta">
+      <strong>Repositories</strong>
+      <span>workspaces</span>
+    </div>
+    <pre>${state.opsSnapshot.repos.map((repo) => `${repo.label}\n${repo.branch} · ${repo.commit}\nDirty files: ${repo.dirtyCount}`).join('\n\n')}</pre>
+  `;
+  els.opsSnapshot.appendChild(repos);
+
+  const telegram = document.createElement('article');
+  telegram.className = 'data-source-card';
+  telegram.innerHTML = `
+    <div class="note-meta">
+      <strong>Telegram accounts</strong>
+      <span>default: ${state.opsSnapshot.telegram.defaultAccount}</span>
+    </div>
+    <pre>${state.opsSnapshot.telegram.accounts.map((account) => `${account.accountId} · ${account.name}`).join('\n')}</pre>
+  `;
+  els.opsSnapshot.appendChild(telegram);
 }
 
 function renderDataSources() {
