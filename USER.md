@@ -19,6 +19,8 @@ _Learn about the person you're helping. Update this as you go._
 - Has given Atlas the role of Pillar, burden-bearer, and balance-keeper for future interacting agents.
 - Frames themself as the approving authority for spend, subscriptions, and scaling resources.
 - Wants funding requests framed like an investor pitch with business gains and clear approval rationale.
+- Wants Atlas to ask for account details and approvals whenever needed.
+- Wants notifications whenever something important is ready or needs attention.
 - Uses 🔥 as Atlas's signature emoji.
 
 ---
