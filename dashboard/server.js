@@ -92,6 +92,25 @@ db.exec(`
     updated_at INTEGER NOT NULL,
     updated_by TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS operation_state (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    actor TEXT NOT NULL,
+    status TEXT NOT NULL,
+    focus TEXT NOT NULL,
+    detail TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS activity_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    actor TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    status TEXT NOT NULL,
+    title TEXT NOT NULL,
+    detail TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+  );
 `);
 
 const defaultRooms = [
@@ -277,6 +296,31 @@ const getAllStaffState = db.prepare(`
   SELECT model_id as modelId, status, clocked_in as clockedIn, notes, updated_at as updatedAt, updated_by as updatedBy
   FROM staff_state
 `);
+const getOperationState = db.prepare(`
+  SELECT actor, status, focus, detail, updated_at as updatedAt
+  FROM operation_state
+  WHERE id = 1
+`);
+const upsertOperationState = db.prepare(`
+  INSERT INTO operation_state (id, actor, status, focus, detail, updated_at)
+  VALUES (1, @actor, @status, @focus, @detail, @updatedAt)
+  ON CONFLICT(id) DO UPDATE SET
+    actor = excluded.actor,
+    status = excluded.status,
+    focus = excluded.focus,
+    detail = excluded.detail,
+    updated_at = excluded.updated_at
+`);
+const insertActivityEvent = db.prepare(`
+  INSERT INTO activity_events (actor, kind, status, title, detail, created_at)
+  VALUES (@actor, @kind, @status, @title, @detail, @createdAt)
+`);
+const getActivityEvents = db.prepare(`
+  SELECT id, actor, kind, status, title, detail, created_at as createdAt
+  FROM activity_events
+  ORDER BY created_at DESC, id DESC
+  LIMIT ?
+`);
 
 function clampText(value, max = 2000) {
   return String(value || '').trim().slice(0, max);
@@ -397,8 +441,38 @@ function seedStaffState() {
   });
 }
 
+function recordActivityEvent({ actor, kind, status, title, detail }) {
+  insertActivityEvent.run({
+    actor: clampText(actor, 64) || 'Atlas',
+    kind: clampText(kind, 40) || 'system',
+    status: clampText(status, 40) || 'info',
+    title: clampText(title, 160) || 'Activity',
+    detail: clampText(detail, 2000) || '',
+    createdAt: now(),
+  });
+}
+
+function ensureOperationState() {
+  if (getOperationState.get()) return;
+  upsertOperationState.run({
+    actor: 'Atlas',
+    status: 'active',
+    focus: 'Maintaining the operation',
+    detail: 'Keeping the dashboard, agents, and infrastructure in working order.',
+    updatedAt: now(),
+  });
+  recordActivityEvent({
+    actor: 'Atlas',
+    kind: 'system',
+    status: 'done',
+    title: 'Operation state initialized',
+    detail: 'Atlas activity tracking came online.',
+  });
+}
+
 seedBootstrapUsers();
 seedStaffState();
+ensureOperationState();
 
 function getGitSummary() {
   try {
@@ -607,6 +681,8 @@ function bootstrapPayload(user, activeRoom = '', hostname = '') {
   const messages = getMessagesByRoom.all(roomId, 100).reverse();
   const notes = getRecentNotes.all(20);
   const tasks = getTasks.all(50);
+  const activityState = getOperationState.get();
+  const activityEvents = getActivityEvents.all(50);
 
   return {
     user,
@@ -616,6 +692,8 @@ function bootstrapPayload(user, activeRoom = '', hostname = '') {
     messages,
     notes,
     tasks,
+    activityState,
+    activityEvents,
     staffModels: getStaffDirectory(),
     system: getSystemStatus(),
     opsSnapshot: getOpsSnapshot(),
@@ -732,7 +810,19 @@ app.post('/api/messages', authRequired, requirePermission('chat.write'), (req, r
   const result = insertMessage.run({ roomId, author, role, body, createdAt });
   const message = getMessageById.get(result.lastInsertRowid);
 
+  recordActivityEvent({
+    actor: author,
+    kind: 'message',
+    status: 'done',
+    title: `Message posted in ${roomId}`,
+    detail: body,
+  });
+
   io.emit('chat:message', message);
+  io.emit('activity:state', {
+    activityState: getOperationState.get(),
+    activityEvents: getActivityEvents.all(50),
+  });
   io.emit('system:status', getSystemStatus());
   return res.status(201).json({ message });
 });
@@ -760,9 +850,72 @@ app.post('/api/notes', authRequired, requirePermission('notes.write'), (req, res
   });
   const note = getRecentNotes.all(20).find((entry) => entry.id === result.lastInsertRowid);
 
+  recordActivityEvent({
+    actor: req.user.displayName,
+    kind: 'note',
+    status: 'done',
+    title: `Note added: ${title}`,
+    detail: body,
+  });
+
   io.emit('note:created', note);
+  io.emit('activity:state', {
+    activityState: getOperationState.get(),
+    activityEvents: getActivityEvents.all(50),
+  });
   io.emit('system:status', getSystemStatus());
   return res.status(201).json({ note });
+});
+
+app.get('/api/activity', authRequired, requirePermission('system.read'), (req, res) => {
+  res.json({
+    activityState: getOperationState.get(),
+    activityEvents: getActivityEvents.all(50),
+  });
+});
+
+app.patch('/api/activity/state', authRequired, requirePermission('notes.write'), (req, res) => {
+  const actor = clampText(req.body.actor, 64) || req.user.displayName;
+  const status = clampText(req.body.status, 40) || 'active';
+  const focus = clampText(req.body.focus, 160) || 'Working';
+  const detail = clampText(req.body.detail, 2000) || '';
+  const updatedAt = now();
+
+  upsertOperationState.run({ actor, status, focus, detail, updatedAt });
+  recordActivityEvent({
+    actor,
+    kind: 'state',
+    status,
+    title: focus,
+    detail,
+  });
+
+  const payload = {
+    activityState: getOperationState.get(),
+    activityEvents: getActivityEvents.all(50),
+  };
+  io.emit('activity:state', payload);
+  res.json(payload);
+});
+
+app.post('/api/activity/events', authRequired, requirePermission('notes.write'), (req, res) => {
+  const actor = clampText(req.body.actor, 64) || req.user.displayName;
+  const kind = clampText(req.body.kind, 40) || 'event';
+  const status = clampText(req.body.status, 40) || 'info';
+  const title = clampText(req.body.title, 160);
+  const detail = clampText(req.body.detail, 2000);
+
+  if (!title) {
+    return res.status(400).json({ error: 'title is required.' });
+  }
+
+  recordActivityEvent({ actor, kind, status, title, detail });
+  const payload = {
+    activityState: getOperationState.get(),
+    activityEvents: getActivityEvents.all(50),
+  };
+  io.emit('activity:state', payload);
+  res.status(201).json(payload);
 });
 
 app.get('/api/tasks', authRequired, (req, res) => {
@@ -796,7 +949,19 @@ app.post('/api/tasks', authRequired, requirePermission('tasks.write'), (req, res
   });
   const task = getTaskById.get(result.lastInsertRowid);
 
+  recordActivityEvent({
+    actor: req.user.displayName,
+    kind: 'task',
+    status: 'done',
+    title: `Task created: ${title}`,
+    detail: description || `Priority ${priority}`,
+  });
+
   io.emit('task:updated', task);
+  io.emit('activity:state', {
+    activityState: getOperationState.get(),
+    activityEvents: getActivityEvents.all(50),
+  });
   io.emit('system:status', getSystemStatus());
   return res.status(201).json({ task });
 });
@@ -825,7 +990,18 @@ app.patch('/api/tasks/:id', authRequired, requirePermission('tasks.write'), (req
   });
 
   const task = getTaskById.get(id);
+  recordActivityEvent({
+    actor: req.user.displayName,
+    kind: 'task',
+    status: 'done',
+    title: `Task updated: ${title}`,
+    detail: `Status ${status} · Priority ${priority}`,
+  });
   io.emit('task:updated', task);
+  io.emit('activity:state', {
+    activityState: getOperationState.get(),
+    activityEvents: getActivityEvents.all(50),
+  });
   io.emit('system:status', getSystemStatus());
   res.json({ task });
 });
@@ -852,7 +1028,18 @@ app.patch('/api/staff/:id', authRequired, requirePermission('staff.manage'), (re
   });
 
   const staff = getStaffDirectory();
+  recordActivityEvent({
+    actor: req.user.displayName,
+    kind: 'staff',
+    status: 'done',
+    title: `Staff state changed: ${model.name}`,
+    detail: `${model.name} is now ${status}`,
+  });
   io.emit('staff:updated', staff);
+  io.emit('activity:state', {
+    activityState: getOperationState.get(),
+    activityEvents: getActivityEvents.all(50),
+  });
   res.json({ staffModels: staff });
 });
 

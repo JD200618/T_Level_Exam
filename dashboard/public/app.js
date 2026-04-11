@@ -6,6 +6,8 @@ const state = {
   messages: [],
   notes: [],
   tasks: [],
+  activityState: null,
+  activityEvents: [],
   staffModels: [],
   system: null,
   opsSnapshot: null,
@@ -31,6 +33,8 @@ const els = {
   messageList: document.querySelector('#messageList'),
   messageForm: document.querySelector('#messageForm'),
   messageInput: document.querySelector('#messageInput'),
+  activityState: document.querySelector('#activityState'),
+  activityFeed: document.querySelector('#activityFeed'),
   staffList: document.querySelector('#staffList'),
   taskForm: document.querySelector('#taskForm'),
   taskTitle: document.querySelector('#taskTitle'),
@@ -80,6 +84,8 @@ async function bootstrap(room = state.activeRoom) {
   state.messages = data.messages;
   state.notes = data.notes;
   state.tasks = data.tasks;
+  state.activityState = data.activityState;
+  state.activityEvents = data.activityEvents;
   state.staffModels = data.staffModels;
   state.system = data.system;
   state.opsSnapshot = data.opsSnapshot;
@@ -213,6 +219,12 @@ function wireEvents() {
     renderTasks();
   });
 
+  socket.on('activity:state', ({ activityState, activityEvents }) => {
+    state.activityState = activityState;
+    state.activityEvents = activityEvents;
+    renderActivity();
+  });
+
   socket.on('staff:updated', (staffModels) => {
     state.staffModels = staffModels;
     renderStaff();
@@ -257,6 +269,7 @@ function renderAll() {
   renderRooms();
   renderRoomHeader();
   renderMessages();
+  renderActivity();
   renderStaff();
   renderTasks();
   renderNotes();
@@ -319,6 +332,47 @@ function renderMessages() {
   });
 
   els.messageList.scrollTop = els.messageList.scrollHeight;
+}
+
+function renderActivity() {
+  els.activityState.innerHTML = '';
+  els.activityFeed.innerHTML = '';
+
+  if (state.activityState) {
+    const stateCard = document.createElement('article');
+    stateCard.className = 'data-source-card';
+    stateCard.innerHTML = `
+      <div class="note-meta">
+        <strong>${state.activityState.actor}</strong>
+        <span class="pill ${state.activityState.status}">${state.activityState.status}</span>
+      </div>
+      <p><strong>${state.activityState.focus}</strong></p>
+      <p>${state.activityState.detail}</p>
+      <div class="muted small">Updated ${formatTime(state.activityState.updatedAt)}</div>
+    `;
+    els.activityState.appendChild(stateCard);
+  } else {
+    els.activityState.appendChild(emptyState('No activity state yet.'));
+  }
+
+  if (!state.activityEvents.length) {
+    els.activityFeed.appendChild(emptyState('No activity events yet.'));
+    return;
+  }
+
+  state.activityEvents.forEach((event) => {
+    const item = document.createElement('article');
+    item.className = 'note-card';
+    item.innerHTML = `
+      <div class="note-meta">
+        <strong>${event.title}</strong>
+        <span class="pill ${event.status}">${event.status}</span>
+      </div>
+      <p>${event.detail}</p>
+      <div class="muted small">${event.actor} · ${event.kind} · ${formatTime(event.createdAt)}</div>
+    `;
+    els.activityFeed.appendChild(item);
+  });
 }
 
 function renderStaff() {

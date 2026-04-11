@@ -139,7 +139,9 @@ h2 { margin-bottom: 4px; }
 .note-list,
 .task-list,
 .data-source-list,
-.ops-list {
+.ops-list,
+.activity-state,
+.activity-feed {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -287,6 +289,7 @@ h2 { margin-bottom: 4px; }
 .pill.backlog { background: rgba(124, 156, 255, 0.14); color: #c2d1ff; }
 .pill.blocked { background: rgba(255, 200, 107, 0.14); color: #ffd98e; }
 .pill.done { background: rgba(61, 217, 180, 0.14); color: #9ef5e2; }
+.pill.info { background: rgba(124, 156, 255, 0.14); color: #c2d1ff; }
 
 .overlay {
   position: fixed;
