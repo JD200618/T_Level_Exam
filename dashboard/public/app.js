@@ -53,6 +53,10 @@ const els = {
   overviewFocus: document.querySelector('#overviewFocus'),
   overviewDetail: document.querySelector('#overviewDetail'),
   overviewMetrics: document.querySelector('#overviewMetrics'),
+  operationalStage: document.querySelector('#operationalStage'),
+  operationalSummary: document.querySelector('#operationalSummary'),
+  capabilityMatrix: document.querySelector('#capabilityMatrix'),
+  gainedCapabilities: document.querySelector('#gainedCapabilities'),
   pillarGrid: document.querySelector('#pillarGrid'),
   agentOperations: document.querySelector('#agentOperations'),
   backendCards: document.querySelector('#backendCards'),
@@ -324,6 +328,7 @@ function renderAll() {
 
 function renderDashboard() {
   renderOverview();
+  renderOperationalLevel();
   renderPillars();
   renderAgentOperations();
   renderBackendCards();
@@ -576,6 +581,65 @@ function renderOverview() {
     card.className = 'metric-card';
     card.innerHTML = `<span>${escapeHtml(metric.label)}</span><strong>${escapeHtml(metric.value)}</strong>`;
     els.overviewMetrics.appendChild(card);
+  });
+}
+
+function renderOperationalLevel() {
+  const operationalLevel = state.dashboardModel?.operationalLevel;
+  els.operationalStage.innerHTML = '';
+  els.operationalSummary.innerHTML = '';
+  els.capabilityMatrix.innerHTML = '';
+  els.gainedCapabilities.innerHTML = '';
+
+  if (!operationalLevel) {
+    els.operationalStage.appendChild(emptyState('No operational level available yet.'));
+    return;
+  }
+
+  els.operationalStage.innerHTML = `
+    <span>Operational maturity</span>
+    <strong>${escapeHtml(operationalLevel.stage)}</strong>
+    <div class="operational-score-row">
+      <div class="operational-score-track">
+        <span class="operational-score-fill" style="width:${Math.max(6, Number(operationalLevel.score || 0))}%"></span>
+      </div>
+      <b>${escapeHtml(String(operationalLevel.score))}/100</b>
+    </div>
+  `;
+
+  els.operationalSummary.innerHTML = `
+    <span>Current posture</span>
+    <strong>${escapeHtml(operationalLevel.summary)}</strong>
+    <p class="muted small">${escapeHtml(operationalLevel.detail)}</p>
+  `;
+
+  (operationalLevel.capabilities || []).forEach((capability) => {
+    const card = document.createElement('article');
+    card.className = 'capability-card';
+    card.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(capability.label)}</strong>
+        <span>${escapeHtml(String(capability.score))}/100</span>
+      </div>
+      <p class="muted small">${escapeHtml(capability.detail)}</p>
+      <div class="progress-track capability-track">
+        <span class="progress-bar ${statusClass(capability.status || 'info')}" style="width:${Math.max(6, Number(capability.score || 0))}%"></span>
+      </div>
+    `;
+    els.capabilityMatrix.appendChild(card);
+  });
+
+  (operationalLevel.gains || []).forEach((gain) => {
+    const card = document.createElement('article');
+    card.className = 'gain-card';
+    card.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(gain.label)}</strong>
+        <span class="pill ${statusClass(gain.status || 'info')}">${escapeHtml(gain.status || 'info')}</span>
+      </div>
+      <p>${escapeHtml(gain.detail)}</p>
+    `;
+    els.gainedCapabilities.appendChild(card);
   });
 }
 

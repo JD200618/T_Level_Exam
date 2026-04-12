@@ -852,6 +852,55 @@ function getDashboardModel(hostname = '') {
     acc[event.kind] = (acc[event.kind] || 0) + 1;
     return acc;
   }, {});
+  const serviceUpCount = Object.values(opsSnapshot.services).filter((status) => status === 'active').length;
+  const operationalCapabilities = [
+    {
+      id: 'telemetry',
+      label: 'Telemetry and visibility',
+      score: Math.min(100, (activityState ? 22 : 0) + Math.min(recentActivity.length, 20) + serviceUpCount * 12),
+      status: recentActivity.length ? 'active' : 'limited',
+      detail: 'Live activity state, event feed, charts, and service visibility.',
+    },
+    {
+      id: 'workflow',
+      label: 'Workflow traceability',
+      score: Math.min(100, 18 + taskCounts.active * 8 + taskCounts.done * 6 + (recentActivity.length ? 10 : 0)),
+      status: taskCounts.active || taskCounts.done ? 'active' : 'limited',
+      detail: 'Tracked work, room execution, and the beginning of execution-state visibility.',
+    },
+    {
+      id: 'modelops',
+      label: 'Model and agent operations',
+      score: Math.min(100, agentOperations.length * 18 + opsSnapshot.telegram.accounts.length * 8 + 10),
+      status: agentOperations.length ? 'ready' : 'limited',
+      detail: 'Agent registry, routing, model endpoints, and operational lanes for Atlas and Zeus.',
+    },
+    {
+      id: 'data',
+      label: 'Data and memory lineage',
+      score: Math.min(100, dataSources.length * 10 + 20),
+      status: dataSources.length ? 'ready' : 'limited',
+      detail: 'Structured context sources, memory files, ontology notes, and study artifacts.',
+    },
+    {
+      id: 'infrastructure',
+      label: 'Infrastructure control',
+      score: Math.min(100, serviceUpCount * 20 + (dirtyRepos ? 0 : 10)),
+      status: serviceHealth,
+      detail: 'Gateway, dashboard, reverse proxy, repository state, and host-level runtime control.',
+    },
+    {
+      id: 'governance',
+      label: 'Governance and audit',
+      score: 32,
+      status: 'limited',
+      detail: 'Auth, roles, notes, and audit direction exist, but deeper control-plane audit is still to be built.',
+    },
+  ];
+  const operationalScore = Math.round(
+    operationalCapabilities.reduce((sum, capability) => sum + capability.score, 0) / operationalCapabilities.length
+  );
+  const operationalStage = operationalScore >= 75 ? 'Control-plane ready' : operationalScore >= 55 ? 'Operational foundation' : operationalScore >= 35 ? 'Structured bootstrap' : 'Early bootstrap';
 
   const pillars = [
     {
@@ -923,6 +972,35 @@ function getDashboardModel(hostname = '') {
         { label: 'Heartbeat feeds', value: String(agentOperations.filter((agent) => agent.heartbeat?.sessionPath).length) },
         { label: 'Active tasks', value: String(taskCounts.active) },
         { label: 'Blocked tasks', value: String(taskCounts.blocked) },
+      ],
+    },
+    operationalLevel: {
+      stage: operationalStage,
+      score: operationalScore,
+      summary: 'The first visual layer tracks platform maturity and gained capability instead of hiding progress in prose.',
+      detail: `Current posture: ${operationalStage}. Telemetry, runtime visibility, model operations, and memory structure are ahead of workflow lineage and governance depth.`,
+      capabilities: operationalCapabilities,
+      gains: [
+        {
+          label: 'Live operations dashboard',
+          status: 'done',
+          detail: 'The platform already exposes live activity, tasks, notes, services, and model/agent surfaces.',
+        },
+        {
+          label: 'Atlas and Zeus operational lanes',
+          status: agentOperations.length >= 2 ? 'done' : 'limited',
+          detail: 'Separate routed agents and staff states are visible in the control surface.',
+        },
+        {
+          label: 'Control-plane research base',
+          status: 'done',
+          detail: 'Palantir/Oracle/Microsoft-inspired control-plane research and build briefs exist in the workspace.',
+        },
+        {
+          label: 'Execution object tracking',
+          status: 'limited',
+          detail: 'Concept and architecture are defined, but first-class execution-run tables still need implementation.',
+        },
       ],
     },
     pillars,

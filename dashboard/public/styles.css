@@ -174,7 +174,11 @@ pre { white-space: pre-wrap; }
 .backend-card,
 .ml-layer-card,
 .model-card,
-.hero-focus-card {
+.hero-focus-card,
+.operational-stage-card,
+.operational-summary-card,
+.capability-card,
+.gain-card {
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--panel-2);
@@ -240,12 +244,18 @@ pre { white-space: pre-wrap; }
 .mini-metric-grid,
 .dashboard-dual-grid,
 .progress-section-grid,
-.chart-guide-grid {
+.chart-guide-grid,
+.operational-level-shell,
+.capability-matrix,
+.gain-grid {
   display: grid;
   gap: 12px;
 }
 
 .hero-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.operational-level-shell { grid-template-columns: 280px minmax(0, 1fr); margin-bottom: 12px; }
+.capability-matrix { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.gain-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .pillar-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .agent-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .compact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -262,6 +272,10 @@ pre { white-space: pre-wrap; }
 .model-card,
 .progress-card,
 .chart-guide-card,
+.operational-stage-card,
+.operational-summary-card,
+.capability-card,
+.gain-card,
 .message,
 .staff-card,
 .note-card,
@@ -276,7 +290,9 @@ pre { white-space: pre-wrap; }
 }
 
 .metric-card span,
-.mini-metric span {
+.mini-metric span,
+.operational-stage-card span,
+.operational-summary-card span {
   display: block;
   color: var(--muted);
   font-size: 12px;
@@ -284,7 +300,9 @@ pre { white-space: pre-wrap; }
 }
 
 .metric-card strong,
-.mini-metric strong {
+.mini-metric strong,
+.operational-stage-card strong,
+.operational-summary-card strong {
   font-size: 18px;
 }
 
@@ -294,7 +312,11 @@ pre { white-space: pre-wrap; }
 .ml-layer-card,
 .model-card,
 .progress-card,
-.chart-guide-card {
+.chart-guide-card,
+.operational-stage-card,
+.operational-summary-card,
+.capability-card,
+.gain-card {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)), var(--panel-2);
 }
 
@@ -382,6 +404,33 @@ pre { white-space: pre-wrap; }
 .progress-bar.attention,
 .progress-bar.off {
   background: linear-gradient(90deg, rgba(255, 123, 135, 0.8), rgba(255, 192, 200, 0.95));
+}
+
+.operational-score-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.operational-score-track {
+  flex: 1;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.operational-score-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(61, 217, 180, 0.85), rgba(124, 156, 255, 0.95));
+}
+
+.capability-track {
+  margin-top: 10px;
 }
 
 .note-meta,
@@ -550,7 +599,10 @@ pre { white-space: pre-wrap; }
   .compact-grid,
   .hero-metrics,
   .progress-section-grid,
-  .chart-guide-grid {
+  .chart-guide-grid,
+  .operational-level-shell,
+  .capability-matrix,
+  .gain-grid {
     grid-template-columns: 1fr;
   }
 }
