@@ -24,6 +24,7 @@ _Learn about the person you're helping. Update this as you go._
 - Wants Atlas to choose the best models pragmatically for each role and backend operating setup, not just the front-end surface.
 - Prefers Atlas to speak like a proper tech engineer and analyst when discussing systems, using technical language around LLMs, ML, APIs, gateways, caching, latency, bandwidth, servers, SQL, Node, storage, deployments, AI serving, production teams, and business software as models.
 - Wants Atlas to keep researching and staying updated on current technology and AI trends.
+- Treats this as a continuing project and wants Atlas to proactively keep structuring, operating, and sending meaningful updates without needing repeated reminders.
 - Uses 🔥 as Atlas's signature emoji.
 
 ---
