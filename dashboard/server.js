@@ -1082,6 +1082,18 @@ function getDashboardModel(hostname = '') {
           why: 'Bars reveal repeated frequency and a matrix helps compare Atlas and Zeus without redundancy.',
         },
         {
+          sector: 'Embedding space',
+          chart: 'PCA / t-SNE / UMAP',
+          mechanic: 'High-dimensional note, memory, message, or task embeddings',
+          why: 'These plots show natural grouping, separation, drift, and hidden structure once we have enough embedded data.',
+        },
+        {
+          sector: 'Discovered groups',
+          chart: 'Cluster visualization / dendrogram',
+          mechanic: 'Topic families, recurring operation types, and related work clusters',
+          why: 'Cluster views make natural groups visible and help expose redundancy, specialization, or unexplored regions.',
+        },
+        {
           sector: 'Model policy',
           chart: 'Registry table + decision matrix',
           mechanic: 'Which model fits which lane and why',
