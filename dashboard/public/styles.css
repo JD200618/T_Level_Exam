@@ -265,6 +265,86 @@ h2 { margin-bottom: 4px; }
   margin-bottom: 6px;
 }
 
+.learning-map {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.learning-source,
+.learning-node,
+.learning-loop,
+.learning-methods {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel-2);
+  padding: 14px;
+}
+
+.learning-source p,
+.learning-loop p,
+.learning-methods p,
+.learning-methods li,
+.learning-node li {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.learning-source {
+  text-align: center;
+}
+
+.learning-arrow {
+  text-align: center;
+  color: var(--accent-2);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.learning-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.learning-node.atlas {
+  border-color: rgba(61, 217, 180, 0.3);
+}
+
+.learning-node.zeus {
+  border-color: rgba(124, 156, 255, 0.4);
+}
+
+.learning-node ul,
+.learning-methods ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.flow-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.flow-step,
+.flow-link {
+  font-size: 12px;
+}
+
+.flow-step {
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: rgba(124, 156, 255, 0.14);
+  border: 1px solid var(--line);
+}
+
+.flow-link {
+  color: var(--muted);
+}
+
 .button-row {
   display: flex;
   flex-wrap: wrap;
@@ -316,4 +396,5 @@ h2 { margin-bottom: 4px; }
 @media (max-width: 1320px) {
   .shell { grid-template-columns: 1fr; }
   .main { min-height: auto; }
+  .learning-grid { grid-template-columns: 1fr; }
 }

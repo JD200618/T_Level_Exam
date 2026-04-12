@@ -35,6 +35,7 @@ const els = {
   messageInput: document.querySelector('#messageInput'),
   activityState: document.querySelector('#activityState'),
   activityFeed: document.querySelector('#activityFeed'),
+  learningMap: document.querySelector('#learningMap'),
   staffList: document.querySelector('#staffList'),
   taskForm: document.querySelector('#taskForm'),
   taskTitle: document.querySelector('#taskTitle'),
@@ -270,6 +271,7 @@ function renderAll() {
   renderRoomHeader();
   renderMessages();
   renderActivity();
+  renderLearningMap();
   renderStaff();
   renderTasks();
   renderNotes();
@@ -373,6 +375,115 @@ function renderActivity() {
     `;
     els.activityFeed.appendChild(item);
   });
+}
+
+function getLearningArchitecture() {
+  return {
+    source: {
+      title: 'Architect',
+      detail: 'Direction, approval, correction, and operating center.',
+    },
+    lanes: [
+      {
+        key: 'atlas',
+        title: 'Atlas',
+        badge: 'Backbone lane',
+        points: [
+          'Continuity, memory, routing, and observability',
+          'Primary synthesis and operating judgment',
+          'Promotes useful patterns into structured notes, tasks, and system state',
+        ],
+      },
+      {
+        key: 'zeus',
+        title: 'Zeus',
+        badge: 'Parallel lane',
+        points: [
+          'Alternate angle, companion analysis, and secondary scan',
+          'Looks for missed patterns, contrast, pressure points, and exceptions',
+          'Avoids duplicating Atlas by focusing on reinforcement, challenge, and variation',
+        ],
+      },
+    ],
+    loop: [
+      'Input',
+      'Parse intent',
+      'Split lanes',
+      'Pattern recognition',
+      'Reconcile',
+      'Update memory and dashboard',
+      'Respond',
+    ],
+    methods: [
+      'Strong reasoning models for core minds',
+      'Pattern recognition over context, history, and operations',
+      'Algorithms and rules for routing, priority, and state changes',
+      'Update mechanisms through tasks, notes, memory, activity events, and sessions',
+    ],
+  };
+}
+
+function renderLearningMap() {
+  if (!els.learningMap) return;
+  els.learningMap.innerHTML = '';
+
+  if (state.siteContext?.key !== 'main-surface') {
+    els.learningMap.appendChild(emptyState('Learning architecture is focused on the main domain.'));
+    return;
+  }
+
+  const map = getLearningArchitecture();
+
+  const source = document.createElement('article');
+  source.className = 'learning-source';
+  source.innerHTML = `<strong>${map.source.title}</strong><p>${map.source.detail}</p>`;
+
+  const arrow = document.createElement('div');
+  arrow.className = 'learning-arrow';
+  arrow.textContent = '↓';
+
+  const grid = document.createElement('div');
+  grid.className = 'learning-grid';
+  map.lanes.forEach((lane) => {
+    const card = document.createElement('article');
+    card.className = `learning-node ${lane.key}`;
+    card.innerHTML = `
+      <div class="note-meta">
+        <strong>${lane.title}</strong>
+        <span class="pill info">${lane.badge}</span>
+      </div>
+      <ul>
+        ${lane.points.map((point) => `<li>${point}</li>`).join('')}
+      </ul>
+    `;
+    grid.appendChild(card);
+  });
+
+  const loop = document.createElement('article');
+  loop.className = 'learning-loop';
+  loop.innerHTML = `
+    <div class="note-meta">
+      <strong>Learning loop</strong>
+      <span>start → end</span>
+    </div>
+    <div class="flow-row">
+      ${map.loop.map((step) => `<span class="flow-step">${step}</span>`).join('<span class="flow-link">→</span>')}
+    </div>
+  `;
+
+  const methods = document.createElement('article');
+  methods.className = 'learning-methods';
+  methods.innerHTML = `
+    <div class="note-meta">
+      <strong>Methods and updates</strong>
+      <span>non-redundant</span>
+    </div>
+    <ul>
+      ${map.methods.map((entry) => `<li>${entry}</li>`).join('')}
+    </ul>
+  `;
+
+  els.learningMap.append(source, arrow, grid, loop, methods);
 }
 
 function renderStaff() {
