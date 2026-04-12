@@ -12,6 +12,7 @@ const state = {
   system: null,
   opsSnapshot: null,
   dataSources: [],
+  dashboardModel: null,
 };
 
 const els = {
@@ -35,7 +36,6 @@ const els = {
   messageInput: document.querySelector('#messageInput'),
   activityState: document.querySelector('#activityState'),
   activityFeed: document.querySelector('#activityFeed'),
-  learningMap: document.querySelector('#learningMap'),
   staffList: document.querySelector('#staffList'),
   taskForm: document.querySelector('#taskForm'),
   taskTitle: document.querySelector('#taskTitle'),
@@ -48,15 +48,29 @@ const els = {
   noteType: document.querySelector('#noteType'),
   noteBody: document.querySelector('#noteBody'),
   noteList: document.querySelector('#noteList'),
-  opsSnapshot: document.querySelector('#opsSnapshot'),
-  dataSourceList: document.querySelector('#dataSourceList'),
-  systemStatus: document.querySelector('#systemStatus'),
+  overviewTitle: document.querySelector('#overviewTitle'),
+  overviewDescription: document.querySelector('#overviewDescription'),
+  overviewFocus: document.querySelector('#overviewFocus'),
+  overviewDetail: document.querySelector('#overviewDetail'),
+  overviewMetrics: document.querySelector('#overviewMetrics'),
+  pillarGrid: document.querySelector('#pillarGrid'),
+  agentOperations: document.querySelector('#agentOperations'),
+  backendCards: document.querySelector('#backendCards'),
+  mlSummary: document.querySelector('#mlSummary'),
+  mlLayerGrid: document.querySelector('#mlLayerGrid'),
+  modelRegistry: document.querySelector('#modelRegistry'),
+  progressChartSections: document.querySelector('#progressChartSections'),
+  chartGuide: document.querySelector('#chartGuide'),
 };
 
 const socket = io();
+let dashboardRefreshQueued = false;
 
 wireEvents();
 checkSession();
+window.setInterval(() => {
+  if (state.user) refreshDashboardModel();
+}, 30000);
 
 async function checkSession() {
   const response = await fetch('/api/auth/me');
@@ -64,6 +78,7 @@ async function checkSession() {
     showLogin(true);
     return;
   }
+
   const data = await response.json();
   state.user = data.user;
   showLogin(false);
@@ -91,7 +106,31 @@ async function bootstrap(room = state.activeRoom) {
   state.system = data.system;
   state.opsSnapshot = data.opsSnapshot;
   state.dataSources = data.dataSources;
+  state.dashboardModel = data.dashboardModel;
   renderAll();
+}
+
+async function refreshDashboardModel() {
+  if (!state.user) return;
+
+  try {
+    const response = await fetch('/api/dashboard');
+    if (!response.ok) return;
+    const data = await response.json();
+    state.dashboardModel = data.dashboardModel;
+    renderDashboard();
+  } catch {
+    // Keep the current rendered state if the refresh fails.
+  }
+}
+
+function queueDashboardRefresh() {
+  if (dashboardRefreshQueued || !state.user) return;
+  dashboardRefreshQueued = true;
+  window.setTimeout(async () => {
+    dashboardRefreshQueued = false;
+    await refreshDashboardModel();
+  }, 120);
 }
 
 function wireEvents() {
@@ -194,6 +233,7 @@ function wireEvents() {
   socket.on('connect', () => {
     els.connectionStatus.textContent = 'Live';
     els.connectionStatus.classList.add('online');
+    queueDashboardRefresh();
   });
 
   socket.on('disconnect', () => {
@@ -211,6 +251,7 @@ function wireEvents() {
   socket.on('note:created', (note) => {
     state.notes.unshift(note);
     renderNotes();
+    queueDashboardRefresh();
   });
 
   socket.on('task:updated', (task) => {
@@ -218,28 +259,31 @@ function wireEvents() {
     if (index >= 0) state.tasks[index] = task;
     else state.tasks.unshift(task);
     renderTasks();
+    queueDashboardRefresh();
   });
 
   socket.on('activity:state', ({ activityState, activityEvents }) => {
     state.activityState = activityState;
     state.activityEvents = activityEvents;
     renderActivity();
+    queueDashboardRefresh();
   });
 
   socket.on('staff:updated', (staffModels) => {
     state.staffModels = staffModels;
     renderStaff();
     populateAssigneeOptions();
+    queueDashboardRefresh();
   });
 
   socket.on('system:status', (system) => {
     state.system = system;
-    renderSystem();
+    queueDashboardRefresh();
   });
 
   socket.on('system:hello', ({ system }) => {
     state.system = system;
-    renderSystem();
+    queueDashboardRefresh();
   });
 }
 
@@ -271,14 +315,20 @@ function renderAll() {
   renderRoomHeader();
   renderMessages();
   renderActivity();
-  renderLearningMap();
   renderStaff();
   renderTasks();
   renderNotes();
-  renderOpsSnapshot();
-  renderDataSources();
-  renderSystem();
   populateAssigneeOptions();
+  renderDashboard();
+}
+
+function renderDashboard() {
+  renderOverview();
+  renderPillars();
+  renderAgentOperations();
+  renderBackendCards();
+  renderMlSystem();
+  renderAnalytics();
 }
 
 function renderSession() {
@@ -297,7 +347,7 @@ function renderRooms() {
     const button = document.createElement('button');
     button.className = `room-button ${room.id === state.activeRoom ? 'active' : ''}`;
     button.type = 'button';
-    button.innerHTML = `<strong>${room.label}</strong><span>${room.description || ''}</span>`;
+    button.innerHTML = `<strong>${escapeHtml(room.label)}</strong><span>${escapeHtml(room.description || '')}</span>`;
     button.addEventListener('click', () => changeRoom(room.id));
     els.roomList.appendChild(button);
   });
@@ -345,11 +395,11 @@ function renderActivity() {
     stateCard.className = 'data-source-card';
     stateCard.innerHTML = `
       <div class="note-meta">
-        <strong>${state.activityState.actor}</strong>
-        <span class="pill ${state.activityState.status}">${state.activityState.status}</span>
+        <strong>${escapeHtml(state.activityState.actor)}</strong>
+        <span class="pill ${statusClass(state.activityState.status)}">${escapeHtml(state.activityState.status)}</span>
       </div>
-      <p><strong>${state.activityState.focus}</strong></p>
-      <p>${state.activityState.detail}</p>
+      <p><strong>${escapeHtml(state.activityState.focus)}</strong></p>
+      <p>${escapeHtml(state.activityState.detail)}</p>
       <div class="muted small">Updated ${formatTime(state.activityState.updatedAt)}</div>
     `;
     els.activityState.appendChild(stateCard);
@@ -367,123 +417,14 @@ function renderActivity() {
     item.className = 'note-card';
     item.innerHTML = `
       <div class="note-meta">
-        <strong>${event.title}</strong>
-        <span class="pill ${event.status}">${event.status}</span>
+        <strong>${escapeHtml(event.title)}</strong>
+        <span class="pill ${statusClass(event.status)}">${escapeHtml(event.status)}</span>
       </div>
-      <p>${event.detail}</p>
-      <div class="muted small">${event.actor} · ${event.kind} · ${formatTime(event.createdAt)}</div>
+      <p>${escapeHtml(event.detail)}</p>
+      <div class="muted small">${escapeHtml(event.actor)} · ${escapeHtml(event.kind)} · ${formatTime(event.createdAt)}</div>
     `;
     els.activityFeed.appendChild(item);
   });
-}
-
-function getLearningArchitecture() {
-  return {
-    source: {
-      title: 'Architect',
-      detail: 'Direction, approval, correction, and operating center.',
-    },
-    lanes: [
-      {
-        key: 'atlas',
-        title: 'Atlas',
-        badge: 'Backbone lane',
-        points: [
-          'Continuity, memory, routing, and observability',
-          'Primary synthesis and operating judgment',
-          'Promotes useful patterns into structured notes, tasks, and system state',
-        ],
-      },
-      {
-        key: 'zeus',
-        title: 'Zeus',
-        badge: 'Parallel lane',
-        points: [
-          'Alternate angle, companion analysis, and secondary scan',
-          'Looks for missed patterns, contrast, pressure points, and exceptions',
-          'Avoids duplicating Atlas by focusing on reinforcement, challenge, and variation',
-        ],
-      },
-    ],
-    loop: [
-      'Input',
-      'Parse intent',
-      'Split lanes',
-      'Pattern recognition',
-      'Reconcile',
-      'Update memory and dashboard',
-      'Respond',
-    ],
-    methods: [
-      'Strong reasoning models for core minds',
-      'Pattern recognition over context, history, and operations',
-      'Algorithms and rules for routing, priority, and state changes',
-      'Update mechanisms through tasks, notes, memory, activity events, and sessions',
-    ],
-  };
-}
-
-function renderLearningMap() {
-  if (!els.learningMap) return;
-  els.learningMap.innerHTML = '';
-
-  if (state.siteContext?.key !== 'main-surface') {
-    els.learningMap.appendChild(emptyState('Learning architecture is focused on the main domain.'));
-    return;
-  }
-
-  const map = getLearningArchitecture();
-
-  const source = document.createElement('article');
-  source.className = 'learning-source';
-  source.innerHTML = `<strong>${map.source.title}</strong><p>${map.source.detail}</p>`;
-
-  const arrow = document.createElement('div');
-  arrow.className = 'learning-arrow';
-  arrow.textContent = '↓';
-
-  const grid = document.createElement('div');
-  grid.className = 'learning-grid';
-  map.lanes.forEach((lane) => {
-    const card = document.createElement('article');
-    card.className = `learning-node ${lane.key}`;
-    card.innerHTML = `
-      <div class="note-meta">
-        <strong>${lane.title}</strong>
-        <span class="pill info">${lane.badge}</span>
-      </div>
-      <ul>
-        ${lane.points.map((point) => `<li>${point}</li>`).join('')}
-      </ul>
-    `;
-    grid.appendChild(card);
-  });
-
-  const loop = document.createElement('article');
-  loop.className = 'learning-loop';
-  loop.innerHTML = `
-    <div class="note-meta">
-      <strong>Learning loop</strong>
-      <span>start → end</span>
-    </div>
-    <div class="flow-row">
-      ${map.loop.map((step) => `<span class="flow-step">${step}</span>`).join('<span class="flow-link">→</span>')}
-    </div>
-  `;
-
-  const methods = document.createElement('article');
-  methods.className = 'learning-methods';
-  methods.innerHTML = `
-    <div class="note-meta">
-      <strong>Methods and updates</strong>
-      <span>non-redundant</span>
-    </div>
-    <ul>
-      ${map.methods.map((entry) => `<li>${entry}</li>`).join('')}
-    </ul>
-  `;
-
-  els.learningMap.append(source, arrow, grid, loop, methods);
 }
 
 function renderStaff() {
@@ -495,21 +436,21 @@ function renderStaff() {
     const controls = can('staff.manage')
       ? `
         <div class="button-row compact">
-          <button data-staff-action="active" data-staff-id="${staff.id}" class="mini-button">Wake</button>
-          <button data-staff-action="asleep" data-staff-id="${staff.id}" class="mini-button">Sleep</button>
-          <button data-staff-action="off" data-staff-id="${staff.id}" class="mini-button danger">Off</button>
+          <button data-staff-action="active" data-staff-id="${escapeHtml(staff.id)}" class="mini-button">Wake</button>
+          <button data-staff-action="asleep" data-staff-id="${escapeHtml(staff.id)}" class="mini-button">Sleep</button>
+          <button data-staff-action="off" data-staff-id="${escapeHtml(staff.id)}" class="mini-button danger">Off</button>
         </div>
       `
       : '';
 
     card.innerHTML = `
       <div class="staff-head">
-        <strong>${staff.name}</strong>
-        <span class="pill ${staff.status}">${staff.status}</span>
+        <strong>${escapeHtml(staff.name)}</strong>
+        <span class="pill ${statusClass(staff.status)}">${escapeHtml(staff.status)}</span>
       </div>
-      <p class="muted small">${staff.category} · ${staff.lane}</p>
-      <p>${staff.purpose}</p>
-      <p class="muted small">${staff.stateNotes || ''}</p>
+      <p class="muted small">${escapeHtml(staff.category)} · ${escapeHtml(staff.lane)}</p>
+      <p>${escapeHtml(staff.purpose)}</p>
+      <p class="muted small">${escapeHtml(staff.stateNotes || '')}</p>
       ${controls}
     `;
     els.staffList.appendChild(card);
@@ -562,11 +503,11 @@ function renderTasks() {
     item.className = 'task-card';
     item.innerHTML = `
       <div class="note-meta">
-        <strong>${task.title}</strong>
-        <span class="pill ${task.status}">${task.status}</span>
+        <strong>${escapeHtml(task.title)}</strong>
+        <span class="pill ${statusClass(task.status)}">${escapeHtml(task.status)}</span>
       </div>
-      <p>${task.description || 'No description.'}</p>
-      <div class="muted small">Priority: ${task.priority} · Assignee: ${assignee?.name || 'Unassigned'} · ${formatTime(task.updatedAt)}</div>
+      <p>${escapeHtml(task.description || 'No description.')}</p>
+      <div class="muted small">Priority: ${escapeHtml(task.priority)} · Assignee: ${escapeHtml(assignee?.name || 'Unassigned')} · ${formatTime(task.updatedAt)}</div>
       ${actions}
     `;
     els.taskList.appendChild(item);
@@ -607,111 +548,262 @@ function renderNotes() {
     item.className = 'note-card';
     item.innerHTML = `
       <div class="note-meta">
-        <strong>${note.title}</strong>
-        <span>${note.noteType}</span>
+        <strong>${escapeHtml(note.title)}</strong>
+        <span>${escapeHtml(note.noteType)}</span>
       </div>
-      <p>${note.body}</p>
-      <div class="muted small">${note.author} · ${formatTime(note.createdAt)}</div>
+      <p>${escapeHtml(note.body)}</p>
+      <div class="muted small">${escapeHtml(note.author)} · ${formatTime(note.createdAt)}</div>
     `;
     els.noteList.appendChild(item);
   });
 }
 
-function renderOpsSnapshot() {
-  els.opsSnapshot.innerHTML = '';
-  if (!state.opsSnapshot) {
-    els.opsSnapshot.appendChild(emptyState('No operations snapshot yet.'));
+function renderOverview() {
+  const overview = state.dashboardModel?.overview;
+  els.overviewTitle.textContent = overview?.title || 'Operations surface';
+  els.overviewDescription.textContent = overview?.description || 'Structured view of command, backend, data/ML, and delivery.';
+  els.overviewFocus.textContent = overview?.focus || 'No active focus.';
+  els.overviewDetail.textContent = overview?.detail || 'Waiting for operational detail.';
+  els.overviewMetrics.innerHTML = '';
+
+  if (!overview?.metrics?.length) {
+    els.overviewMetrics.appendChild(emptyState('No overview metrics available yet.'));
     return;
   }
 
-  const services = document.createElement('article');
-  services.className = 'data-source-card';
-  services.innerHTML = `
-    <div class="note-meta">
-      <strong>Services</strong>
-      <span>runtime</span>
-    </div>
-    <p>Dashboard: ${state.opsSnapshot.services.dashboard} · Caddy: ${state.opsSnapshot.services.caddy} · Gateway: ${state.opsSnapshot.services.gateway}</p>
-  `;
-  els.opsSnapshot.appendChild(services);
-
-  const agents = document.createElement('article');
-  agents.className = 'data-source-card';
-  agents.innerHTML = `
-    <div class="note-meta">
-      <strong>Agents</strong>
-      <span>${state.opsSnapshot.agents.length}</span>
-    </div>
-    <pre>${state.opsSnapshot.agents.map((agent) => `${agent.name} (${agent.id}) → ${agent.routes.map((route) => `${route.match.channel}:${route.match.accountId}`).join(', ') || 'no route'}`).join('\n')}</pre>
-  `;
-  els.opsSnapshot.appendChild(agents);
-
-  const repos = document.createElement('article');
-  repos.className = 'data-source-card';
-  repos.innerHTML = `
-    <div class="note-meta">
-      <strong>Repositories</strong>
-      <span>workspaces</span>
-    </div>
-    <pre>${state.opsSnapshot.repos.map((repo) => `${repo.label}\n${repo.branch} · ${repo.commit}\nDirty files: ${repo.dirtyCount}`).join('\n\n')}</pre>
-  `;
-  els.opsSnapshot.appendChild(repos);
-
-  const telegram = document.createElement('article');
-  telegram.className = 'data-source-card';
-  telegram.innerHTML = `
-    <div class="note-meta">
-      <strong>Telegram accounts</strong>
-      <span>default: ${state.opsSnapshot.telegram.defaultAccount}</span>
-    </div>
-    <pre>${state.opsSnapshot.telegram.accounts.map((account) => `${account.accountId} · ${account.name}`).join('\n')}</pre>
-  `;
-  els.opsSnapshot.appendChild(telegram);
-}
-
-function renderDataSources() {
-  els.dataSourceList.innerHTML = '';
-  if (!state.dataSources.length) {
-    els.dataSourceList.appendChild(emptyState('No data sources loaded.'));
-    return;
-  }
-
-  state.dataSources.forEach((source) => {
-    const item = document.createElement('article');
-    item.className = 'data-source-card';
-    item.innerHTML = `
-      <div class="note-meta">
-        <strong>${source.label}</strong>
-        <span>${source.path}</span>
-      </div>
-      <pre>${source.preview}</pre>
-      <div class="muted small">Updated ${formatTime(source.updatedAt)}</div>
-    `;
-    els.dataSourceList.appendChild(item);
+  overview.metrics.forEach((metric) => {
+    const card = document.createElement('article');
+    card.className = 'metric-card';
+    card.innerHTML = `<span>${escapeHtml(metric.label)}</span><strong>${escapeHtml(metric.value)}</strong>`;
+    els.overviewMetrics.appendChild(card);
   });
 }
 
-function renderSystem() {
-  if (!state.system) return;
-  els.systemStatus.innerHTML = '';
+function renderPillars() {
+  els.pillarGrid.innerHTML = '';
+  const pillars = state.dashboardModel?.pillars || [];
+  if (!pillars.length) {
+    els.pillarGrid.appendChild(emptyState('No pillars are defined yet.'));
+    return;
+  }
 
-  const cards = [
-    ['Host', state.system.hostname],
-    ['Platform', state.system.platform],
-    ['Node', state.system.node],
-    ['Port', String(state.system.appPort)],
-    ['Messages', String(state.system.metrics.messages)],
-    ['Notes', String(state.system.metrics.notes)],
-    ['Tasks', String(state.system.metrics.tasks)],
-    ['Models', String(state.system.metrics.staffModels)],
-    ['Git', `${state.system.git.branch} · ${state.system.git.commit}`],
-  ];
+  pillars.forEach((pillar) => {
+    const article = document.createElement('article');
+    article.className = 'pillar-card';
+    article.innerHTML = `
+      <div class="note-meta">
+        <div>
+          <div class="eyebrow tight-eyebrow">${escapeHtml(pillar.label)}</div>
+          <strong>${escapeHtml(pillar.title)}</strong>
+        </div>
+        <span class="pill ${statusClass(pillar.status)}">${escapeHtml(pillar.status)}</span>
+      </div>
+      <p class="muted small">Owner: ${escapeHtml(pillar.owner)}</p>
+      <p>${escapeHtml(pillar.summary)}</p>
+      <p class="muted">${escapeHtml(pillar.detail)}</p>
+      <div class="mini-metric-grid">
+        ${(pillar.metrics || [])
+          .map(
+            (metric) => `
+              <div class="mini-metric">
+                <span>${escapeHtml(metric.label)}</span>
+                <strong>${escapeHtml(metric.value)}</strong>
+              </div>
+            `
+          )
+          .join('')}
+      </div>
+    `;
+    els.pillarGrid.appendChild(article);
+  });
+}
 
-  cards.forEach(([label, value]) => {
-    const item = document.createElement('div');
-    item.className = 'system-card';
-    item.innerHTML = `<span>${label}</span><strong>${value}</strong>`;
-    els.systemStatus.appendChild(item);
+function renderAgentOperations() {
+  els.agentOperations.innerHTML = '';
+  const agents = state.dashboardModel?.agentOperations || [];
+  if (!agents.length) {
+    els.agentOperations.appendChild(emptyState('No agent operations are available yet.'));
+    return;
+  }
+
+  agents.forEach((agent) => {
+    const article = document.createElement('article');
+    article.className = 'agent-card';
+    article.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(agent.name)}</strong>
+        <span class="pill ${statusClass(agent.status)}">${escapeHtml(agent.status)}</span>
+      </div>
+      <p class="muted small">${escapeHtml(agent.category)} · ${escapeHtml(agent.lane)}</p>
+      <p>${escapeHtml(agent.purpose)}</p>
+      <div class="mini-metric-grid two-up">
+        <div class="mini-metric"><span>Model</span><strong>${escapeHtml(agent.model || 'unknown')}</strong></div>
+        <div class="mini-metric"><span>Route</span><strong>${escapeHtml(agent.routeSummary)}</strong></div>
+        <div class="mini-metric"><span>Runtime</span><strong>${escapeHtml(agent.runtimeStatus || agent.status)}</strong></div>
+        <div class="mini-metric"><span>Staff state</span><strong>${escapeHtml(agent.staffStatus || 'unknown')}</strong></div>
+        <div class="mini-metric"><span>Workspace</span><strong>${escapeHtml(agent.workspace)}</strong></div>
+        <div class="mini-metric"><span>Repo</span><strong>${escapeHtml(agent.branch)} · dirty ${escapeHtml(String(agent.dirtyCount))}</strong></div>
+      </div>
+      <div class="heartbeat-strip">
+        <span class="pill ${statusClass(agent.runtimeStatus || agent.status)}">heartbeat ${escapeHtml(agent.runtimeStatus || agent.status)}</span>
+        <span class="muted small">${escapeHtml(agent.heartbeat?.detail || 'No live heartbeat yet.')}</span>
+      </div>
+      <p class="muted small">Last role: ${escapeHtml(agent.heartbeat?.lastRole || 'unknown')} · Session: ${escapeHtml(agent.heartbeat?.sessionPath || 'none')}</p>
+      <p class="muted small">${escapeHtml(agent.heartbeat?.preview || '')}</p>
+      <p class="muted small">${escapeHtml(agent.stateNotes || '')}</p>
+      <div class="memory-preview">
+        <div class="memory-head">
+          <strong>Latest memory</strong>
+          <span>${escapeHtml(agent.latestMemory?.path || 'No memory file')}</span>
+        </div>
+        <p>${escapeHtml(agent.latestMemory?.preview || 'No preview available yet.')}</p>
+      </div>
+    `;
+    els.agentOperations.appendChild(article);
+  });
+}
+
+function renderBackendCards() {
+  els.backendCards.innerHTML = '';
+  const cards = state.dashboardModel?.backend?.cards || [];
+  if (!cards.length) {
+    els.backendCards.appendChild(emptyState('No backend cards available yet.'));
+    return;
+  }
+
+  cards.forEach((card) => {
+    const article = document.createElement('article');
+    article.className = 'backend-card';
+    article.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(card.title)}</strong>
+        <span class="pill ${statusClass(card.status)}">${escapeHtml(card.status)}</span>
+      </div>
+      <ul class="line-list">
+        ${(card.lines || []).map((line) => `<li>${escapeHtml(line)}</li>`).join('')}
+      </ul>
+    `;
+    els.backendCards.appendChild(article);
+  });
+}
+
+function renderMlSystem() {
+  const mlSystem = state.dashboardModel?.mlSystem;
+  els.mlSummary.textContent = mlSystem?.summary || 'No machine learning system summary available yet.';
+  els.mlLayerGrid.innerHTML = '';
+  els.modelRegistry.innerHTML = '';
+
+  if (!mlSystem?.layers?.length) {
+    els.mlLayerGrid.appendChild(emptyState('No ML layers available yet.'));
+  } else {
+    mlSystem.layers.forEach((layer) => {
+      const article = document.createElement('article');
+      article.className = 'ml-layer-card';
+      article.innerHTML = `
+        <div class="note-meta">
+          <strong>${escapeHtml(layer.title)}</strong>
+          <span class="pill ${statusClass(layer.status)}">${escapeHtml(layer.status)}</span>
+        </div>
+        <p class="muted small">${escapeHtml(layer.value)}</p>
+        <p>${escapeHtml(layer.detail)}</p>
+      `;
+      els.mlLayerGrid.appendChild(article);
+    });
+  }
+
+  if (!mlSystem?.models?.length) {
+    els.modelRegistry.appendChild(emptyState('No model registry entries available yet.'));
+    return;
+  }
+
+  mlSystem.models.forEach((model) => {
+    const article = document.createElement('article');
+    article.className = 'model-card';
+    article.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(model.name)}</strong>
+        <span class="pill ${statusClass(model.status)}">${escapeHtml(model.status)}</span>
+      </div>
+      <p class="muted small">${escapeHtml(model.lane)}</p>
+      <p>${escapeHtml(model.purpose)}</p>
+      <div class="mini-metric-grid two-up">
+        <div class="mini-metric"><span>Model</span><strong>${escapeHtml(model.model)}</strong></div>
+        <div class="mini-metric"><span>Route</span><strong>${escapeHtml(model.routeSummary)}</strong></div>
+        <div class="mini-metric"><span>Runtime</span><strong>${escapeHtml(model.runtimeStatus || model.status)}</strong></div>
+        <div class="mini-metric"><span>Staff</span><strong>${escapeHtml(model.staffStatus || 'unknown')}</strong></div>
+        <div class="mini-metric"><span>Workspace</span><strong>${escapeHtml(model.workspace)}</strong></div>
+        <div class="mini-metric"><span>Repo</span><strong>${escapeHtml(model.branch)} · dirty ${escapeHtml(String(model.dirtyCount))}</strong></div>
+      </div>
+      <div class="heartbeat-strip">
+        <span class="pill ${statusClass(model.runtimeStatus || model.status)}">heartbeat ${escapeHtml(model.runtimeStatus || model.status)}</span>
+        <span class="muted small">${escapeHtml(model.heartbeat?.detail || 'No live heartbeat yet.')}</span>
+      </div>
+      <p class="muted small">Last role: ${escapeHtml(model.heartbeat?.lastRole || 'unknown')} · Session: ${escapeHtml(model.heartbeat?.sessionPath || 'none')}</p>
+      <p class="muted small">Memory: ${escapeHtml(model.memoryPath)}</p>
+      <p class="muted small">${escapeHtml(model.notes || '')}</p>
+    `;
+    els.modelRegistry.appendChild(article);
+  });
+}
+
+function renderAnalytics() {
+  const analytics = state.dashboardModel?.analytics;
+  els.progressChartSections.innerHTML = '';
+  els.chartGuide.innerHTML = '';
+
+  if (!analytics?.sections?.length) {
+    els.progressChartSections.appendChild(emptyState('No visualization sections available yet.'));
+  } else {
+    analytics.sections.forEach((section) => {
+      const total = Math.max(section.items.reduce((sum, item) => sum + Number(item.value || 0), 0), 1);
+      const article = document.createElement('article');
+      article.className = 'progress-card';
+      article.innerHTML = `
+        <div class="note-meta">
+          <strong>${escapeHtml(section.title)}</strong>
+          <span>${escapeHtml(section.chart)}</span>
+        </div>
+        <p class="muted small">${escapeHtml(section.reason)}</p>
+        <div class="progress-stack">
+          ${section.items
+            .map((item) => {
+              const width = Math.max(8, Math.round((Number(item.value || 0) / total) * 100));
+              return `
+                <div class="progress-row">
+                  <div class="progress-label">
+                    <span>${escapeHtml(item.label)}</span>
+                    <strong>${escapeHtml(String(item.value))}</strong>
+                  </div>
+                  <div class="progress-track">
+                    <span class="progress-bar ${statusClass(item.status || 'info')}" style="width:${width}%"></span>
+                  </div>
+                </div>
+              `;
+            })
+            .join('')}
+        </div>
+      `;
+      els.progressChartSections.appendChild(article);
+    });
+  }
+
+  if (!analytics?.guide?.length) {
+    els.chartGuide.appendChild(emptyState('No chart guide entries available yet.'));
+    return;
+  }
+
+  analytics.guide.forEach((entry) => {
+    const article = document.createElement('article');
+    article.className = 'chart-guide-card';
+    article.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(entry.sector)}</strong>
+        <span>${escapeHtml(entry.chart)}</span>
+      </div>
+      <p class="muted small">${escapeHtml(entry.mechanic)}</p>
+      <p>${escapeHtml(entry.why)}</p>
+    `;
+    els.chartGuide.appendChild(article);
   });
 }
 
@@ -724,6 +816,20 @@ function emptyState(message) {
   empty.className = 'empty-state';
   empty.textContent = message;
   return empty;
+}
+
+function statusClass(status) {
+  const value = String(status || 'unknown').toLowerCase().replace(/\s+/g, '-');
+  return value;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 function formatTime(value) {

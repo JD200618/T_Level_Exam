@@ -21,6 +21,16 @@ const PUBLIC_DIR = path.join(APP_ROOT, 'public');
 const DATA_DIR = path.join(APP_ROOT, 'data');
 const DB_PATH = path.join(DATA_DIR, 'pillar.db');
 const CREDENTIALS_PATH = path.join(DATA_DIR, 'bootstrap-credentials.json');
+const AGENT_RUNTIME_MAP = {
+  atlas: {
+    configId: 'main',
+    sessionsDir: path.join(OPENCLAW_HOME, 'agents', 'main', 'sessions'),
+  },
+  zeus: {
+    configId: 'zeus',
+    sessionsDir: path.join(OPENCLAW_HOME, 'agents', 'zeus', 'sessions'),
+  },
+};
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -560,7 +570,7 @@ function getOpsSnapshot() {
 
   return {
     services: {
-      dashboard: serviceState('pillar-dashboard'),
+      dashboard: portListening(PORT) ? 'online' : serviceState('pillar-dashboard'),
       caddy: serviceState('caddy'),
       gateway: portListening(18789) ? 'online' : 'offline',
     },
@@ -598,8 +608,8 @@ function getSystemStatus() {
   };
 }
 
-function latestMemoryPath() {
-  const memoryDir = path.join(WORKSPACE_ROOT, 'memory');
+function latestMemoryPath(root = WORKSPACE_ROOT) {
+  const memoryDir = path.join(root, 'memory');
   if (!fs.existsSync(memoryDir)) return null;
 
   const files = fs.readdirSync(memoryDir)
@@ -620,11 +630,97 @@ function filePreview(filePath, maxChars = 500) {
   };
 }
 
+function latestSessionFile(agentId) {
+  const runtime = AGENT_RUNTIME_MAP[agentId];
+  if (!runtime?.sessionsDir || !fs.existsSync(runtime.sessionsDir)) return null;
+
+  const files = fs.readdirSync(runtime.sessionsDir)
+    .filter((file) => file.endsWith('.jsonl') && !file.includes('.checkpoint.'))
+    .map((file) => path.join(runtime.sessionsDir, file))
+    .sort((left, right) => fs.statSync(right).mtimeMs - fs.statSync(left).mtimeMs);
+
+  return files[0] || null;
+}
+
+function readRecentLines(filePath, maxBytes = 65536) {
+  if (!filePath || !fs.existsSync(filePath)) return [];
+  const stat = fs.statSync(filePath);
+  const size = Math.min(stat.size, maxBytes);
+  const buffer = Buffer.alloc(size);
+  const fd = fs.openSync(filePath, 'r');
+  try {
+    fs.readSync(fd, buffer, 0, size, stat.size - size);
+  } finally {
+    fs.closeSync(fd);
+  }
+  return buffer.toString('utf8').split(/\r?\n/).filter(Boolean);
+}
+
+function extractMessagePreview(entry) {
+  if (!entry?.message?.content) return '';
+  const parts = Array.isArray(entry.message.content)
+    ? entry.message.content
+        .map((item) => {
+          if (typeof item?.text === 'string') return item.text;
+          if (typeof item?.thinking === 'string') return item.thinking;
+          return item?.type || '';
+        })
+        .filter(Boolean)
+    : [];
+  return clampText(parts.join(' ').replace(/\s+/g, ' '), 220);
+}
+
+function getAgentHeartbeat(agentId) {
+  const sessionPath = latestSessionFile(agentId);
+  if (!sessionPath) {
+    return {
+      status: 'off',
+      sessionPath: null,
+      sessionId: null,
+      updatedAt: null,
+      lastMessageAt: null,
+      lastRole: null,
+      preview: 'No session transcript found yet.',
+      detail: 'No runtime session has been detected for this agent yet.',
+    };
+  }
+
+  const stat = fs.statSync(sessionPath);
+  const recentLines = readRecentLines(sessionPath, 65536);
+  let lastMessage = null;
+
+  for (let index = recentLines.length - 1; index >= 0; index -= 1) {
+    try {
+      const parsed = JSON.parse(recentLines[index]);
+      if (parsed.type === 'message' && parsed.message?.role) {
+        lastMessage = parsed;
+        break;
+      }
+    } catch {
+      // Skip malformed tail lines.
+    }
+  }
+
+  const ageMinutes = (now() - stat.mtimeMs) / 1000 / 60;
+  const status = ageMinutes <= 15 ? 'active' : ageMinutes <= 120 ? 'ready' : 'limited';
+
+  return {
+    status,
+    sessionPath: path.relative(OPENCLAW_HOME, sessionPath),
+    sessionId: path.basename(sessionPath, '.jsonl'),
+    updatedAt: stat.mtimeMs,
+    lastMessageAt: lastMessage?.timestamp ? new Date(lastMessage.timestamp).getTime() : stat.mtimeMs,
+    lastRole: lastMessage?.message?.role || null,
+    preview: extractMessagePreview(lastMessage) || 'Recent session activity detected.',
+    detail: `Latest runtime transcript update was ${Math.max(0, Math.round(ageMinutes))} minute(s) ago.`,
+  };
+}
+
 function getDataSources() {
   const candidates = [
     { key: 'soul', label: 'SOUL.md', path: path.join(WORKSPACE_ROOT, 'SOUL.md') },
     { key: 'user', label: 'USER.md', path: path.join(WORKSPACE_ROOT, 'USER.md') },
-    { key: 'memory', label: 'Latest memory log', path: latestMemoryPath() },
+    { key: 'memory', label: 'Latest memory log', path: latestMemoryPath(WORKSPACE_ROOT) },
     { key: 'org', label: 'AI operating model', path: path.join(WORKSPACE_ROOT, 'org', 'ai-operating-model.md') },
     { key: 'study', label: 'Ancient texts study plan', path: path.join(WORKSPACE_ROOT, 'studies', 'ancient-texts-plan.md') },
   ];
@@ -652,6 +748,348 @@ function getStaffDirectory() {
     updatedAt: stateMap.get(staff.id)?.updatedAt || null,
     updatedBy: stateMap.get(staff.id)?.updatedBy || 'system',
   }));
+}
+
+function countTaskStates(tasks) {
+  return tasks.reduce(
+    (summary, task) => {
+      if (summary[task.status] !== undefined) summary[task.status] += 1;
+      return summary;
+    },
+    { backlog: 0, active: 0, blocked: 0, done: 0 }
+  );
+}
+
+function summarizeServiceHealth(services = {}) {
+  const values = Object.values(services).filter(Boolean);
+  if (!values.length) return 'unknown';
+  if (values.every((status) => status === 'active' || status === 'online')) return 'healthy';
+  if (values.some((status) => ['offline', 'inactive', 'failed', 'unknown'].includes(status))) return 'attention';
+  return 'active';
+}
+
+function summarizeStatus(values = []) {
+  const filtered = values.filter(Boolean);
+  if (!filtered.length) return 'unknown';
+  if (filtered.some((status) => ['offline', 'off', 'blocked', 'attention'].includes(status))) return 'attention';
+  if (filtered.every((status) => ['healthy', 'ready', 'online', 'active', 'done'].includes(status))) return 'healthy';
+  if (filtered.some((status) => ['unknown', 'limited', 'partial'].includes(status))) return 'limited';
+  return 'active';
+}
+
+function routeSummary(routes = []) {
+  const summaries = routes
+    .map((route) => {
+      const channel = route.match?.channel || '';
+      const accountId = route.match?.accountId || '';
+      return [channel, accountId].filter(Boolean).join(':');
+    })
+    .filter(Boolean);
+
+  return summaries.length ? summaries.join(', ') : 'No route configured';
+}
+
+function getAgentOperations(staffDirectory, opsSnapshot) {
+  const repoByPath = new Map(opsSnapshot.repos.map((repo) => [path.resolve(repo.path), repo]));
+
+  return ['atlas', 'zeus'].map((agentId) => {
+    const staff = staffDirectory.find((entry) => entry.id === agentId);
+    const configId = AGENT_RUNTIME_MAP[agentId]?.configId || agentId;
+    const configAgent = opsSnapshot.agents.find((entry) => entry.id === configId) || opsSnapshot.agents.find((entry) => entry.id === agentId);
+    const workspaceRoot = agentId === 'zeus' ? path.join(WORKSPACE_ROOT, 'zeus') : WORKSPACE_ROOT;
+    const repo = repoByPath.get(path.resolve(workspaceRoot)) || repoSummary(workspaceRoot, `${agentId} workspace`);
+    const latestMemory = filePreview(latestMemoryPath(workspaceRoot), 220);
+    const heartbeat = getAgentHeartbeat(agentId);
+    const status = heartbeat?.status || staff?.status || 'unknown';
+
+    return {
+      id: agentId,
+      name: staff?.name || configAgent?.name || agentId,
+      lane: staff?.lane || 'Core',
+      category: staff?.category || 'Core',
+      purpose: staff?.purpose || '',
+      status,
+      runtimeStatus: heartbeat?.status || 'off',
+      staffStatus: staff?.status || 'unknown',
+      stateNotes: staff?.stateNotes || '',
+      clockedIn: Boolean(staff?.clockedIn),
+      updatedAt: heartbeat?.updatedAt || staff?.updatedAt || latestMemory?.updatedAt || null,
+      model: configAgent?.model || 'unknown',
+      workspace: path.relative(WORKSPACE_ROOT, workspaceRoot) || '.',
+      branch: repo.branch,
+      commit: repo.commit,
+      dirtyCount: repo.dirtyCount,
+      routeSummary: routeSummary(configAgent?.routes || []),
+      latestMemory,
+      heartbeat,
+    };
+  });
+}
+
+function getDashboardModel(hostname = '') {
+  const siteContext = getSiteContext(hostname);
+  const system = getSystemStatus();
+  const opsSnapshot = getOpsSnapshot();
+  const staffDirectory = getStaffDirectory();
+  const tasks = getTasks.all(200);
+  const notes = getRecentNotes.all(50);
+  const activityState = getOperationState.get();
+  const dataSources = getDataSources();
+  const agentOperations = getAgentOperations(staffDirectory, opsSnapshot);
+  const taskCounts = countTaskStates(tasks);
+  const serviceHealth = summarizeServiceHealth(opsSnapshot.services);
+  const activeAgents = agentOperations.filter((agent) => ['active', 'ready'].includes(agent.runtimeStatus)).length;
+  const dirtyRepos = opsSnapshot.repos.reduce((count, repo) => count + Number(repo.dirtyCount || 0), 0);
+  const recentActivity = getActivityEvents.all(100);
+  const staffCounts = staffDirectory.reduce(
+    (acc, staff) => {
+      acc[staff.status] = (acc[staff.status] || 0) + 1;
+      return acc;
+    },
+    { active: 0, asleep: 0, off: 0 }
+  );
+  const activityKindCounts = recentActivity.reduce((acc, event) => {
+    acc[event.kind] = (acc[event.kind] || 0) + 1;
+    return acc;
+  }, {});
+
+  const pillars = [
+    {
+      id: 'command',
+      label: 'Pillar I',
+      title: 'Command and Continuity',
+      owner: 'Architect · Atlas · Zeus',
+      status: summarizeStatus([activityState?.status || 'active', activeAgents ? 'active' : 'limited']),
+      summary: activityState?.focus || 'No active operating focus set.',
+      detail: activityState?.detail || 'The command layer is online and ready for structured direction.',
+      metrics: [
+        { label: 'Active agents', value: String(activeAgents) },
+        { label: 'Rooms', value: String(system.metrics.rooms) },
+        { label: 'Live focus', value: activityState?.actor || 'Atlas' },
+      ],
+    },
+    {
+      id: 'backend',
+      label: 'Pillar II',
+      title: 'Backend Operations',
+      owner: 'Runtime surface',
+      status: serviceHealth,
+      summary: 'Service health, repository state, routing, and host readiness.',
+      detail: `Dashboard ${opsSnapshot.services.dashboard} · Caddy ${opsSnapshot.services.caddy} · Gateway ${opsSnapshot.services.gateway}`,
+      metrics: [
+        { label: 'Repos with drift', value: String(dirtyRepos) },
+        { label: 'App port', value: String(system.appPort) },
+        { label: 'Host', value: system.hostname },
+      ],
+    },
+    {
+      id: 'data-ml',
+      label: 'Pillar III',
+      title: 'Data and Machine Learning System',
+      owner: 'Atlas + Zeus',
+      status: summarizeStatus([dataSources.length ? 'ready' : 'limited', agentOperations.length ? 'active' : 'limited']),
+      summary: 'Context sources, model endpoints, and orchestration layers for both agents.',
+      detail: `${dataSources.length} source(s) loaded into the operational context and ${agentOperations.length} tracked agent endpoint(s).`,
+      metrics: [
+        { label: 'Data sources', value: String(dataSources.length) },
+        { label: 'Model endpoints', value: String(agentOperations.length) },
+        { label: 'Telegram surfaces', value: String(opsSnapshot.telegram.accounts.length) },
+      ],
+    },
+    {
+      id: 'delivery',
+      label: 'Pillar IV',
+      title: 'Execution and Delivery',
+      owner: 'Build lane',
+      status: taskCounts.blocked ? 'attention' : taskCounts.active ? 'active' : 'limited',
+      summary: 'Tasks, notes, and room execution without duplicate tracking surfaces.',
+      detail: `${taskCounts.active} active, ${taskCounts.blocked} blocked, ${taskCounts.done} done, ${taskCounts.backlog} backlog.`,
+      metrics: [
+        { label: 'Tasks', value: String(tasks.length) },
+        { label: 'Notes', value: String(notes.length) },
+        { label: 'Messages', value: String(system.metrics.messages) },
+      ],
+    },
+  ];
+
+  return {
+    overview: {
+      title: siteContext.title,
+      description: siteContext.description,
+      focus: activityState?.focus || 'Dashboard ready for structured operations.',
+      detail: activityState?.detail || 'This surface tracks command, backend, data/ML, and delivery together.',
+      metrics: [
+        { label: 'Live agents', value: String(activeAgents) },
+        { label: 'Heartbeat feeds', value: String(agentOperations.filter((agent) => agent.heartbeat?.sessionPath).length) },
+        { label: 'Active tasks', value: String(taskCounts.active) },
+        { label: 'Blocked tasks', value: String(taskCounts.blocked) },
+      ],
+    },
+    pillars,
+    agentOperations,
+    backend: {
+      cards: [
+        {
+          title: 'Runtime services',
+          status: serviceHealth,
+          lines: [
+            `Dashboard: ${opsSnapshot.services.dashboard}`,
+            `Caddy: ${opsSnapshot.services.caddy}`,
+            `Gateway: ${opsSnapshot.services.gateway}`,
+          ],
+        },
+        {
+          title: 'Agent routes',
+          status: agentOperations.length ? 'active' : 'limited',
+          lines: agentOperations.map((agent) => `${agent.name}: ${agent.routeSummary}`),
+        },
+        {
+          title: 'Live heartbeats',
+          status: agentOperations.some((agent) => ['active', 'ready'].includes(agent.runtimeStatus)) ? 'active' : 'limited',
+          lines: agentOperations.map((agent) => `${agent.name}: ${agent.runtimeStatus} · ${agent.heartbeat?.detail || 'No heartbeat detected'}`),
+        },
+        {
+          title: 'Repositories',
+          status: dirtyRepos ? 'attention' : 'healthy',
+          lines: opsSnapshot.repos.map((repo) => `${repo.label}: ${repo.branch} · dirty ${repo.dirtyCount}`),
+        },
+        {
+          title: 'System capacity',
+          status: 'active',
+          lines: [
+            `Node: ${system.node}`,
+            `Memory: ${system.freeMemoryGb} GB free / ${system.totalMemoryGb} GB`,
+            `Uptime: ${system.uptimeSeconds}s`,
+          ],
+        },
+      ],
+    },
+    mlSystem: {
+      summary: 'Model, memory, routing, and delivery layers for Atlas and Zeus with backend awareness.',
+      layers: [
+        {
+          id: 'context',
+          title: 'Context and memory',
+          status: dataSources.length ? 'ready' : 'limited',
+          value: `${dataSources.length} live source(s)`,
+          detail: 'SOUL, USER, memory logs, org files, and studies anchor the system context.',
+        },
+        {
+          id: 'models',
+          title: 'Agent model endpoints',
+          status: agentOperations.every((agent) => agent.model && agent.model !== 'unknown') ? 'ready' : 'limited',
+          value: `${agentOperations.length} tracked endpoint(s)`,
+          detail: agentOperations.map((agent) => `${agent.name}: ${agent.model} · runtime ${agent.runtimeStatus}`).join(' · ') || 'No agent models discovered.',
+        },
+        {
+          id: 'orchestration',
+          title: 'Orchestration and runtime',
+          status: serviceHealth,
+          value: `Port ${system.appPort} · Host ${system.hostname}`,
+          detail: `Dashboard ${opsSnapshot.services.dashboard}, Caddy ${opsSnapshot.services.caddy}, Gateway ${opsSnapshot.services.gateway}.`,
+        },
+        {
+          id: 'delivery',
+          title: 'Delivery surfaces',
+          status: opsSnapshot.telegram.accounts.length ? 'active' : 'limited',
+          value: `${opsSnapshot.telegram.accounts.length} Telegram account(s)`,
+          detail: 'Messages, rooms, notes, and tasks form the human-facing surface for operations.',
+        },
+      ],
+      models: agentOperations.map((agent) => ({
+        id: agent.id,
+        name: agent.name,
+        lane: agent.lane,
+        status: agent.status,
+        runtimeStatus: agent.runtimeStatus,
+        staffStatus: agent.staffStatus,
+        model: agent.model,
+        purpose: agent.purpose,
+        routeSummary: agent.routeSummary,
+        workspace: agent.workspace,
+        branch: agent.branch,
+        dirtyCount: agent.dirtyCount,
+        memoryPath: agent.latestMemory?.path || 'No recent memory file',
+        notes: agent.stateNotes,
+        heartbeat: agent.heartbeat,
+      })),
+    },
+    analytics: {
+      sections: [
+        {
+          id: 'execution',
+          title: 'Execution flow',
+          chart: 'Stacked bar / burnup',
+          reason: 'Best for seeing delivery progress, backlog pressure, and blocked work at a glance.',
+          items: [
+            { label: 'Backlog', value: taskCounts.backlog, status: 'backlog' },
+            { label: 'Active', value: taskCounts.active, status: 'active' },
+            { label: 'Blocked', value: taskCounts.blocked, status: 'blocked' },
+            { label: 'Done', value: taskCounts.done, status: 'done' },
+          ],
+        },
+        {
+          id: 'agents',
+          title: 'Agent readiness',
+          chart: 'State bar / donut',
+          reason: 'Best for seeing whether Atlas, Zeus, and staff lanes are awake, sleeping, or off.',
+          items: [
+            { label: 'Active', value: staffCounts.active, status: 'active' },
+            { label: 'Asleep', value: staffCounts.asleep, status: 'asleep' },
+            { label: 'Off', value: staffCounts.off, status: 'off' },
+          ],
+        },
+        {
+          id: 'activity',
+          title: 'Activity mix',
+          chart: 'Timeline / event bars',
+          reason: 'Best for seeing where motion is happening across architecture, backend, routing, and system work.',
+          items: Object.entries(activityKindCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([label, value]) => ({ label, value, status: 'info' })),
+        },
+      ],
+      guide: [
+        {
+          sector: 'Infrastructure',
+          chart: 'Status tiles + uptime line',
+          mechanic: 'Services, ports, memory, gateway, reverse proxy',
+          why: 'Use fixed health tiles for present state and a line chart when we start tracking uptime over time.',
+        },
+        {
+          sector: 'Tasks and delivery',
+          chart: 'Burnup + stacked status bar',
+          mechanic: 'Scope, execution, blockages, completion',
+          why: 'Burnup shows output growth while the stacked bar shows where work is stuck right now.',
+        },
+        {
+          sector: 'Agent coordination',
+          chart: 'Timeline + state bar',
+          mechanic: 'Wake, sleep, active focus, handoffs',
+          why: 'A timeline shows transitions while a state bar shows the current distribution across minds.',
+        },
+        {
+          sector: 'Knowledge and memory',
+          chart: 'Cumulative line + milestone cards',
+          mechanic: 'Study notes, memory promotion, ontology growth',
+          why: 'Knowledge compounds over time, so trend lines and milestone cards fit better than pie charts.',
+        },
+        {
+          sector: 'Pattern recognition',
+          chart: 'Event bars + comparison matrix',
+          mechanic: 'Signals, repeated structures, anomalies, contrasts',
+          why: 'Bars reveal repeated frequency and a matrix helps compare Atlas and Zeus without redundancy.',
+        },
+        {
+          sector: 'Model policy',
+          chart: 'Registry table + decision matrix',
+          mechanic: 'Which model fits which lane and why',
+          why: 'This is a reasoning problem, not a decorative chart problem, so a matrix is clearer than a pie.',
+        },
+      ],
+    },
+  };
 }
 
 function getSiteContext(hostname = '') {
@@ -698,6 +1136,7 @@ function bootstrapPayload(user, activeRoom = '', hostname = '') {
     system: getSystemStatus(),
     opsSnapshot: getOpsSnapshot(),
     dataSources: getDataSources(),
+    dashboardModel: getDashboardModel(hostname),
   };
 }
 
@@ -784,6 +1223,10 @@ app.get('/api/auth/me', authRequired, (req, res) => {
 app.get('/api/bootstrap', authRequired, (req, res) => {
   const room = clampText(req.query.room || '', 64);
   res.json(bootstrapPayload(req.user, room, req.headers.host || ''));
+});
+
+app.get('/api/dashboard', authRequired, (req, res) => {
+  res.json({ dashboardModel: getDashboardModel(req.headers.host || '') });
 });
 
 app.get('/api/messages', authRequired, (req, res) => {

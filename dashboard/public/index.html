@@ -46,25 +46,98 @@
         </section>
       </aside>
 
-      <main class="main card">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow" id="roomEyebrow">Room</p>
-            <h2 id="roomTitle">General</h2>
-            <p class="muted" id="roomDescription"></p>
+      <main class="main stack gap-md">
+        <section class="card hero-card">
+          <div class="section-head hero-head">
+            <div>
+              <p class="eyebrow">Main page dashboard</p>
+              <h2 id="overviewTitle">Operations surface</h2>
+              <p id="overviewDescription" class="muted">Structured view of command, backend, data/ML, and delivery.</p>
+            </div>
+            <div class="hero-status-wrap">
+              <div class="status-chip" id="connectionStatus">Connecting...</div>
+            </div>
           </div>
-          <div class="status-chip" id="connectionStatus">Connecting...</div>
-        </div>
-
-        <div id="messageList" class="message-list"></div>
-
-        <form id="messageForm" class="composer">
-          <textarea id="messageInput" class="input textarea" placeholder="Send an update, direction, or question..." required></textarea>
-          <div class="composer-actions">
-            <div class="muted small">Messages sync live across the dashboard.</div>
-            <button class="button" type="submit">Send</button>
+          <div class="hero-focus-card">
+            <p class="eyebrow">Current focus</p>
+            <h3 id="overviewFocus">Loading focus...</h3>
+            <p id="overviewDetail" class="muted">Loading detail...</p>
           </div>
-        </form>
+          <div id="overviewMetrics" class="hero-metrics"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>Operational pillars</h2>
+            <p class="muted small">Separated by role so backend, models, and execution do not collapse into one noisy layer.</p>
+          </div>
+          <div id="pillarGrid" class="pillar-grid"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>Atlas and Zeus operations</h2>
+            <p class="muted small">Direct view of both operating lanes, routes, workspaces, and memory surfaces.</p>
+          </div>
+          <div id="agentOperations" class="agent-grid"></div>
+        </section>
+
+        <section class="dashboard-dual-grid">
+          <article class="card">
+            <div class="section-head">
+              <h2>Backend surface</h2>
+            </div>
+            <div id="backendCards" class="backend-grid"></div>
+          </article>
+
+          <article class="card">
+            <div class="section-head">
+              <div>
+                <h2>Data and machine learning system</h2>
+                <p id="mlSummary" class="muted"></p>
+              </div>
+            </div>
+            <div id="mlLayerGrid" class="ml-layer-grid"></div>
+            <div class="section-head compact-top">
+              <h2>Model registry</h2>
+            </div>
+            <div id="modelRegistry" class="agent-grid compact-grid"></div>
+          </article>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <div>
+              <h2>Visualization and progress</h2>
+              <p class="muted small">Chart types chosen by sector, with live bars for current system state and progress.</p>
+            </div>
+          </div>
+          <div id="progressChartSections" class="progress-section-grid"></div>
+          <div class="section-head compact-top">
+            <h2>Chart guide</h2>
+          </div>
+          <div id="chartGuide" class="chart-guide-grid"></div>
+        </section>
+
+        <section class="card room-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow" id="roomEyebrow">Room</p>
+              <h2 id="roomTitle">General</h2>
+              <p class="muted" id="roomDescription"></p>
+            </div>
+          </div>
+
+          <div id="messageList" class="message-list"></div>
+
+          <form id="messageForm" class="composer">
+            <textarea id="messageInput" class="input textarea" placeholder="Send an update, direction, or question..." required></textarea>
+            <div class="composer-actions">
+              <div class="muted small">Messages sync live across the dashboard.</div>
+              <button class="button" type="submit">Send</button>
+            </div>
+          </form>
+        </section>
       </main>
 
       <aside class="right-rail stack gap-md">
@@ -74,13 +147,6 @@
           </div>
           <div id="activityState" class="activity-state"></div>
           <div id="activityFeed" class="activity-feed"></div>
-        </section>
-
-        <section class="card">
-          <div class="section-head">
-            <h2>Learning architecture</h2>
-          </div>
-          <div id="learningMap" class="learning-map"></div>
         </section>
 
         <section class="card">
@@ -127,27 +193,6 @@
             <button class="button secondary" type="submit">Add note</button>
           </form>
           <div id="noteList" class="note-list"></div>
-        </section>
-
-        <section class="card">
-          <div class="section-head">
-            <h2>Operations</h2>
-          </div>
-          <div id="opsSnapshot" class="ops-list"></div>
-        </section>
-
-        <section class="card">
-          <div class="section-head">
-            <h2>Data sources</h2>
-          </div>
-          <div id="dataSourceList" class="data-source-list"></div>
-        </section>
-
-        <section class="card">
-          <div class="section-head">
-            <h2>System</h2>
-          </div>
-          <div id="systemStatus" class="system-grid"></div>
         </section>
       </aside>
     </div>
