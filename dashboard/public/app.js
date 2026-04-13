@@ -62,6 +62,7 @@ const els = {
   workflowGraph: document.querySelector('#workflowGraph'),
   lineageEntities: document.querySelector('#lineageEntities'),
   lineageRelations: document.querySelector('#lineageRelations'),
+  telemetryPanels: document.querySelector('#telemetryPanels'),
   pillarGrid: document.querySelector('#pillarGrid'),
   agentOperations: document.querySelector('#agentOperations'),
   backendCards: document.querySelector('#backendCards'),
@@ -337,6 +338,7 @@ function renderDashboard() {
   renderTopology();
   renderWorkflowGraph();
   renderLineage();
+  renderTelemetryPlane();
   renderPillars();
   renderAgentOperations();
   renderBackendCards();
@@ -765,6 +767,32 @@ function renderLineage() {
       <p>${escapeHtml(relation.detail)}</p>
     `;
     els.lineageRelations.appendChild(item);
+  });
+}
+
+function renderTelemetryPlane() {
+  const telemetry = state.dashboardModel?.telemetryPlane;
+  els.telemetryPanels.innerHTML = '';
+
+  if (!telemetry?.panels?.length) {
+    els.telemetryPanels.appendChild(emptyState('No telemetry panels available yet.'));
+    return;
+  }
+
+  telemetry.panels.forEach((panel) => {
+    const article = document.createElement('article');
+    article.className = 'telemetry-card';
+    article.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(panel.title)}</strong>
+        <span class="pill ${statusClass(panel.status || 'info')}">${escapeHtml(panel.status || 'info')}</span>
+      </div>
+      <p class="muted small">${escapeHtml(panel.summary)}</p>
+      <ul class="line-list">
+        ${(panel.lines || []).map((line) => `<li>${escapeHtml(line)}</li>`).join('')}
+      </ul>
+    `;
+    els.telemetryPanels.appendChild(article);
   });
 }
 

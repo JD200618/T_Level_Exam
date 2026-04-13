@@ -182,7 +182,8 @@ pre { white-space: pre-wrap; }
 .topology-node,
 .edge-card,
 .workflow-step-card,
-.lineage-card {
+.lineage-card,
+.telemetry-card {
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--panel-2);
@@ -254,6 +255,7 @@ pre { white-space: pre-wrap; }
 .gain-grid,
 .topology-grid,
 .lineage-grid,
+.telemetry-grid,
 .edge-list {
   display: grid;
   gap: 12px;
@@ -272,6 +274,7 @@ pre { white-space: pre-wrap; }
 .gain-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .topology-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .lineage-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.telemetry-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .edge-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .pillar-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .agent-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -297,6 +300,7 @@ pre { white-space: pre-wrap; }
 .edge-card,
 .workflow-step-card,
 .lineage-card,
+.telemetry-card,
 .message,
 .staff-card,
 .note-card,
@@ -341,7 +345,8 @@ pre { white-space: pre-wrap; }
 .topology-node,
 .edge-card,
 .workflow-step-card,
-.lineage-card {
+.lineage-card,
+.telemetry-card {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)), var(--panel-2);
 }
 
@@ -645,6 +650,7 @@ pre { white-space: pre-wrap; }
   .gain-grid,
   .topology-grid,
   .lineage-grid,
+  .telemetry-grid,
   .edge-list {
     grid-template-columns: 1fr;
   }

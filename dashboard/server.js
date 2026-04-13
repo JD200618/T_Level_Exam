@@ -1178,6 +1178,59 @@ function getDashboardModel(hostname = '') {
     ],
   };
 
+  const telemetryPlane = {
+    panels: [
+      {
+        id: 'signals',
+        title: 'Signal coverage',
+        status: recentActivity.length ? 'active' : 'limited',
+        summary: 'Current live signal surfaces available to the control plane.',
+        lines: [
+          `Recent activity events: ${recentActivity.length}`,
+          `Tracked services: ${Object.keys(opsSnapshot.services).length}`,
+          `Tracked agents: ${agentOperations.length}`,
+          `Data sources: ${dataSources.length}`,
+        ],
+      },
+      {
+        id: 'alerts',
+        title: 'Alert posture',
+        status: taskCounts.blocked || Object.values(opsSnapshot.services).some((status) => status !== 'active') ? 'attention' : 'ready',
+        summary: 'Current blockers, service risk, and visible operational pressure.',
+        lines: [
+          `Blocked tasks: ${taskCounts.blocked}`,
+          `Active tasks: ${taskCounts.active}`,
+          `Repos with drift: ${dirtyRepos}`,
+          `Services not active: ${Object.values(opsSnapshot.services).filter((status) => status !== 'active').length}`,
+        ],
+      },
+      {
+        id: 'trace',
+        title: 'Trace readiness',
+        status: 'limited',
+        summary: 'Trace-like visibility exists, but first-class execution objects are still being built.',
+        lines: [
+          'Topology layer: live',
+          'Workflow graph layer: live',
+          'Lineage layer: live',
+          'Execution-run tables: pending',
+        ],
+      },
+      {
+        id: 'performance',
+        title: 'Performance posture',
+        status: serviceHealth,
+        summary: 'Current runtime readiness from host, service, and workflow pressure signals.',
+        lines: [
+          `Dashboard service: ${opsSnapshot.services.dashboard}`,
+          `Gateway service: ${opsSnapshot.services.gateway}`,
+          `Caddy service: ${opsSnapshot.services.caddy}`,
+          `Queued workflow pressure proxy: ${taskCounts.active + taskCounts.blocked}`,
+        ],
+      },
+    ],
+  };
+
   const pillars = [
     {
       id: 'command',
@@ -1285,6 +1338,7 @@ function getDashboardModel(hostname = '') {
     },
     workflowGraph,
     lineage,
+    telemetryPlane,
     pillars,
     agentOperations,
     backend: {
