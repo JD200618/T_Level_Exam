@@ -202,6 +202,9 @@ pre { white-space: pre-wrap; }
   color: var(--text);
   text-align: left;
   padding: 14px;
+}
+
+button.surface-map-card {
   cursor: pointer;
 }
 

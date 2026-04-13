@@ -59,6 +59,7 @@ const els = {
   overviewMetrics: document.querySelector('#overviewMetrics'),
   pageNav: document.querySelector('#pageNav'),
   surfaceMap: document.querySelector('#surfaceMap'),
+  attentionQueue: document.querySelector('#attentionQueue'),
   operationalStage: document.querySelector('#operationalStage'),
   operationalSummary: document.querySelector('#operationalSummary'),
   capabilityMatrix: document.querySelector('#capabilityMatrix'),
@@ -361,6 +362,7 @@ function renderDashboard() {
   renderPageNav();
   renderOverview();
   renderSurfaceMap();
+  renderAttentionQueue();
   renderOperationalLevel();
   renderTopology();
   renderWorkflowGraph();
@@ -462,6 +464,39 @@ function renderSurfaceMap() {
     `;
     card.addEventListener('click', () => setActivePage(id));
     els.surfaceMap.appendChild(card);
+  });
+}
+
+function renderAttentionQueue() {
+  if (!els.attentionQueue) return;
+  els.attentionQueue.innerHTML = '';
+
+  const issues = [];
+  const blockedTasks = state.tasks.filter((task) => task.status === 'blocked').length;
+  const inactiveServices = Object.entries(state.opsSnapshot?.services || {}).filter(([, status]) => status !== 'active');
+  const dirtyRepos = (state.opsSnapshot?.repos || []).filter((repo) => repo.dirtyCount > 0);
+  const activeTraces = (state.dashboardModel?.executionStore?.runs || []).filter((run) => run.status === 'active').length;
+
+  if (blockedTasks) issues.push({ title: 'Blocked tasks', detail: `${blockedTasks} task(s) are blocked and need intervention.`, status: 'attention' });
+  if (inactiveServices.length) issues.push({ title: 'Service health drift', detail: inactiveServices.map(([name, status]) => `${name}: ${status}`).join(' · '), status: 'attention' });
+  if (dirtyRepos.length) issues.push({ title: 'Repository drift', detail: dirtyRepos.map((repo) => `${repo.label}: dirty ${repo.dirtyCount}`).join(' · '), status: 'attention' });
+  if (activeTraces) issues.push({ title: 'Active execution traces', detail: `${activeTraces} trace(s) are still active in the execution store.`, status: 'active' });
+
+  if (!issues.length) {
+    issues.push({ title: 'No current attention items', detail: 'Services, tasks, and tracked repositories are currently in a stable posture.', status: 'ready' });
+  }
+
+  issues.forEach((issue) => {
+    const card = document.createElement('article');
+    card.className = 'surface-map-card';
+    card.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(issue.title)}</strong>
+        <span class="pill ${statusClass(issue.status || 'info')}">${escapeHtml(issue.status || 'info')}</span>
+      </div>
+      <p class="muted small">${escapeHtml(issue.detail)}</p>
+    `;
+    els.attentionQueue.appendChild(card);
   });
 }
 
