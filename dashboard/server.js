@@ -150,6 +150,18 @@ db.exec(`
     parent_step_id INTEGER,
     FOREIGN KEY (run_id) REFERENCES execution_runs(id)
   );
+
+  CREATE TABLE IF NOT EXISTS execution_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER NOT NULL,
+    step_id INTEGER,
+    event_type TEXT NOT NULL,
+    status TEXT NOT NULL,
+    detail TEXT NOT NULL DEFAULT '',
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (run_id) REFERENCES execution_runs(id),
+    FOREIGN KEY (step_id) REFERENCES execution_steps(id)
+  );
 `);
 
 const defaultRooms = [
@@ -403,6 +415,17 @@ const insertExecutionStep = db.prepare(`
   INSERT INTO execution_steps (run_id, step_key, step_label, service_name, status, detail, started_at, completed_at, latency_ms, parent_step_id)
   VALUES (@runId, @stepKey, @stepLabel, @serviceName, @status, @detail, @startedAt, @completedAt, @latencyMs, @parentStepId)
 `);
+const countExecutionEvents = db.prepare(`SELECT COUNT(*) as count FROM execution_events`);
+const getExecutionEventsByRun = db.prepare(`
+  SELECT id, run_id as runId, step_id as stepId, event_type as eventType, status, detail, created_at as createdAt
+  FROM execution_events
+  WHERE run_id = ?
+  ORDER BY created_at ASC, id ASC
+`);
+const insertExecutionEvent = db.prepare(`
+  INSERT INTO execution_events (run_id, step_id, event_type, status, detail, created_at)
+  VALUES (@runId, @stepId, @eventType, @status, @detail, @createdAt)
+`);
 const getActivityEvents = db.prepare(`
   SELECT id, actor, kind, status, title, detail, created_at as createdAt
   FROM activity_events
@@ -610,6 +633,33 @@ function ensureExecutionTracking() {
   });
 }
 
+function ensureExecutionEvents() {
+  if ((countExecutionEvents.get()?.count || 0) > 0) return;
+
+  const runs = getRecentExecutionRuns.all(50);
+  runs.forEach((run) => {
+    const steps = getExecutionStepsByRun.all(run.id);
+    steps.forEach((step) => {
+      insertExecutionEvent.run({
+        runId: run.id,
+        stepId: step.id,
+        eventType: 'step_status',
+        status: step.status,
+        detail: `${step.stepLabel} via ${step.serviceName || 'service'} is ${step.status}.`,
+        createdAt: step.completedAt || step.startedAt,
+      });
+    });
+  });
+
+  recordActivityEvent({
+    actor: 'Atlas',
+    kind: 'execution',
+    status: 'done',
+    title: 'Execution event storage initialized',
+    detail: 'Execution events were backfilled for existing run and step records.',
+  });
+}
+
 function getExecutionStore(limit = 5, traceId = '') {
   const parsedLimit = Math.max(1, Math.min(Number(limit) || 5, 50));
   const runs = getRecentExecutionRuns
@@ -617,6 +667,7 @@ function getExecutionStore(limit = 5, traceId = '') {
     .map((run) => ({
       ...run,
       steps: getExecutionStepsByRun.all(run.id),
+      events: getExecutionEventsByRun.all(run.id),
     }));
 
   const filteredRuns = traceId ? runs.filter((run) => run.traceId === traceId) : runs;
@@ -626,6 +677,7 @@ function getExecutionStore(limit = 5, traceId = '') {
     counts: {
       runs: countExecutionRuns.get()?.count || 0,
       steps: countExecutionSteps.get()?.count || 0,
+      events: countExecutionEvents.get()?.count || 0,
     },
   };
 }
@@ -634,6 +686,7 @@ seedBootstrapUsers();
 seedStaffState();
 ensureOperationState();
 ensureExecutionTracking();
+ensureExecutionEvents();
 
 function getGitSummary() {
   try {
