@@ -1017,6 +1017,62 @@ function getDashboardModel(hostname = '') {
     },
   ];
 
+  const workflowGraph = {
+    id: 'request-lifecycle',
+    title: 'Inbound request lifecycle',
+    steps: [
+      {
+        id: 'input',
+        label: 'Input',
+        kind: 'channel ingress',
+        status: opsSnapshot.telegram.accounts.length ? 'ready' : 'limited',
+        detail: 'User messages arrive through Telegram and dashboard surfaces.',
+      },
+      {
+        id: 'session',
+        label: 'Auth and session',
+        kind: 'session service',
+        status: 'ready',
+        detail: 'Requests are tied to user identity, session reuse, and routing state.',
+      },
+      {
+        id: 'orchestration',
+        label: 'Orchestration',
+        kind: 'gateway runtime',
+        status: opsSnapshot.services.gateway === 'active' ? 'ready' : 'attention',
+        detail: 'The gateway compiles context, routes the run, and decides which tools or agents to engage.',
+      },
+      {
+        id: 'model',
+        label: 'Model and retrieval',
+        kind: 'intelligence plane',
+        status: agentOperations.length ? 'active' : 'limited',
+        detail: 'Model selection and memory/data grounding happen here, though first-class execution objects are still pending.',
+      },
+      {
+        id: 'tooling',
+        label: 'Tool execution',
+        kind: 'action plane',
+        status: 'ready',
+        detail: 'File, shell, dashboard, and messaging tools turn reasoning into state changes.',
+      },
+      {
+        id: 'persistence',
+        label: 'Persistence',
+        kind: 'state storage',
+        status: 'ready',
+        detail: 'Outputs, tasks, notes, memory files, and dashboard records are persisted in the current stack.',
+      },
+      {
+        id: 'events',
+        label: 'Event trail',
+        kind: 'observability',
+        status: recentActivity.length ? 'active' : 'limited',
+        detail: 'Activity feeds and dashboard surfaces expose the current audit and progress trail.',
+      },
+    ],
+  };
+
   const pillars = [
     {
       id: 'command',
@@ -1122,6 +1178,7 @@ function getDashboardModel(hostname = '') {
       nodes: topologyNodes,
       edges: topologyEdges,
     },
+    workflowGraph,
     pillars,
     agentOperations,
     backend: {

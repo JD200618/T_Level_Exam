@@ -59,6 +59,7 @@ const els = {
   gainedCapabilities: document.querySelector('#gainedCapabilities'),
   topologyNodes: document.querySelector('#topologyNodes'),
   topologyEdges: document.querySelector('#topologyEdges'),
+  workflowGraph: document.querySelector('#workflowGraph'),
   pillarGrid: document.querySelector('#pillarGrid'),
   agentOperations: document.querySelector('#agentOperations'),
   backendCards: document.querySelector('#backendCards'),
@@ -332,6 +333,7 @@ function renderDashboard() {
   renderOverview();
   renderOperationalLevel();
   renderTopology();
+  renderWorkflowGraph();
   renderPillars();
   renderAgentOperations();
   renderBackendCards();
@@ -686,6 +688,37 @@ function renderTopology() {
       <p>${escapeHtml(edge.detail)}</p>
     `;
     els.topologyEdges.appendChild(item);
+  });
+}
+
+function renderWorkflowGraph() {
+  const workflowGraph = state.dashboardModel?.workflowGraph;
+  els.workflowGraph.innerHTML = '';
+
+  if (!workflowGraph?.steps?.length) {
+    els.workflowGraph.appendChild(emptyState('No workflow graph available yet.'));
+    return;
+  }
+
+  workflowGraph.steps.forEach((step, index) => {
+    const card = document.createElement('article');
+    card.className = 'workflow-step-card';
+    card.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(step.label)}</strong>
+        <span class="pill ${statusClass(step.status || 'info')}">${escapeHtml(step.status || 'info')}</span>
+      </div>
+      <p class="muted small">${escapeHtml(step.kind)}</p>
+      <p>${escapeHtml(step.detail)}</p>
+    `;
+    els.workflowGraph.appendChild(card);
+
+    if (index < workflowGraph.steps.length - 1) {
+      const arrow = document.createElement('div');
+      arrow.className = 'workflow-arrow';
+      arrow.textContent = '→';
+      els.workflowGraph.appendChild(arrow);
+    }
   });
 }
 

@@ -180,7 +180,8 @@ pre { white-space: pre-wrap; }
 .capability-card,
 .gain-card,
 .topology-node,
-.edge-card {
+.edge-card,
+.workflow-step-card {
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--panel-2);
@@ -256,6 +257,13 @@ pre { white-space: pre-wrap; }
   gap: 12px;
 }
 
+.workflow-graph {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 10px;
+}
+
 .hero-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .operational-level-shell { grid-template-columns: 280px minmax(0, 1fr); margin-bottom: 12px; }
 .capability-matrix { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -284,6 +292,7 @@ pre { white-space: pre-wrap; }
 .gain-card,
 .topology-node,
 .edge-card,
+.workflow-step-card,
 .message,
 .staff-card,
 .note-card,
@@ -326,7 +335,8 @@ pre { white-space: pre-wrap; }
 .capability-card,
 .gain-card,
 .topology-node,
-.edge-card {
+.edge-card,
+.workflow-step-card {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)), var(--panel-2);
 }
 
@@ -441,6 +451,21 @@ pre { white-space: pre-wrap; }
 
 .capability-track {
   margin-top: 10px;
+}
+
+.workflow-step-card {
+  flex: 1 1 220px;
+  min-width: 200px;
+}
+
+.workflow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-2);
+  font-size: 24px;
+  font-weight: 700;
+  min-width: 20px;
 }
 
 .note-meta,
