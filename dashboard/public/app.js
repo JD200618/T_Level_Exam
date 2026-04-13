@@ -477,17 +477,18 @@ function renderAttentionQueue() {
   const dirtyRepos = (state.opsSnapshot?.repos || []).filter((repo) => repo.dirtyCount > 0);
   const activeTraces = (state.dashboardModel?.executionStore?.runs || []).filter((run) => run.status === 'active').length;
 
-  if (blockedTasks) issues.push({ title: 'Blocked tasks', detail: `${blockedTasks} task(s) are blocked and need intervention.`, status: 'attention' });
-  if (inactiveServices.length) issues.push({ title: 'Service health drift', detail: inactiveServices.map(([name, status]) => `${name}: ${status}`).join(' · '), status: 'attention' });
-  if (dirtyRepos.length) issues.push({ title: 'Repository drift', detail: dirtyRepos.map((repo) => `${repo.label}: dirty ${repo.dirtyCount}`).join(' · '), status: 'attention' });
-  if (activeTraces) issues.push({ title: 'Active execution traces', detail: `${activeTraces} trace(s) are still active in the execution store.`, status: 'active' });
+  if (blockedTasks) issues.push({ title: 'Blocked tasks', detail: `${blockedTasks} task(s) are blocked and need intervention.`, status: 'attention', page: 'operations' });
+  if (inactiveServices.length) issues.push({ title: 'Service health drift', detail: inactiveServices.map(([name, status]) => `${name}: ${status}`).join(' · '), status: 'attention', page: 'infrastructure' });
+  if (dirtyRepos.length) issues.push({ title: 'Repository drift', detail: dirtyRepos.map((repo) => `${repo.label}: dirty ${repo.dirtyCount}`).join(' · '), status: 'attention', page: 'deployments' });
+  if (activeTraces) issues.push({ title: 'Active execution traces', detail: `${activeTraces} trace(s) are still active in the execution store.`, status: 'active', page: 'workflows' });
 
   if (!issues.length) {
-    issues.push({ title: 'No current attention items', detail: 'Services, tasks, and tracked repositories are currently in a stable posture.', status: 'ready' });
+    issues.push({ title: 'No current attention items', detail: 'Services, tasks, and tracked repositories are currently in a stable posture.', status: 'ready', page: 'overview' });
   }
 
   issues.forEach((issue) => {
-    const card = document.createElement('article');
+    const card = document.createElement('button');
+    card.type = 'button';
     card.className = 'surface-map-card';
     card.innerHTML = `
       <div class="note-meta">
@@ -496,6 +497,7 @@ function renderAttentionQueue() {
       </div>
       <p class="muted small">${escapeHtml(issue.detail)}</p>
     `;
+    card.addEventListener('click', () => setActivePage(issue.page || 'overview'));
     els.attentionQueue.appendChild(card);
   });
 }
