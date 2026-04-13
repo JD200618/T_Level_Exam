@@ -60,6 +60,8 @@ const els = {
   topologyNodes: document.querySelector('#topologyNodes'),
   topologyEdges: document.querySelector('#topologyEdges'),
   workflowGraph: document.querySelector('#workflowGraph'),
+  lineageEntities: document.querySelector('#lineageEntities'),
+  lineageRelations: document.querySelector('#lineageRelations'),
   pillarGrid: document.querySelector('#pillarGrid'),
   agentOperations: document.querySelector('#agentOperations'),
   backendCards: document.querySelector('#backendCards'),
@@ -334,6 +336,7 @@ function renderDashboard() {
   renderOperationalLevel();
   renderTopology();
   renderWorkflowGraph();
+  renderLineage();
   renderPillars();
   renderAgentOperations();
   renderBackendCards();
@@ -719,6 +722,49 @@ function renderWorkflowGraph() {
       arrow.textContent = '→';
       els.workflowGraph.appendChild(arrow);
     }
+  });
+}
+
+function renderLineage() {
+  const lineage = state.dashboardModel?.lineage;
+  els.lineageEntities.innerHTML = '';
+  els.lineageRelations.innerHTML = '';
+
+  if (!lineage?.entities?.length) {
+    els.lineageEntities.appendChild(emptyState('No lineage entities available yet.'));
+    return;
+  }
+
+  lineage.entities.forEach((entity) => {
+    const card = document.createElement('article');
+    card.className = 'lineage-card';
+    card.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(entity.label)}</strong>
+        <span class="pill ${statusClass(entity.status || 'info')}">${escapeHtml(entity.status || 'info')}</span>
+      </div>
+      <p class="muted small">${escapeHtml(entity.kind)}</p>
+      <p>${escapeHtml(entity.detail)}</p>
+    `;
+    els.lineageEntities.appendChild(card);
+  });
+
+  if (!lineage?.relations?.length) {
+    els.lineageRelations.appendChild(emptyState('No lineage relations available yet.'));
+    return;
+  }
+
+  lineage.relations.forEach((relation) => {
+    const item = document.createElement('article');
+    item.className = 'edge-card';
+    item.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(relation.from)} → ${escapeHtml(relation.to)}</strong>
+        <span class="pill ${statusClass(relation.status || 'info')}">${escapeHtml(relation.status || 'info')}</span>
+      </div>
+      <p>${escapeHtml(relation.detail)}</p>
+    `;
+    els.lineageRelations.appendChild(item);
   });
 }
 

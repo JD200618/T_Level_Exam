@@ -1073,6 +1073,111 @@ function getDashboardModel(hostname = '') {
     ],
   };
 
+  const lineage = {
+    entities: [
+      {
+        id: 'user',
+        label: 'Architect',
+        kind: 'user',
+        status: 'active',
+        detail: 'Human operator and source of direction for the control plane.',
+      },
+      {
+        id: 'session',
+        label: 'Main session',
+        kind: 'session',
+        status: 'ready',
+        detail: 'Session continuity boundary used for routing, context accumulation, and history.',
+      },
+      {
+        id: 'workflow',
+        label: 'Request workflow',
+        kind: 'workflow',
+        status: 'active',
+        detail: 'Canonical inbound request lifecycle from input through event trail.',
+      },
+      {
+        id: 'atlas-agent',
+        label: 'Atlas agent',
+        kind: 'agent',
+        status: agentOperations.find((agent) => agent.id === 'main')?.runtimeStatus || 'limited',
+        detail: 'Primary operational intelligence surface.',
+      },
+      {
+        id: 'model',
+        label: 'GPT-5.4',
+        kind: 'model',
+        status: 'ready',
+        detail: 'Current served reasoning model for the main session.',
+      },
+      {
+        id: 'memory',
+        label: 'Workspace memory',
+        kind: 'memory source',
+        status: dataSources.length ? 'ready' : 'limited',
+        detail: 'SOUL, USER, memory logs, ontology docs, and study notes.',
+      },
+      {
+        id: 'dashboard-db',
+        label: 'Dashboard SQLite',
+        kind: 'state store',
+        status: 'active',
+        detail: 'Persistent task, note, activity, and dashboard state store.',
+      },
+      {
+        id: 'activity-feed',
+        label: 'Activity feed',
+        kind: 'output surface',
+        status: recentActivity.length ? 'active' : 'limited',
+        detail: 'Operational event stream surfaced back into the dashboard.',
+      },
+    ],
+    relations: [
+      {
+        from: 'Architect',
+        to: 'Main session',
+        status: 'active',
+        detail: 'The user enters the platform through an authenticated session boundary.',
+      },
+      {
+        from: 'Main session',
+        to: 'Request workflow',
+        status: 'ready',
+        detail: 'Session state anchors the workflow instance and execution context.',
+      },
+      {
+        from: 'Request workflow',
+        to: 'Atlas agent',
+        status: 'active',
+        detail: 'The workflow invokes the Atlas agent for reasoning and action selection.',
+      },
+      {
+        from: 'Atlas agent',
+        to: 'GPT-5.4',
+        status: 'ready',
+        detail: 'Atlas currently uses GPT-5.4 as the served reasoning model.',
+      },
+      {
+        from: 'Atlas agent',
+        to: 'Workspace memory',
+        status: dataSources.length ? 'ready' : 'limited',
+        detail: 'The agent reads file-backed memory, ontology, and study sources for grounding.',
+      },
+      {
+        from: 'Request workflow',
+        to: 'Dashboard SQLite',
+        status: 'active',
+        detail: 'Workflow-adjacent state is persisted into dashboard storage and operational tables.',
+      },
+      {
+        from: 'Dashboard SQLite',
+        to: 'Activity feed',
+        status: recentActivity.length ? 'active' : 'limited',
+        detail: 'Persisted operational events flow back into the activity and progress surfaces.',
+      },
+    ],
+  };
+
   const pillars = [
     {
       id: 'command',
@@ -1179,6 +1284,7 @@ function getDashboardModel(hostname = '') {
       edges: topologyEdges,
     },
     workflowGraph,
+    lineage,
     pillars,
     agentOperations,
     backend: {
