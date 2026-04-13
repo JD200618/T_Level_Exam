@@ -58,6 +58,7 @@ const els = {
   overviewDetail: document.querySelector('#overviewDetail'),
   overviewMetrics: document.querySelector('#overviewMetrics'),
   pageNav: document.querySelector('#pageNav'),
+  surfaceMap: document.querySelector('#surfaceMap'),
   operationalStage: document.querySelector('#operationalStage'),
   operationalSummary: document.querySelector('#operationalSummary'),
   capabilityMatrix: document.querySelector('#capabilityMatrix'),
@@ -163,6 +164,7 @@ function wireEvents() {
     if (nextPage !== state.activePage) {
       state.activePage = nextPage;
       renderPageNav();
+      renderSurfaceMap();
       applyPageSections();
     }
   });
@@ -358,6 +360,7 @@ function renderAll() {
 function renderDashboard() {
   renderPageNav();
   renderOverview();
+  renderSurfaceMap();
   renderOperationalLevel();
   renderTopology();
   renderWorkflowGraph();
@@ -389,12 +392,7 @@ function renderPageNav() {
       <span>${escapeHtml(label)}</span>
       ${badge ? `<span class="page-badge">${escapeHtml(String(badge))}</span>` : ''}
     `;
-    button.addEventListener('click', () => {
-      state.activePage = id;
-      window.location.hash = id;
-      renderPageNav();
-      applyPageSections();
-    });
+    button.addEventListener('click', () => setActivePage(id));
     els.pageNav.appendChild(button);
   });
 }
@@ -437,6 +435,34 @@ function setActiveTrace(traceId = '') {
   syncUrlState();
   if (traceId) fetchFocusedExecution();
   renderExecutionRuns();
+}
+
+function setActivePage(pageId) {
+  state.activePage = pageId;
+  window.location.hash = pageId;
+  renderPageNav();
+  renderSurfaceMap();
+  applyPageSections();
+}
+
+function renderSurfaceMap() {
+  if (!els.surfaceMap) return;
+  els.surfaceMap.innerHTML = '';
+
+  getPageNavigationMeta().forEach(({ id, label, badge }) => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = `surface-map-card ${state.activePage === id ? 'active' : ''}`;
+    card.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(label)}</strong>
+        ${badge ? `<span class="pill info">${escapeHtml(String(badge))}</span>` : ''}
+      </div>
+      <p class="muted small">Open the ${escapeHtml(label)} surface.</p>
+    `;
+    card.addEventListener('click', () => setActivePage(id));
+    els.surfaceMap.appendChild(card);
+  });
 }
 
 async function fetchFocusedExecution() {
