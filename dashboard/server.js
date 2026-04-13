@@ -610,6 +610,26 @@ function ensureExecutionTracking() {
   });
 }
 
+function getExecutionStore(limit = 5, traceId = '') {
+  const parsedLimit = Math.max(1, Math.min(Number(limit) || 5, 50));
+  const runs = getRecentExecutionRuns
+    .all(parsedLimit)
+    .map((run) => ({
+      ...run,
+      steps: getExecutionStepsByRun.all(run.id),
+    }));
+
+  const filteredRuns = traceId ? runs.filter((run) => run.traceId === traceId) : runs;
+
+  return {
+    runs: filteredRuns,
+    counts: {
+      runs: countExecutionRuns.get()?.count || 0,
+      steps: countExecutionSteps.get()?.count || 0,
+    },
+  };
+}
+
 seedBootstrapUsers();
 seedStaffState();
 ensureOperationState();
@@ -1538,16 +1558,7 @@ function getDashboardModel(hostname = '') {
       edges: topologyEdges,
     },
     workflowGraph,
-    executionStore: {
-      runs: recentExecutionRuns.map((run) => ({
-        ...run,
-        steps: getExecutionStepsByRun.all(run.id),
-      })),
-      counts: {
-        runs: executionRunCount,
-        steps: executionStepCount,
-      },
-    },
+    executionStore: getExecutionStore(5),
     lineage,
     telemetryPlane,
     infrastructurePlane,
@@ -1952,6 +1963,15 @@ app.get('/api/activity', authRequired, requirePermission('system.read'), (req, r
   res.json({
     activityState: getOperationState.get(),
     activityEvents: getActivityEvents.all(50),
+  });
+});
+
+app.get('/api/executions', authRequired, requirePermission('system.read'), (req, res) => {
+  const limit = req.query.limit;
+  const traceId = clampText(req.query.traceId || '', 160);
+
+  res.json({
+    executionStore: getExecutionStore(limit, traceId),
   });
 });
 
