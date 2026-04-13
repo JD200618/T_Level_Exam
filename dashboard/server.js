@@ -378,6 +378,23 @@ const getRecentExecutionRuns = db.prepare(`
   ORDER BY started_at DESC, id DESC
   LIMIT ?
 `);
+const getExecutionStepsByRun = db.prepare(`
+  SELECT
+    id,
+    run_id as runId,
+    step_key as stepKey,
+    step_label as stepLabel,
+    service_name as serviceName,
+    status,
+    detail,
+    started_at as startedAt,
+    completed_at as completedAt,
+    latency_ms as latencyMs,
+    parent_step_id as parentStepId
+  FROM execution_steps
+  WHERE run_id = ?
+  ORDER BY started_at ASC, id ASC
+`);
 const insertExecutionRun = db.prepare(`
   INSERT INTO execution_runs (trace_id, workflow_key, actor, status, input_ref, output_ref, started_at, updated_at, completed_at, latency_ms)
   VALUES (@traceId, @workflowKey, @actor, @status, @inputRef, @outputRef, @startedAt, @updatedAt, @completedAt, @latencyMs)
@@ -1522,7 +1539,10 @@ function getDashboardModel(hostname = '') {
     },
     workflowGraph,
     executionStore: {
-      runs: recentExecutionRuns,
+      runs: recentExecutionRuns.map((run) => ({
+        ...run,
+        steps: getExecutionStepsByRun.all(run.id),
+      })),
       counts: {
         runs: executionRunCount,
         steps: executionStepCount,

@@ -807,6 +807,15 @@ function renderExecutionRuns() {
       <p>${escapeHtml(run.workflowKey)} · ${escapeHtml(run.actor)}</p>
       <p class="muted small">Steps: ${escapeHtml(String(run.stepCount || 0))} · Started ${formatTime(run.startedAt)}</p>
       <p class="muted small">Input: ${escapeHtml(run.inputRef || 'n/a')} · Output: ${escapeHtml(run.outputRef || 'n/a')}</p>
+      <div class="execution-step-list">
+        ${(run.steps || []).map((step) => `
+          <div class="execution-step-item">
+            <span>${escapeHtml(step.stepLabel)}</span>
+            <span class="pill ${statusClass(step.status || 'info')}">${escapeHtml(step.status || 'info')}</span>
+            <span class="muted small">${escapeHtml(step.serviceName || 'service')}</span>
+          </div>
+        `).join('')}
+      </div>
     `;
     els.executionRuns.appendChild(item);
   });

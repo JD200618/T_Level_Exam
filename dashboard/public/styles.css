@@ -172,6 +172,22 @@ pre { white-space: pre-wrap; }
   display: none !important;
 }
 
+.execution-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.execution-step-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 .room-list,
 .staff-list,
 .note-list,
