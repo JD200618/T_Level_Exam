@@ -357,7 +357,23 @@ const insertActivityEvent = db.prepare(`
 const countExecutionRuns = db.prepare(`SELECT COUNT(*) as count FROM execution_runs`);
 const countExecutionSteps = db.prepare(`SELECT COUNT(*) as count FROM execution_steps`);
 const getRecentExecutionRuns = db.prepare(`
-  SELECT id, trace_id as traceId, workflow_key as workflowKey, actor, status, input_ref as inputRef, output_ref as outputRef, started_at as startedAt, updated_at as updatedAt, completed_at as completedAt, latency_ms as latencyMs
+  SELECT
+    execution_runs.id,
+    trace_id as traceId,
+    workflow_key as workflowKey,
+    actor,
+    status,
+    input_ref as inputRef,
+    output_ref as outputRef,
+    started_at as startedAt,
+    updated_at as updatedAt,
+    completed_at as completedAt,
+    latency_ms as latencyMs,
+    (
+      SELECT COUNT(*)
+      FROM execution_steps
+      WHERE execution_steps.run_id = execution_runs.id
+    ) as stepCount
   FROM execution_runs
   ORDER BY started_at DESC, id DESC
   LIMIT ?
@@ -1505,6 +1521,13 @@ function getDashboardModel(hostname = '') {
       edges: topologyEdges,
     },
     workflowGraph,
+    executionStore: {
+      runs: recentExecutionRuns,
+      counts: {
+        runs: executionRunCount,
+        steps: executionStepCount,
+      },
+    },
     lineage,
     telemetryPlane,
     infrastructurePlane,

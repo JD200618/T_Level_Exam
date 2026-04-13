@@ -62,6 +62,7 @@ const els = {
   topologyNodes: document.querySelector('#topologyNodes'),
   topologyEdges: document.querySelector('#topologyEdges'),
   workflowGraph: document.querySelector('#workflowGraph'),
+  executionRuns: document.querySelector('#executionRuns'),
   lineageEntities: document.querySelector('#lineageEntities'),
   lineageRelations: document.querySelector('#lineageRelations'),
   telemetryPanels: document.querySelector('#telemetryPanels'),
@@ -352,6 +353,7 @@ function renderDashboard() {
   renderOperationalLevel();
   renderTopology();
   renderWorkflowGraph();
+  renderExecutionRuns();
   renderLineage();
   renderTelemetryPlane();
   renderInfrastructurePlane();
@@ -782,6 +784,31 @@ function renderWorkflowGraph() {
       arrow.textContent = '→';
       els.workflowGraph.appendChild(arrow);
     }
+  });
+}
+
+function renderExecutionRuns() {
+  const executionStore = state.dashboardModel?.executionStore;
+  els.executionRuns.innerHTML = '';
+
+  if (!executionStore?.runs?.length) {
+    els.executionRuns.appendChild(emptyState('No execution runs available yet.'));
+    return;
+  }
+
+  executionStore.runs.forEach((run) => {
+    const item = document.createElement('article');
+    item.className = 'execution-run-card';
+    item.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(run.traceId)}</strong>
+        <span class="pill ${statusClass(run.status || 'info')}">${escapeHtml(run.status || 'info')}</span>
+      </div>
+      <p>${escapeHtml(run.workflowKey)} · ${escapeHtml(run.actor)}</p>
+      <p class="muted small">Steps: ${escapeHtml(String(run.stepCount || 0))} · Started ${formatTime(run.startedAt)}</p>
+      <p class="muted small">Input: ${escapeHtml(run.inputRef || 'n/a')} · Output: ${escapeHtml(run.outputRef || 'n/a')}</p>
+    `;
+    els.executionRuns.appendChild(item);
   });
 }
 

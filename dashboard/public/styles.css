@@ -178,6 +178,7 @@ pre { white-space: pre-wrap; }
 .task-list,
 .activity-state,
 .activity-feed,
+.execution-run-list,
 .backend-grid,
 .ml-layer-grid {
   display: flex;
@@ -209,6 +210,7 @@ pre { white-space: pre-wrap; }
 .edge-card,
 .workflow-step-card,
 .lineage-card,
+.execution-run-card,
 .telemetry-card {
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -326,6 +328,7 @@ pre { white-space: pre-wrap; }
 .edge-card,
 .workflow-step-card,
 .lineage-card,
+.execution-run-card,
 .telemetry-card,
 .message,
 .staff-card,
