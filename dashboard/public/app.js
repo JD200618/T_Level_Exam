@@ -3,6 +3,8 @@ const state = {
   siteContext: null,
   activePage: 'overview',
   activeTrace: '',
+  focusedExecution: null,
+  focusedExecutionLoading: false,
   rooms: [],
   activeRoom: 'general',
   messages: [],
@@ -125,6 +127,7 @@ async function bootstrap(room = state.activeRoom) {
   state.opsSnapshot = data.opsSnapshot;
   state.dataSources = data.dataSources;
   state.dashboardModel = data.dashboardModel;
+  if (state.activeTrace) await fetchFocusedExecution();
   renderAll();
 }
 
@@ -136,6 +139,7 @@ async function refreshDashboardModel() {
     if (!response.ok) return;
     const data = await response.json();
     state.dashboardModel = data.dashboardModel;
+    if (state.activeTrace) await fetchFocusedExecution();
     renderDashboard();
   } catch {
     // Keep the current rendered state if the refresh fails.
@@ -415,8 +419,28 @@ function syncUrlState() {
 
 function setActiveTrace(traceId = '') {
   state.activeTrace = traceId;
+  state.focusedExecution = null;
   syncUrlState();
+  if (traceId) fetchFocusedExecution();
   renderExecutionRuns();
+}
+
+async function fetchFocusedExecution() {
+  if (!state.activeTrace) return;
+  state.focusedExecutionLoading = true;
+  renderExecutionRuns();
+
+  try {
+    const response = await fetch(`/api/executions?traceId=${encodeURIComponent(state.activeTrace)}&limit=20`);
+    if (!response.ok) return;
+    const data = await response.json();
+    state.focusedExecution = data.executionStore?.runs?.[0] || null;
+  } catch {
+    // keep current state on fetch failure
+  } finally {
+    state.focusedExecutionLoading = false;
+    renderExecutionRuns();
+  }
 }
 
 function applyPageSections() {
@@ -811,7 +835,9 @@ function renderExecutionRuns() {
   const executionStore = state.dashboardModel?.executionStore;
   els.executionRuns.innerHTML = '';
 
-  const runs = (executionStore?.runs || []).filter((run) => !state.activeTrace || run.traceId === state.activeTrace);
+  const runs = state.activeTrace
+    ? (state.focusedExecution ? [state.focusedExecution] : [])
+    : (executionStore?.runs || []);
 
   if (state.activeTrace) {
     const focus = document.createElement('article');
@@ -821,7 +847,7 @@ function renderExecutionRuns() {
         <strong>Trace focus</strong>
         <span class="pill info">${escapeHtml(state.activeTrace)}</span>
       </div>
-      <p class="muted small">Workflows view is currently locked to one trace.</p>
+      <p class="muted small">Workflows view is currently locked to one trace${state.focusedExecutionLoading ? ' and refreshing live execution data.' : '.'}</p>
       <div class="composer-actions">
         <button class="button secondary" type="button">Clear trace focus</button>
       </div>
