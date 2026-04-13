@@ -2,6 +2,7 @@ const state = {
   user: null,
   siteContext: null,
   activePage: 'overview',
+  activeTrace: '',
   rooms: [],
   activeRoom: 'general',
   messages: [],
@@ -83,6 +84,7 @@ const dashboardPages = ['overview', 'operations', 'workflows', 'agents', 'intell
 
 wireEvents();
 state.activePage = resolvePageFromHash();
+state.activeTrace = resolveTraceFromUrl();
 checkSession();
 window.setInterval(() => {
   if (state.user) refreshDashboardModel();
@@ -397,6 +399,24 @@ function renderPageNav() {
 function resolvePageFromHash() {
   const page = window.location.hash.replace(/^#/, '').trim().toLowerCase();
   return dashboardPages.includes(page) ? page : 'overview';
+}
+
+function resolveTraceFromUrl() {
+  return new URLSearchParams(window.location.search).get('trace') || '';
+}
+
+function syncUrlState() {
+  const url = new URL(window.location.href);
+  if (state.activeTrace) url.searchParams.set('trace', state.activeTrace);
+  else url.searchParams.delete('trace');
+  url.hash = state.activePage;
+  window.history.replaceState({}, '', url);
+}
+
+function setActiveTrace(traceId = '') {
+  state.activeTrace = traceId;
+  syncUrlState();
+  renderExecutionRuns();
 }
 
 function applyPageSections() {
@@ -791,14 +811,33 @@ function renderExecutionRuns() {
   const executionStore = state.dashboardModel?.executionStore;
   els.executionRuns.innerHTML = '';
 
-  if (!executionStore?.runs?.length) {
+  const runs = (executionStore?.runs || []).filter((run) => !state.activeTrace || run.traceId === state.activeTrace);
+
+  if (state.activeTrace) {
+    const focus = document.createElement('article');
+    focus.className = 'execution-run-card execution-focus-card';
+    focus.innerHTML = `
+      <div class="note-meta">
+        <strong>Trace focus</strong>
+        <span class="pill info">${escapeHtml(state.activeTrace)}</span>
+      </div>
+      <p class="muted small">Workflows view is currently locked to one trace.</p>
+      <div class="composer-actions">
+        <button class="button secondary" type="button">Clear trace focus</button>
+      </div>
+    `;
+    focus.querySelector('button')?.addEventListener('click', () => setActiveTrace(''));
+    els.executionRuns.appendChild(focus);
+  }
+
+  if (!runs.length) {
     els.executionRuns.appendChild(emptyState('No execution runs available yet.'));
     return;
   }
 
-  executionStore.runs.forEach((run) => {
+  runs.forEach((run) => {
     const item = document.createElement('article');
-    item.className = 'execution-run-card';
+    item.className = `execution-run-card ${state.activeTrace === run.traceId ? 'active' : ''}`;
     item.innerHTML = `
       <div class="note-meta">
         <strong>${escapeHtml(run.traceId)}</strong>
@@ -826,6 +865,7 @@ function renderExecutionRuns() {
         `).join('')}
       </div>
     `;
+    item.addEventListener('click', () => setActiveTrace(run.traceId));
     els.executionRuns.appendChild(item);
   });
 }

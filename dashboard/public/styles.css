@@ -204,6 +204,16 @@ pre { white-space: pre-wrap; }
   border-top: 1px dashed rgba(255, 255, 255, 0.08);
 }
 
+.execution-run-card {
+  cursor: pointer;
+}
+
+.execution-run-card.active,
+.execution-focus-card {
+  border-color: rgba(124, 156, 255, 0.42);
+  box-shadow: 0 0 0 1px rgba(124, 156, 255, 0.18) inset;
+}
+
 .room-list,
 .staff-list,
 .note-list,
