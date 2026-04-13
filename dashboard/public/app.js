@@ -1,6 +1,7 @@
 const state = {
   user: null,
   siteContext: null,
+  activePage: 'overview',
   rooms: [],
   activeRoom: 'general',
   messages: [],
@@ -53,6 +54,7 @@ const els = {
   overviewFocus: document.querySelector('#overviewFocus'),
   overviewDetail: document.querySelector('#overviewDetail'),
   overviewMetrics: document.querySelector('#overviewMetrics'),
+  pageNav: document.querySelector('#pageNav'),
   operationalStage: document.querySelector('#operationalStage'),
   operationalSummary: document.querySelector('#operationalSummary'),
   capabilityMatrix: document.querySelector('#capabilityMatrix'),
@@ -334,6 +336,7 @@ function renderAll() {
 }
 
 function renderDashboard() {
+  renderPageNav();
   renderOverview();
   renderOperationalLevel();
   renderTopology();
@@ -346,6 +349,42 @@ function renderDashboard() {
   renderBackendCards();
   renderMlSystem();
   renderAnalytics();
+  applyPageSections();
+}
+
+function renderPageNav() {
+  if (!els.pageNav) return;
+  els.pageNav.innerHTML = '';
+
+  const pages = [
+    ['overview', 'Overview'],
+    ['operations', 'Operations'],
+    ['workflows', 'Workflows'],
+    ['agents', 'Agents'],
+    ['intelligence', 'Models/Data'],
+    ['data', 'Lineage'],
+    ['infrastructure', 'Infra'],
+  ];
+
+  pages.forEach(([id, label]) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `page-button ${state.activePage === id ? 'active' : ''}`;
+    button.textContent = label;
+    button.addEventListener('click', () => {
+      state.activePage = id;
+      renderPageNav();
+      applyPageSections();
+    });
+    els.pageNav.appendChild(button);
+  });
+}
+
+function applyPageSections() {
+  document.querySelectorAll('[data-page-section]').forEach((section) => {
+    const visible = section.getAttribute('data-page-section') === state.activePage;
+    section.classList.toggle('page-section-hidden', !visible);
+  });
 }
 
 function renderSession() {

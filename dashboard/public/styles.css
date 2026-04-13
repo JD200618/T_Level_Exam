@@ -146,6 +146,32 @@ pre { white-space: pre-wrap; }
 .section-head.tight { margin-bottom: 8px; }
 .compact-top { margin-top: 18px; }
 
+.page-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.page-button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  padding: 10px 14px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.page-button.active {
+  background: linear-gradient(135deg, rgba(124, 156, 255, 0.22), rgba(61, 217, 180, 0.18));
+  border-color: rgba(124, 156, 255, 0.45);
+}
+
+.page-section-hidden {
+  display: none !important;
+}
+
 .room-list,
 .staff-list,
 .note-list,

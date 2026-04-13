@@ -66,7 +66,9 @@
           <div id="overviewMetrics" class="hero-metrics"></div>
         </section>
 
-        <section class="card">
+        <nav id="pageNav" class="page-nav"></nav>
+
+        <section class="card" data-page-section="overview">
           <div class="section-head">
             <div>
               <h2>Operational level</h2>
@@ -84,7 +86,7 @@
           <div id="gainedCapabilities" class="gain-grid"></div>
         </section>
 
-        <section class="card">
+        <section class="card" data-page-section="operations">
           <div class="section-head">
             <div>
               <h2>System topology</h2>
@@ -98,7 +100,7 @@
           <div id="topologyEdges" class="edge-list"></div>
         </section>
 
-        <section class="card">
+        <section class="card" data-page-section="workflows">
           <div class="section-head">
             <div>
               <h2>Workflow execution graph</h2>
@@ -108,7 +110,7 @@
           <div id="workflowGraph" class="workflow-graph"></div>
         </section>
 
-        <section class="card">
+        <section class="card" data-page-section="data">
           <div class="section-head">
             <div>
               <h2>Data and entity lineage</h2>
@@ -122,7 +124,7 @@
           <div id="lineageRelations" class="edge-list"></div>
         </section>
 
-        <section class="card">
+        <section class="card" data-page-section="operations">
           <div class="section-head">
             <div>
               <h2>Observability and telemetry plane</h2>
@@ -132,7 +134,7 @@
           <div id="telemetryPanels" class="telemetry-grid"></div>
         </section>
 
-        <section class="card">
+        <section class="card" data-page-section="infrastructure">
           <div class="section-head">
             <div>
               <h2>Infrastructure and network plane</h2>
@@ -142,7 +144,7 @@
           <div id="infraNetworkPanels" class="telemetry-grid"></div>
         </section>
 
-        <section class="card">
+        <section class="card" data-page-section="overview">
           <div class="section-head">
             <h2>Operational pillars</h2>
             <p class="muted small">Separated by role so backend, models, and execution do not collapse into one noisy layer.</p>
@@ -150,7 +152,7 @@
           <div id="pillarGrid" class="pillar-grid"></div>
         </section>
 
-        <section class="card">
+        <section class="card" data-page-section="agents">
           <div class="section-head">
             <h2>Atlas and Zeus operations</h2>
             <p class="muted small">Direct view of both operating lanes, routes, workspaces, and memory surfaces.</p>
@@ -158,7 +160,7 @@
           <div id="agentOperations" class="agent-grid"></div>
         </section>
 
-        <section class="dashboard-dual-grid">
+        <section class="dashboard-dual-grid" data-page-section="intelligence">
           <article class="card">
             <div class="section-head">
               <h2>Backend surface</h2>
@@ -181,7 +183,7 @@
           </article>
         </section>
 
-        <section class="card">
+        <section class="card" data-page-section="overview">
           <div class="section-head">
             <div>
               <h2>Visualization and progress</h2>
@@ -195,7 +197,7 @@
           <div id="chartGuide" class="chart-guide-grid"></div>
         </section>
 
-        <section class="card room-panel">
+        <section class="card room-panel" data-page-section="operations">
           <div class="section-head">
             <div>
               <p class="eyebrow" id="roomEyebrow">Room</p>
