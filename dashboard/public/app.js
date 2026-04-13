@@ -70,6 +70,7 @@ const els = {
   lineageRelations: document.querySelector('#lineageRelations'),
   telemetryPanels: document.querySelector('#telemetryPanels'),
   infraNetworkPanels: document.querySelector('#infraNetworkPanels'),
+  securityAuditPanels: document.querySelector('#securityAuditPanels'),
   pillarGrid: document.querySelector('#pillarGrid'),
   agentOperations: document.querySelector('#agentOperations'),
   backendCards: document.querySelector('#backendCards'),
@@ -82,7 +83,7 @@ const els = {
 
 const socket = io();
 let dashboardRefreshQueued = false;
-const dashboardPages = ['overview', 'operations', 'workflows', 'agents', 'intelligence', 'data', 'infrastructure'];
+const dashboardPages = ['overview', 'operations', 'workflows', 'agents', 'intelligence', 'data', 'infrastructure', 'security'];
 
 wireEvents();
 state.activePage = resolvePageFromHash();
@@ -363,6 +364,7 @@ function renderDashboard() {
   renderLineage();
   renderTelemetryPlane();
   renderInfrastructurePlane();
+  renderSecurityAudit();
   renderPillars();
   renderAgentOperations();
   renderBackendCards();
@@ -383,6 +385,7 @@ function renderPageNav() {
     ['intelligence', 'Models/Data'],
     ['data', 'Lineage'],
     ['infrastructure', 'Infra'],
+    ['security', 'Security/Audit'],
   ];
 
   pages.forEach(([id, label]) => {
@@ -988,6 +991,32 @@ function renderInfrastructurePlane() {
       </ul>
     `;
     els.infraNetworkPanels.appendChild(article);
+  });
+}
+
+function renderSecurityAudit() {
+  const securityAudit = state.dashboardModel?.securityAudit;
+  els.securityAuditPanels.innerHTML = '';
+
+  if (!securityAudit?.panels?.length) {
+    els.securityAuditPanels.appendChild(emptyState('No security/audit panels available yet.'));
+    return;
+  }
+
+  securityAudit.panels.forEach((panel) => {
+    const article = document.createElement('article');
+    article.className = 'telemetry-card';
+    article.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(panel.title)}</strong>
+        <span class="pill ${statusClass(panel.status || 'info')}">${escapeHtml(panel.status || 'info')}</span>
+      </div>
+      <p class="muted small">${escapeHtml(panel.summary)}</p>
+      <ul class="line-list">
+        ${(panel.lines || []).map((line) => `<li>${escapeHtml(line)}</li>`).join('')}
+      </ul>
+    `;
+    els.securityAuditPanels.appendChild(article);
   });
 }
 

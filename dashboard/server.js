@@ -317,6 +317,7 @@ const getTaskById = db.prepare(`
 const countMessages = db.prepare(`SELECT COUNT(*) as count FROM messages`);
 const countNotes = db.prepare(`SELECT COUNT(*) as count FROM notes`);
 const countTasks = db.prepare(`SELECT COUNT(*) as count FROM tasks`);
+const countUsers = db.prepare(`SELECT COUNT(*) as count FROM users`);
 const getUserByUsername = db.prepare(`SELECT id, username, display_name as displayName, role, password_hash as passwordHash, created_at as createdAt FROM users WHERE username = ?`);
 const getUserById = db.prepare(`SELECT id, username, display_name as displayName, role, created_at as createdAt FROM users WHERE id = ?`);
 const insertUser = db.prepare(`
@@ -1503,6 +1504,47 @@ function getDashboardModel(hostname = '') {
     ],
   };
 
+  const securityAudit = {
+    panels: [
+      {
+        id: 'auth',
+        title: 'Identity and auth posture',
+        status: 'active',
+        summary: 'Current local auth, role, and user posture for the control plane.',
+        lines: [
+          `Users: ${countUsers.get()?.count || 0}`,
+          `Roles: ${Object.keys(rolePermissions).join(', ')}`,
+          'Session auth: local cookie-backed session',
+          `Site mode: ${siteContext.mode}`,
+        ],
+      },
+      {
+        id: 'audit',
+        title: 'Audit trail coverage',
+        status: 'active',
+        summary: 'Signals currently available for operational audit and replay.',
+        lines: [
+          `Recent activity events: ${recentActivity.length}`,
+          `Execution runs: ${executionRunCount}`,
+          `Execution steps: ${executionStepCount}`,
+          `Execution events: ${countExecutionEvents.get()?.count || 0}`,
+        ],
+      },
+      {
+        id: 'exposure',
+        title: 'Exposure and surface map',
+        status: opsSnapshot.services.caddy === 'active' ? 'ready' : 'attention',
+        summary: 'Externally facing surfaces and routing posture currently in play.',
+        lines: [
+          'HTTPS domains: srv1555140.hstgr.cloud, atlasarchitect.cloud',
+          `Gateway: ${opsSnapshot.services.gateway}`,
+          `Caddy: ${opsSnapshot.services.caddy}`,
+          `Telegram accounts: ${opsSnapshot.telegram.accounts.length}`,
+        ],
+      },
+    ],
+  };
+
   const pillars = [
     {
       id: 'command',
@@ -1615,6 +1657,7 @@ function getDashboardModel(hostname = '') {
     lineage,
     telemetryPlane,
     infrastructurePlane,
+    securityAudit,
     pillars,
     agentOperations,
     backend: {
