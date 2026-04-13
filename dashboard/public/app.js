@@ -60,6 +60,7 @@ const els = {
   pageNav: document.querySelector('#pageNav'),
   surfaceMap: document.querySelector('#surfaceMap'),
   attentionQueue: document.querySelector('#attentionQueue'),
+  operationsLane: document.querySelector('#operationsLane'),
   operationalStage: document.querySelector('#operationalStage'),
   operationalSummary: document.querySelector('#operationalSummary'),
   capabilityMatrix: document.querySelector('#capabilityMatrix'),
@@ -363,6 +364,7 @@ function renderDashboard() {
   renderOverview();
   renderSurfaceMap();
   renderAttentionQueue();
+  renderOperationsLane();
   renderOperationalLevel();
   renderTopology();
   renderWorkflowGraph();
@@ -499,6 +501,35 @@ function renderAttentionQueue() {
     `;
     card.addEventListener('click', () => setActivePage(issue.page || 'overview'));
     els.attentionQueue.appendChild(card);
+  });
+}
+
+function renderOperationsLane() {
+  if (!els.operationsLane) return;
+  els.operationsLane.innerHTML = '';
+
+  const focusCard = document.createElement('article');
+  focusCard.className = 'surface-map-card';
+  focusCard.innerHTML = `
+    <div class="note-meta">
+      <strong>${escapeHtml(state.activityState?.focus || 'Operations ready')}</strong>
+      <span class="pill ${statusClass(state.activityState?.status || 'active')}">${escapeHtml(state.activityState?.status || 'active')}</span>
+    </div>
+    <p class="muted small">${escapeHtml(state.activityState?.detail || 'No active detail published yet.')}</p>
+  `;
+  els.operationsLane.appendChild(focusCard);
+
+  (state.activityEvents || []).slice(0, 5).forEach((event) => {
+    const card = document.createElement('article');
+    card.className = 'surface-map-card';
+    card.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(event.title || 'Event')}</strong>
+        <span class="pill ${statusClass(event.status || 'info')}">${escapeHtml(event.status || 'info')}</span>
+      </div>
+      <p class="muted small">${escapeHtml(event.detail || '')}</p>
+    `;
+    els.operationsLane.appendChild(card);
   });
 }
 
