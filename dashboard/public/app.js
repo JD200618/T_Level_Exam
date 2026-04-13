@@ -63,6 +63,7 @@ const els = {
   lineageEntities: document.querySelector('#lineageEntities'),
   lineageRelations: document.querySelector('#lineageRelations'),
   telemetryPanels: document.querySelector('#telemetryPanels'),
+  infraNetworkPanels: document.querySelector('#infraNetworkPanels'),
   pillarGrid: document.querySelector('#pillarGrid'),
   agentOperations: document.querySelector('#agentOperations'),
   backendCards: document.querySelector('#backendCards'),
@@ -339,6 +340,7 @@ function renderDashboard() {
   renderWorkflowGraph();
   renderLineage();
   renderTelemetryPlane();
+  renderInfrastructurePlane();
   renderPillars();
   renderAgentOperations();
   renderBackendCards();
@@ -793,6 +795,32 @@ function renderTelemetryPlane() {
       </ul>
     `;
     els.telemetryPanels.appendChild(article);
+  });
+}
+
+function renderInfrastructurePlane() {
+  const infrastructure = state.dashboardModel?.infrastructurePlane;
+  els.infraNetworkPanels.innerHTML = '';
+
+  if (!infrastructure?.panels?.length) {
+    els.infraNetworkPanels.appendChild(emptyState('No infrastructure panels available yet.'));
+    return;
+  }
+
+  infrastructure.panels.forEach((panel) => {
+    const article = document.createElement('article');
+    article.className = 'telemetry-card';
+    article.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(panel.title)}</strong>
+        <span class="pill ${statusClass(panel.status || 'info')}">${escapeHtml(panel.status || 'info')}</span>
+      </div>
+      <p class="muted small">${escapeHtml(panel.summary)}</p>
+      <ul class="line-list">
+        ${(panel.lines || []).map((line) => `<li>${escapeHtml(line)}</li>`).join('')}
+      </ul>
+    `;
+    els.infraNetworkPanels.appendChild(article);
   });
 }
 

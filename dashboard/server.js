@@ -1231,6 +1231,60 @@ function getDashboardModel(hostname = '') {
     ],
   };
 
+  const infrastructurePlane = {
+    panels: [
+      {
+        id: 'ingress',
+        title: 'Ingress and proxy',
+        status: opsSnapshot.services.caddy === 'active' ? 'ready' : 'attention',
+        summary: 'Edge entrypoints, reverse proxy, and HTTPS-facing surface status.',
+        lines: [
+          `Caddy: ${opsSnapshot.services.caddy}`,
+          'Domains: srv1555140.hstgr.cloud, atlasarchitect.cloud',
+          `App port: ${system.appPort}`,
+          'TLS termination: edge proxy',
+        ],
+      },
+      {
+        id: 'routing',
+        title: 'Gateway and routing',
+        status: opsSnapshot.services.gateway === 'active' ? 'ready' : 'attention',
+        summary: 'Agent/channel routing path through the gateway runtime.',
+        lines: [
+          `Gateway: ${opsSnapshot.services.gateway}`,
+          `Telegram accounts: ${opsSnapshot.telegram.accounts.length}`,
+          `Agent routes: ${agentOperations.length}`,
+          'Primary path: channel -> gateway -> agent -> dashboard/state',
+        ],
+      },
+      {
+        id: 'compute',
+        title: 'Compute and host',
+        status: 'active',
+        summary: 'Current host runtime posture and capacity signals.',
+        lines: [
+          `Host: ${system.hostname}`,
+          `Platform: ${system.platform}`,
+          `Node: ${system.node}`,
+          `Memory: ${system.freeMemoryGb} GB free / ${system.totalMemoryGb} GB`,
+          `Uptime: ${system.uptimeSeconds}s`,
+        ],
+      },
+      {
+        id: 'storage',
+        title: 'Storage and state',
+        status: 'active',
+        summary: 'Current control-plane storage surfaces and durable state paths.',
+        lines: [
+          'State DB: SQLite',
+          `Workspace data sources: ${dataSources.length}`,
+          `Repositories tracked: ${opsSnapshot.repos.length}`,
+          `Dirty repo count: ${dirtyRepos}`,
+        ],
+      },
+    ],
+  };
+
   const pillars = [
     {
       id: 'command',
@@ -1339,6 +1393,7 @@ function getDashboardModel(hostname = '') {
     workflowGraph,
     lineage,
     telemetryPlane,
+    infrastructurePlane,
     pillars,
     agentOperations,
     backend: {
