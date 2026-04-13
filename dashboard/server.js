@@ -121,6 +121,35 @@ db.exec(`
     detail TEXT NOT NULL,
     created_at INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS execution_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    trace_id TEXT NOT NULL UNIQUE,
+    workflow_key TEXT NOT NULL,
+    actor TEXT NOT NULL,
+    status TEXT NOT NULL,
+    input_ref TEXT NOT NULL DEFAULT '',
+    output_ref TEXT NOT NULL DEFAULT '',
+    started_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    completed_at INTEGER,
+    latency_ms INTEGER
+  );
+
+  CREATE TABLE IF NOT EXISTS execution_steps (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER NOT NULL,
+    step_key TEXT NOT NULL,
+    step_label TEXT NOT NULL,
+    service_name TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL,
+    detail TEXT NOT NULL DEFAULT '',
+    started_at INTEGER NOT NULL,
+    completed_at INTEGER,
+    latency_ms INTEGER,
+    parent_step_id INTEGER,
+    FOREIGN KEY (run_id) REFERENCES execution_runs(id)
+  );
 `);
 
 const defaultRooms = [
@@ -325,6 +354,22 @@ const insertActivityEvent = db.prepare(`
   INSERT INTO activity_events (actor, kind, status, title, detail, created_at)
   VALUES (@actor, @kind, @status, @title, @detail, @createdAt)
 `);
+const countExecutionRuns = db.prepare(`SELECT COUNT(*) as count FROM execution_runs`);
+const countExecutionSteps = db.prepare(`SELECT COUNT(*) as count FROM execution_steps`);
+const getRecentExecutionRuns = db.prepare(`
+  SELECT id, trace_id as traceId, workflow_key as workflowKey, actor, status, input_ref as inputRef, output_ref as outputRef, started_at as startedAt, updated_at as updatedAt, completed_at as completedAt, latency_ms as latencyMs
+  FROM execution_runs
+  ORDER BY started_at DESC, id DESC
+  LIMIT ?
+`);
+const insertExecutionRun = db.prepare(`
+  INSERT INTO execution_runs (trace_id, workflow_key, actor, status, input_ref, output_ref, started_at, updated_at, completed_at, latency_ms)
+  VALUES (@traceId, @workflowKey, @actor, @status, @inputRef, @outputRef, @startedAt, @updatedAt, @completedAt, @latencyMs)
+`);
+const insertExecutionStep = db.prepare(`
+  INSERT INTO execution_steps (run_id, step_key, step_label, service_name, status, detail, started_at, completed_at, latency_ms, parent_step_id)
+  VALUES (@runId, @stepKey, @stepLabel, @serviceName, @status, @detail, @startedAt, @completedAt, @latencyMs, @parentStepId)
+`);
 const getActivityEvents = db.prepare(`
   SELECT id, actor, kind, status, title, detail, created_at as createdAt
   FROM activity_events
@@ -480,9 +525,62 @@ function ensureOperationState() {
   });
 }
 
+function ensureExecutionTracking() {
+  if ((countExecutionRuns.get()?.count || 0) > 0) return;
+
+  const startedAt = now();
+  insertExecutionRun.run({
+    traceId: 'bootstrap-request-lifecycle',
+    workflowKey: 'request-lifecycle',
+    actor: 'Atlas',
+    status: 'active',
+    inputRef: 'telegram/dashboard ingress',
+    outputRef: 'dashboard activity feed',
+    startedAt,
+    updatedAt: startedAt,
+    completedAt: null,
+    latencyMs: null,
+  });
+
+  const runId = db.prepare(`SELECT id FROM execution_runs WHERE trace_id = ?`).get('bootstrap-request-lifecycle')?.id;
+  if (!runId) return;
+
+  [
+    ['input', 'Input', 'channel-ingress', 'done', 'Inbound request enters from channel or dashboard surface.'],
+    ['session', 'Auth and session', 'session-service', 'done', 'Session identity and continuity state are applied.'],
+    ['orchestration', 'Orchestration', 'openclaw-gateway', 'done', 'Gateway compiles context and determines the path of execution.'],
+    ['model', 'Model and retrieval', 'model-router', 'active', 'Model selection and context grounding occur here.'],
+    ['tooling', 'Tool execution', 'tool-runtime', 'active', 'Tooling converts reasoning into state mutations and side effects.'],
+    ['persistence', 'Persistence', 'state-store', 'active', 'State is persisted into memory files and dashboard storage.'],
+    ['events', 'Event trail', 'observability', 'active', 'Execution state is surfaced through dashboard activity and telemetry.'],
+  ].forEach(([stepKey, stepLabel, serviceName, status, detail], index) => {
+    insertExecutionStep.run({
+      runId,
+      stepKey,
+      stepLabel,
+      serviceName,
+      status,
+      detail,
+      startedAt: startedAt + index,
+      completedAt: ['done'].includes(status) ? startedAt + index + 1 : null,
+      latencyMs: ['done'].includes(status) ? 1 : null,
+      parentStepId: null,
+    });
+  });
+
+  recordActivityEvent({
+    actor: 'Atlas',
+    kind: 'execution',
+    status: 'done',
+    title: 'Execution tracking foundation initialized',
+    detail: 'Execution run and step storage came online with the first canonical request lifecycle trace.',
+  });
+}
+
 seedBootstrapUsers();
 seedStaffState();
 ensureOperationState();
+ensureExecutionTracking();
 
 function getGitSummary() {
   try {
@@ -841,6 +939,9 @@ function getDashboardModel(hostname = '') {
   const activeAgents = agentOperations.filter((agent) => ['active', 'ready'].includes(agent.runtimeStatus)).length;
   const dirtyRepos = opsSnapshot.repos.reduce((count, repo) => count + Number(repo.dirtyCount || 0), 0);
   const recentActivity = getActivityEvents.all(100);
+  const executionRunCount = countExecutionRuns.get()?.count || 0;
+  const executionStepCount = countExecutionSteps.get()?.count || 0;
+  const recentExecutionRuns = getRecentExecutionRuns.all(5);
   const staffCounts = staffDirectory.reduce(
     (acc, staff) => {
       acc[staff.status] = (acc[staff.status] || 0) + 1;
@@ -1207,13 +1308,15 @@ function getDashboardModel(hostname = '') {
       {
         id: 'trace',
         title: 'Trace readiness',
-        status: 'limited',
-        summary: 'Trace-like visibility exists, but first-class execution objects are still being built.',
+        status: executionRunCount ? 'active' : 'limited',
+        summary: executionRunCount
+          ? 'Execution object storage is now live and beginning to back the control-plane visuals.'
+          : 'Trace-like visibility exists, but first-class execution objects are still being built.',
         lines: [
           'Topology layer: live',
           'Workflow graph layer: live',
           'Lineage layer: live',
-          'Execution-run tables: pending',
+          executionRunCount ? `Execution runs: ${executionRunCount} · steps: ${executionStepCount}` : 'Execution-run tables: pending',
         ],
       },
       {
@@ -1227,6 +1330,15 @@ function getDashboardModel(hostname = '') {
           `Caddy service: ${opsSnapshot.services.caddy}`,
           `Queued workflow pressure proxy: ${taskCounts.active + taskCounts.blocked}`,
         ],
+      },
+      {
+        id: 'execution-store',
+        title: 'Execution store',
+        status: executionRunCount ? 'active' : 'limited',
+        summary: 'Run and step storage that will back replay, drill-down, and deeper workflow lineage.',
+        lines: executionRunCount
+          ? recentExecutionRuns.map((run) => `${run.traceId} · ${run.status} · ${run.workflowKey}`)
+          : ['No execution runs stored yet.'],
       },
     ],
   };
@@ -1381,8 +1493,10 @@ function getDashboardModel(hostname = '') {
         },
         {
           label: 'Execution object tracking',
-          status: 'limited',
-          detail: 'Concept and architecture are defined, but first-class execution-run tables still need implementation.',
+          status: executionRunCount ? 'active' : 'limited',
+          detail: executionRunCount
+            ? `Execution tracking foundation is live with ${executionRunCount} run(s) and ${executionStepCount} step record(s).`
+            : 'Concept and architecture are defined, but first-class execution-run tables still need implementation.',
         },
       ],
     },
