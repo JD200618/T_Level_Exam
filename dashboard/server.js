@@ -1545,6 +1545,42 @@ function getDashboardModel(hostname = '') {
     ],
   };
 
+  const deploymentPlane = {
+    panels: [
+      {
+        id: 'runtime',
+        title: 'Runtime rollout posture',
+        status: serviceHealth,
+        summary: 'Current service readiness for the deployed control-plane stack.',
+        lines: [
+          `Dashboard: ${opsSnapshot.services.dashboard}`,
+          `Gateway: ${opsSnapshot.services.gateway}`,
+          `Caddy: ${opsSnapshot.services.caddy}`,
+          `Node runtime: ${system.node}`,
+        ],
+      },
+      {
+        id: 'repos',
+        title: 'Repository deployment state',
+        status: dirtyRepos ? 'attention' : 'ready',
+        summary: 'Repository branch, commit, and dirty-state posture for tracked code surfaces.',
+        lines: opsSnapshot.repos.map((repo) => `${repo.label}: ${repo.branch}@${repo.commit}${repo.dirtyCount ? ` · dirty ${repo.dirtyCount}` : ''}`),
+      },
+      {
+        id: 'targets',
+        title: 'Deployment targets and surfaces',
+        status: 'active',
+        summary: 'Currently active domains and app targets for the control-plane deployment.',
+        lines: [
+          'Main: https://srv1555140.hstgr.cloud',
+          'Staff ops: https://atlasarchitect.cloud',
+          `App bind: 0.0.0.0:${system.appPort}`,
+          `Tracked agents: ${agentOperations.length}`,
+        ],
+      },
+    ],
+  };
+
   const pillars = [
     {
       id: 'command',
@@ -1658,6 +1694,7 @@ function getDashboardModel(hostname = '') {
     telemetryPlane,
     infrastructurePlane,
     securityAudit,
+    deploymentPlane,
     pillars,
     agentOperations,
     backend: {

@@ -71,6 +71,7 @@ const els = {
   telemetryPanels: document.querySelector('#telemetryPanels'),
   infraNetworkPanels: document.querySelector('#infraNetworkPanels'),
   securityAuditPanels: document.querySelector('#securityAuditPanels'),
+  deploymentPanels: document.querySelector('#deploymentPanels'),
   pillarGrid: document.querySelector('#pillarGrid'),
   agentOperations: document.querySelector('#agentOperations'),
   backendCards: document.querySelector('#backendCards'),
@@ -83,7 +84,7 @@ const els = {
 
 const socket = io();
 let dashboardRefreshQueued = false;
-const dashboardPages = ['overview', 'operations', 'workflows', 'agents', 'intelligence', 'data', 'infrastructure', 'security'];
+const dashboardPages = ['overview', 'operations', 'workflows', 'agents', 'intelligence', 'data', 'infrastructure', 'security', 'deployments'];
 
 wireEvents();
 state.activePage = resolvePageFromHash();
@@ -365,6 +366,7 @@ function renderDashboard() {
   renderTelemetryPlane();
   renderInfrastructurePlane();
   renderSecurityAudit();
+  renderDeployments();
   renderPillars();
   renderAgentOperations();
   renderBackendCards();
@@ -386,6 +388,7 @@ function renderPageNav() {
     ['data', 'Lineage'],
     ['infrastructure', 'Infra'],
     ['security', 'Security/Audit'],
+    ['deployments', 'Deployments'],
   ];
 
   pages.forEach(([id, label]) => {
@@ -1017,6 +1020,32 @@ function renderSecurityAudit() {
       </ul>
     `;
     els.securityAuditPanels.appendChild(article);
+  });
+}
+
+function renderDeployments() {
+  const deploymentPlane = state.dashboardModel?.deploymentPlane;
+  els.deploymentPanels.innerHTML = '';
+
+  if (!deploymentPlane?.panels?.length) {
+    els.deploymentPanels.appendChild(emptyState('No deployment panels available yet.'));
+    return;
+  }
+
+  deploymentPlane.panels.forEach((panel) => {
+    const article = document.createElement('article');
+    article.className = 'telemetry-card';
+    article.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(panel.title)}</strong>
+        <span class="pill ${statusClass(panel.status || 'info')}">${escapeHtml(panel.status || 'info')}</span>
+      </div>
+      <p class="muted small">${escapeHtml(panel.summary)}</p>
+      <ul class="line-list">
+        ${(panel.lines || []).map((line) => `<li>${escapeHtml(line)}</li>`).join('')}
+      </ul>
+    `;
+    els.deploymentPanels.appendChild(article);
   });
 }
 
