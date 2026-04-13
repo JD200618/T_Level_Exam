@@ -161,11 +161,28 @@ pre { white-space: pre-wrap; }
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .page-button.active {
   background: linear-gradient(135deg, rgba(124, 156, 255, 0.22), rgba(61, 217, 180, 0.18));
   border-color: rgba(124, 156, 255, 0.45);
+}
+
+.page-badge {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(124, 156, 255, 0.18);
+  border: 1px solid rgba(124, 156, 255, 0.28);
+  color: var(--text);
+  font-size: 12px;
 }
 
 .page-section-hidden {

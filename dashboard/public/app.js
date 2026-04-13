@@ -379,23 +379,16 @@ function renderPageNav() {
   if (!els.pageNav) return;
   els.pageNav.innerHTML = '';
 
-  const pages = [
-    ['overview', 'Overview'],
-    ['operations', 'Operations'],
-    ['workflows', 'Workflows'],
-    ['agents', 'Agents'],
-    ['intelligence', 'Models/Data'],
-    ['data', 'Lineage'],
-    ['infrastructure', 'Infra'],
-    ['security', 'Security/Audit'],
-    ['deployments', 'Deployments'],
-  ];
+  const pages = getPageNavigationMeta();
 
-  pages.forEach(([id, label]) => {
+  pages.forEach(({ id, label, badge }) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `page-button ${state.activePage === id ? 'active' : ''}`;
-    button.textContent = label;
+    button.innerHTML = `
+      <span>${escapeHtml(label)}</span>
+      ${badge ? `<span class="page-badge">${escapeHtml(String(badge))}</span>` : ''}
+    `;
     button.addEventListener('click', () => {
       state.activePage = id;
       window.location.hash = id;
@@ -404,6 +397,21 @@ function renderPageNav() {
     });
     els.pageNav.appendChild(button);
   });
+}
+
+function getPageNavigationMeta() {
+  const dirtyRepoCount = (state.opsSnapshot?.repos || []).filter((repo) => repo.dirtyCount > 0).length;
+  return [
+    { id: 'overview', label: 'Overview' },
+    { id: 'operations', label: 'Operations', badge: state.activityEvents?.length || '' },
+    { id: 'workflows', label: 'Workflows', badge: state.dashboardModel?.executionStore?.counts?.runs || '' },
+    { id: 'agents', label: 'Agents', badge: state.dashboardModel?.agentOperations?.length || '' },
+    { id: 'intelligence', label: 'Models/Data', badge: state.dashboardModel?.ml?.modelRegistry?.length || '' },
+    { id: 'data', label: 'Lineage', badge: state.dashboardModel?.lineage?.entities?.length || '' },
+    { id: 'infrastructure', label: 'Infra', badge: state.dashboardModel?.infrastructurePlane?.panels?.length || '' },
+    { id: 'security', label: 'Security/Audit', badge: state.dashboardModel?.securityAudit?.panels?.length || '' },
+    { id: 'deployments', label: 'Deployments', badge: dirtyRepoCount || state.dashboardModel?.deploymentPlane?.panels?.length || '' },
+  ];
 }
 
 function resolvePageFromHash() {
