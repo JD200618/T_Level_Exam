@@ -78,8 +78,10 @@ const els = {
 
 const socket = io();
 let dashboardRefreshQueued = false;
+const dashboardPages = ['overview', 'operations', 'workflows', 'agents', 'intelligence', 'data', 'infrastructure'];
 
 wireEvents();
+state.activePage = resolvePageFromHash();
 checkSession();
 window.setInterval(() => {
   if (state.user) refreshDashboardModel();
@@ -147,6 +149,15 @@ function queueDashboardRefresh() {
 }
 
 function wireEvents() {
+  window.addEventListener('hashchange', () => {
+    const nextPage = resolvePageFromHash();
+    if (nextPage !== state.activePage) {
+      state.activePage = nextPage;
+      renderPageNav();
+      applyPageSections();
+    }
+  });
+
   els.loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     els.loginError.textContent = '';
@@ -373,11 +384,17 @@ function renderPageNav() {
     button.textContent = label;
     button.addEventListener('click', () => {
       state.activePage = id;
+      window.location.hash = id;
       renderPageNav();
       applyPageSections();
     });
     els.pageNav.appendChild(button);
   });
+}
+
+function resolvePageFromHash() {
+  const page = window.location.hash.replace(/^#/, '').trim().toLowerCase();
+  return dashboardPages.includes(page) ? page : 'overview';
 }
 
 function applyPageSections() {
