@@ -179,6 +179,13 @@ pre { white-space: pre-wrap; }
   margin-top: 12px;
 }
 
+.execution-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .execution-step-item {
   display: flex;
   flex-wrap: wrap;
@@ -186,6 +193,15 @@ pre { white-space: pre-wrap; }
   align-items: center;
   padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.execution-event-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
 }
 
 .room-list,

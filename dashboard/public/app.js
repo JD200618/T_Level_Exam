@@ -816,6 +816,15 @@ function renderExecutionRuns() {
           </div>
         `).join('')}
       </div>
+      <div class="execution-event-list">
+        ${(run.events || []).map((event) => `
+          <div class="execution-event-item">
+            <span>${escapeHtml(event.eventType)}</span>
+            <span class="pill ${statusClass(event.status || 'info')}">${escapeHtml(event.status || 'info')}</span>
+            <span class="muted small">${escapeHtml(event.detail || '')}</span>
+          </div>
+        `).join('')}
+      </div>
     `;
     els.executionRuns.appendChild(item);
   });
