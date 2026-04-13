@@ -178,7 +178,9 @@ pre { white-space: pre-wrap; }
 .operational-stage-card,
 .operational-summary-card,
 .capability-card,
-.gain-card {
+.gain-card,
+.topology-node,
+.edge-card {
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--panel-2);
@@ -247,7 +249,9 @@ pre { white-space: pre-wrap; }
 .chart-guide-grid,
 .operational-level-shell,
 .capability-matrix,
-.gain-grid {
+.gain-grid,
+.topology-grid,
+.edge-list {
   display: grid;
   gap: 12px;
 }
@@ -256,6 +260,8 @@ pre { white-space: pre-wrap; }
 .operational-level-shell { grid-template-columns: 280px minmax(0, 1fr); margin-bottom: 12px; }
 .capability-matrix { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .gain-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.topology-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.edge-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .pillar-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .agent-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .compact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -276,6 +282,8 @@ pre { white-space: pre-wrap; }
 .operational-summary-card,
 .capability-card,
 .gain-card,
+.topology-node,
+.edge-card,
 .message,
 .staff-card,
 .note-card,
@@ -316,7 +324,9 @@ pre { white-space: pre-wrap; }
 .operational-stage-card,
 .operational-summary-card,
 .capability-card,
-.gain-card {
+.gain-card,
+.topology-node,
+.edge-card {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)), var(--panel-2);
 }
 
@@ -602,7 +612,9 @@ pre { white-space: pre-wrap; }
   .chart-guide-grid,
   .operational-level-shell,
   .capability-matrix,
-  .gain-grid {
+  .gain-grid,
+  .topology-grid,
+  .edge-list {
     grid-template-columns: 1fr;
   }
 }

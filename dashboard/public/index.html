@@ -86,6 +86,20 @@
 
         <section class="card">
           <div class="section-head">
+            <div>
+              <h2>System topology</h2>
+              <p class="muted small">Second tracked layer: live service, agent, storage, proxy, and channel dependencies.</p>
+            </div>
+          </div>
+          <div id="topologyNodes" class="topology-grid"></div>
+          <div class="section-head compact-top">
+            <h2>Dependency edges</h2>
+          </div>
+          <div id="topologyEdges" class="edge-list"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
             <h2>Operational pillars</h2>
             <p class="muted small">Separated by role so backend, models, and execution do not collapse into one noisy layer.</p>
           </div>

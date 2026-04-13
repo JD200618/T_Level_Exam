@@ -901,6 +901,121 @@ function getDashboardModel(hostname = '') {
     operationalCapabilities.reduce((sum, capability) => sum + capability.score, 0) / operationalCapabilities.length
   );
   const operationalStage = operationalScore >= 75 ? 'Control-plane ready' : operationalScore >= 55 ? 'Operational foundation' : operationalScore >= 35 ? 'Structured bootstrap' : 'Early bootstrap';
+  const topologyNodes = [
+    {
+      id: 'caddy',
+      label: 'Caddy proxy',
+      kind: 'proxy',
+      status: opsSnapshot.services.caddy === 'active' ? 'ready' : 'attention',
+      detail: 'TLS termination and reverse proxy for the control-plane surface.',
+    },
+    {
+      id: 'dashboard',
+      label: 'Dashboard service',
+      kind: 'application',
+      status: opsSnapshot.services.dashboard === 'active' ? 'ready' : 'attention',
+      detail: 'Node-based control-plane UI and API layer.',
+    },
+    {
+      id: 'gateway',
+      label: 'OpenClaw gateway',
+      kind: 'runtime',
+      status: opsSnapshot.services.gateway === 'active' ? 'ready' : 'attention',
+      detail: 'Agent routing, sessions, channels, and tool runtime.',
+    },
+    {
+      id: 'atlas',
+      label: 'Atlas agent',
+      kind: 'agent',
+      status: agentOperations.find((agent) => agent.id === 'main')?.runtimeStatus || 'limited',
+      detail: 'Primary control-plane intelligence and continuity owner.',
+    },
+    {
+      id: 'zeus',
+      label: 'Zeus agent',
+      kind: 'agent',
+      status: agentOperations.find((agent) => agent.id === 'zeus')?.runtimeStatus || 'limited',
+      detail: 'Parallel intelligence lane and companion analysis surface.',
+    },
+    {
+      id: 'db',
+      label: 'Dashboard SQLite',
+      kind: 'storage',
+      status: 'active',
+      detail: 'Transactional state store for notes, tasks, sessions, and dashboard data.',
+    },
+    {
+      id: 'workspace',
+      label: 'Workspace memory',
+      kind: 'data',
+      status: dataSources.length ? 'ready' : 'limited',
+      detail: 'File-backed memory, ontology, studies, and operational notes.',
+    },
+    {
+      id: 'telegram-default',
+      label: 'Telegram default',
+      kind: 'channel',
+      status: opsSnapshot.telegram.accounts.some((account) => account.accountId === 'default') ? 'active' : 'limited',
+      detail: 'Atlas-facing Telegram channel surface.',
+    },
+    {
+      id: 'telegram-zeus',
+      label: 'Telegram zeus',
+      kind: 'channel',
+      status: opsSnapshot.telegram.accounts.some((account) => account.accountId === 'zeus') ? 'active' : 'limited',
+      detail: 'Zeus-facing Telegram channel surface.',
+    },
+  ];
+  const topologyEdges = [
+    {
+      from: 'Telegram default',
+      to: 'OpenClaw gateway',
+      status: opsSnapshot.telegram.accounts.some((account) => account.accountId === 'default') ? 'active' : 'limited',
+      detail: 'Inbound Atlas chat traffic enters through the default Telegram account.',
+    },
+    {
+      from: 'Telegram zeus',
+      to: 'OpenClaw gateway',
+      status: opsSnapshot.telegram.accounts.some((account) => account.accountId === 'zeus') ? 'active' : 'limited',
+      detail: 'Inbound Zeus chat traffic enters through the zeus Telegram account.',
+    },
+    {
+      from: 'OpenClaw gateway',
+      to: 'Atlas agent',
+      status: agentOperations.find((agent) => agent.id === 'main') ? 'ready' : 'limited',
+      detail: 'Gateway routes Atlas-bound sessions, tools, and memory context into the main agent.',
+    },
+    {
+      from: 'OpenClaw gateway',
+      to: 'Zeus agent',
+      status: agentOperations.find((agent) => agent.id === 'zeus') ? 'ready' : 'limited',
+      detail: 'Gateway routes Zeus sessions into the separate zeus agent runtime.',
+    },
+    {
+      from: 'Caddy proxy',
+      to: 'Dashboard service',
+      status: opsSnapshot.services.caddy === 'active' && opsSnapshot.services.dashboard === 'active' ? 'ready' : 'attention',
+      detail: 'HTTPS traffic is terminated at Caddy and forwarded to the Node control-plane service.',
+    },
+    {
+      from: 'Dashboard service',
+      to: 'Dashboard SQLite',
+      status: 'active',
+      detail: 'The dashboard persists tasks, notes, activity, and session state into SQLite.',
+    },
+    {
+      from: 'Atlas agent',
+      to: 'Workspace memory',
+      status: dataSources.length ? 'ready' : 'limited',
+      detail: 'Atlas reads operational memory, studies, and ontology files from the workspace.',
+    },
+    {
+      from: 'Zeus agent',
+      to: 'Workspace memory',
+      status: dataSources.length ? 'active' : 'limited',
+      detail: 'Zeus is grounded by its own workspace and aligned operational baseline.',
+    },
+  ];
 
   const pillars = [
     {
@@ -1002,6 +1117,10 @@ function getDashboardModel(hostname = '') {
           detail: 'Concept and architecture are defined, but first-class execution-run tables still need implementation.',
         },
       ],
+    },
+    topology: {
+      nodes: topologyNodes,
+      edges: topologyEdges,
     },
     pillars,
     agentOperations,

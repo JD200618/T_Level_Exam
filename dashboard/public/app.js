@@ -57,6 +57,8 @@ const els = {
   operationalSummary: document.querySelector('#operationalSummary'),
   capabilityMatrix: document.querySelector('#capabilityMatrix'),
   gainedCapabilities: document.querySelector('#gainedCapabilities'),
+  topologyNodes: document.querySelector('#topologyNodes'),
+  topologyEdges: document.querySelector('#topologyEdges'),
   pillarGrid: document.querySelector('#pillarGrid'),
   agentOperations: document.querySelector('#agentOperations'),
   backendCards: document.querySelector('#backendCards'),
@@ -329,6 +331,7 @@ function renderAll() {
 function renderDashboard() {
   renderOverview();
   renderOperationalLevel();
+  renderTopology();
   renderPillars();
   renderAgentOperations();
   renderBackendCards();
@@ -640,6 +643,49 @@ function renderOperationalLevel() {
       <p>${escapeHtml(gain.detail)}</p>
     `;
     els.gainedCapabilities.appendChild(card);
+  });
+}
+
+function renderTopology() {
+  const topology = state.dashboardModel?.topology;
+  els.topologyNodes.innerHTML = '';
+  els.topologyEdges.innerHTML = '';
+
+  if (!topology?.nodes?.length) {
+    els.topologyNodes.appendChild(emptyState('No topology nodes available yet.'));
+    return;
+  }
+
+  topology.nodes.forEach((node) => {
+    const card = document.createElement('article');
+    card.className = 'topology-node';
+    card.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(node.label)}</strong>
+        <span class="pill ${statusClass(node.status || 'info')}">${escapeHtml(node.status || 'info')}</span>
+      </div>
+      <p class="muted small">${escapeHtml(node.kind)}</p>
+      <p>${escapeHtml(node.detail)}</p>
+    `;
+    els.topologyNodes.appendChild(card);
+  });
+
+  if (!topology.edges?.length) {
+    els.topologyEdges.appendChild(emptyState('No dependency edges available yet.'));
+    return;
+  }
+
+  topology.edges.forEach((edge) => {
+    const item = document.createElement('article');
+    item.className = 'edge-card';
+    item.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(edge.from)} → ${escapeHtml(edge.to)}</strong>
+        <span class="pill ${statusClass(edge.status || 'info')}">${escapeHtml(edge.status || 'info')}</span>
+      </div>
+      <p>${escapeHtml(edge.detail)}</p>
+    `;
+    els.topologyEdges.appendChild(item);
   });
 }
 
