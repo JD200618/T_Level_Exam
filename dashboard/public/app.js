@@ -82,13 +82,18 @@ const els = {
   mlLayerGrid: document.querySelector('#mlLayerGrid'),
   modelRegistry: document.querySelector('#modelRegistry'),
   mlObservability: document.querySelector('#mlObservability'),
+  modelTiers: document.querySelector('#modelTiers'),
+  modelRouting: document.querySelector('#modelRouting'),
+  agentAssignments: document.querySelector('#agentAssignments'),
+  modelPricing: document.querySelector('#modelPricing'),
+  operatingModules: document.querySelector('#operatingModules'),
   progressChartSections: document.querySelector('#progressChartSections'),
   chartGuide: document.querySelector('#chartGuide'),
 };
 
 const socket = io();
 let dashboardRefreshQueued = false;
-const dashboardPages = ['overview', 'operations', 'workflows', 'agents', 'intelligence', 'data', 'infrastructure', 'security', 'deployments'];
+const dashboardPages = ['overview', 'operations', 'workflows', 'agents', 'intelligence', 'model-policy', 'modules', 'data', 'infrastructure', 'security', 'deployments'];
 
 wireEvents();
 state.activePage = resolvePageFromHash();
@@ -380,6 +385,8 @@ function renderDashboard() {
   renderBackendCards();
   renderMlSystem();
   renderMlObservability();
+  renderModelPolicy();
+  renderOperatingModules();
   renderAnalytics();
   applyPageSections();
 }
@@ -411,6 +418,8 @@ function getPageNavigationMeta() {
     { id: 'workflows', label: 'Workflows', badge: state.dashboardModel?.executionStore?.counts?.runs || '' },
     { id: 'agents', label: 'Agents', badge: state.dashboardModel?.agentOperations?.length || '' },
     { id: 'intelligence', label: 'Models/Data', badge: state.dashboardModel?.ml?.modelRegistry?.length || '' },
+    { id: 'model-policy', label: 'Model Policy', badge: state.dashboardModel?.modelLanePolicy?.tiers?.length || '' },
+    { id: 'modules', label: 'Modules', badge: state.dashboardModel?.operatingModules?.filter(m => m.status === 'active').length || '' },
     { id: 'data', label: 'Lineage', badge: state.dashboardModel?.lineage?.entities?.length || '' },
     { id: 'infrastructure', label: 'Infra', badge: state.dashboardModel?.infrastructurePlane?.panels?.length || '' },
     { id: 'security', label: 'Security/Audit', badge: state.dashboardModel?.securityAudit?.panels?.length || '' },
@@ -1448,6 +1457,102 @@ function renderMlObservability() {
     card.innerHTML = `<div class="note-meta"><strong>Correlation Heatmap</strong></div>${tableHtml}`;
     els.mlObservability.appendChild(card);
   }
+}
+
+function renderModelPolicy() {
+  const policy = state.dashboardModel?.modelLanePolicy;
+  if (!policy) return;
+
+  // Tiers
+  if (els.modelTiers) {
+    els.modelTiers.innerHTML = '';
+    (policy.tiers || []).forEach(tier => {
+      const card = document.createElement('article');
+      card.className = 'ml-obs-card';
+      const statusPill = tier.status === 'planned' ? '<span class="pill pill-planned">planned</span>' : '<span class="pill pill-active">active</span>';
+      const models = tier.models.map(m => `<code>${escapeHtml(m)}</code>`).join(' ');
+      card.innerHTML = `
+        <div class="note-meta"><strong>Tier ${escapeHtml(tier.id)}: ${escapeHtml(tier.label)}</strong>${statusPill}</div>
+        <p class="muted small">${escapeHtml(tier.description)}</p>
+        <div class="obs-token-cloud">${models}</div>
+      `;
+      els.modelTiers.appendChild(card);
+    });
+  }
+
+  // Routing
+  if (els.modelRouting) {
+    els.modelRouting.innerHTML = '';
+    const table = document.createElement('table');
+    table.className = 'obs-matrix';
+    let html = '<thead><tr><th>Task</th><th>Tier</th><th>Agent</th><th>Model</th><th>Status</th></tr></thead><tbody>';
+    (policy.routing || []).forEach(r => {
+      const st = r.status === 'planned' ? '<span class="pill pill-planned">planned</span>' : '<span class="pill pill-active">active</span>';
+      html += `<tr><td>${escapeHtml(r.task)}</td><td>${escapeHtml(r.tier)}</td><td>${escapeHtml(r.agent)}</td><td><code>${escapeHtml(r.model)}</code></td><td>${st}</td></tr>`;
+    });
+    html += '</tbody>';
+    table.innerHTML = html;
+    els.modelRouting.appendChild(table);
+  }
+
+  // Agent assignments
+  if (els.agentAssignments) {
+    els.agentAssignments.innerHTML = '';
+    (policy.agentAssignments || []).forEach(a => {
+      const card = document.createElement('article');
+      card.className = 'ml-obs-card';
+      let modelsHtml = `<div class="obs-bar-row"><span class="obs-bar-label">Primary</span><span></span><code>${escapeHtml(a.primary)}</code></div>`;
+      if (a.escalation) modelsHtml += `<div class="obs-bar-row"><span class="obs-bar-label">Escalation</span><span></span><code>${escapeHtml(a.escalation)}</code></div>`;
+      if (a.secondary) modelsHtml += `<div class="obs-bar-row"><span class="obs-bar-label">Secondary</span><span></span><code>${escapeHtml(a.secondary)}</code></div>`;
+      if (a.future) modelsHtml += `<div class="obs-bar-row"><span class="obs-bar-label">Future</span><span></span><code class="muted">${escapeHtml(a.future)}</code></div>`;
+      card.innerHTML = `
+        <div class="note-meta"><strong>${escapeHtml(a.agent.charAt(0).toUpperCase() + a.agent.slice(1))}</strong></div>
+        <p class="muted small">${escapeHtml(a.role)}</p>
+        ${modelsHtml}
+      `;
+      els.agentAssignments.appendChild(card);
+    });
+  }
+
+  // Pricing
+  if (els.modelPricing) {
+    els.modelPricing.innerHTML = '';
+    const table = document.createElement('table');
+    table.className = 'obs-matrix';
+    let html = '<thead><tr><th>Model</th><th>Input/1M</th><th>Output/1M</th><th>Context</th><th>Status</th></tr></thead><tbody>';
+    (policy.pricing || []).forEach(p => {
+      const st = p.status === 'planned' ? '<span class="pill pill-planned">planned</span>' : '<span class="pill pill-active">active</span>';
+      html += `<tr><td><code>${escapeHtml(p.model)}</code></td><td>$${p.inputPer1M.toFixed(2)}</td><td>$${p.outputPer1M.toFixed(2)}</td><td>${escapeHtml(p.context)}</td><td>${st}</td></tr>`;
+    });
+    html += '</tbody>';
+    table.innerHTML = html;
+    els.modelPricing.appendChild(table);
+  }
+}
+
+function renderOperatingModules() {
+  if (!els.operatingModules) return;
+  els.operatingModules.innerHTML = '';
+  const modules = state.dashboardModel?.operatingModules;
+  if (!modules?.length) {
+    els.operatingModules.appendChild(emptyState('No operating modules defined yet.'));
+    return;
+  }
+  modules.forEach(mod => {
+    const card = document.createElement('article');
+    card.className = 'ml-obs-card';
+    const statusClass = mod.status === 'active' ? 'pill-active' : mod.status === 'building' ? 'pill-building' : 'pill-planned';
+    const subdomainHtml = mod.subdomain ? `<a href="https://${escapeHtml(mod.subdomain)}" target="_blank" class="muted small">${escapeHtml(mod.subdomain)}</a>` : '<span class="muted small">internal module</span>';
+    card.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(mod.label)}</strong>
+        <span class="pill ${statusClass}">${escapeHtml(mod.status)}</span>
+      </div>
+      <p class="muted small">Priority ${mod.priority} · ${subdomainHtml}</p>
+      <p>${escapeHtml(mod.description)}</p>
+    `;
+    els.operatingModules.appendChild(card);
+  });
 }
 
 function renderAnalytics() {

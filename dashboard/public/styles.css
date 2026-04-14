@@ -867,6 +867,26 @@ button.surface-map-card {
   border-radius: 6px;
   font-size: 0.78rem;
 }
+.pill-building {
+  background: rgba(255, 200, 107, 0.2);
+  color: var(--warning);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+.pill-planned {
+  background: rgba(153, 163, 196, 0.15);
+  color: var(--muted);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+.obs-matrix code, .obs-token-cloud code {
+  background: var(--panel-3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
 
 @media (max-width: 720px) {
   .shell { padding: 10px; gap: 10px; }

@@ -266,6 +266,55 @@ const staffModels = [
   },
 ];
 
+const modelLanePolicy = {
+  tiers: [
+    { id: 'A', label: 'Premium Intelligence', description: 'Hardest reasoning, architecture review, high-stakes decisions', models: ['anthropic/claude-opus-4-6', 'openai/gpt-5.4'] },
+    { id: 'B', label: 'Daily Workhorse', description: 'Coding, writing, planning, implementation flow', models: ['anthropic/claude-sonnet-4-6'] },
+    { id: 'C', label: 'Research & Long Context', description: 'Large corpus analysis, document synthesis, multimodal reading', models: ['google/gemini-3.1-pro'], status: 'planned' },
+    { id: 'D', label: 'Cheap Volume Lane', description: 'Batch classification, scanning, first-pass research, bulk transforms', models: ['deepseek/deepseek-v4', 'qwen/qwen-3.5'], status: 'planned' },
+  ],
+  routing: [
+    { task: 'Architecture / high-stakes reasoning', tier: 'A', agent: 'atlas', model: 'anthropic/claude-opus-4-6' },
+    { task: 'Backend / infrastructure / deep implementation', tier: 'A', agent: 'heracles', model: 'anthropic/claude-opus-4-6' },
+    { task: 'General execution / tool-heavy ops', tier: 'A', agent: 'atlas', model: 'openai/gpt-5.4' },
+    { task: 'Daily coding / docs / implementation', tier: 'B', agent: 'any', model: 'anthropic/claude-sonnet-4-6' },
+    { task: 'Research packs / long documents / multimodal', tier: 'C', agent: 'zeus', model: 'google/gemini-3.1-pro', status: 'planned' },
+    { task: 'Cheap scan / classification / batch work', tier: 'D', agent: 'any', model: 'deepseek/deepseek-v4', status: 'planned' },
+  ],
+  agentAssignments: [
+    { agent: 'atlas', primary: 'openai/gpt-5.4', escalation: 'anthropic/claude-opus-4-6', role: 'Lead, orchestrator, control-plane intelligence' },
+    { agent: 'zeus', primary: 'openai/gpt-5.4', future: 'google/gemini-3.1-pro', role: 'Research, narrative intake, trend synthesis' },
+    { agent: 'heracles', primary: 'anthropic/claude-opus-4-6', secondary: 'anthropic/claude-sonnet-4-6', role: 'Backend, systems, infrastructure, deep implementation' },
+    { agent: 'claude', primary: 'anthropic/claude-sonnet-4-6', role: 'Claude support lane for coding and writing' },
+  ],
+  pricing: [
+    { model: 'anthropic/claude-opus-4-6', inputPer1M: 5.00, outputPer1M: 25.00, context: '1M' },
+    { model: 'openai/gpt-5.4', inputPer1M: 2.50, outputPer1M: 10.00, context: '200K' },
+    { model: 'anthropic/claude-sonnet-4-6', inputPer1M: 3.00, outputPer1M: 15.00, context: '200K' },
+    { model: 'google/gemini-3.1-pro', inputPer1M: 2.00, outputPer1M: 12.00, context: '1M', status: 'planned' },
+    { model: 'deepseek/deepseek-v4', inputPer1M: 0.30, outputPer1M: 0.50, context: '128K', status: 'planned' },
+    { model: 'openai/gpt-5.4-mini', inputPer1M: 0.75, outputPer1M: 4.50, context: '200K', status: 'planned' },
+  ],
+};
+
+const operatingModules = [
+  { id: 'control', label: 'Control Plane', subdomain: 'control.atlasarchitect.ai', status: 'active', priority: 1, description: 'Mission control dashboard, attention queue, operator approvals, execution drill-downs.' },
+  { id: 'agents', label: 'Agent Registry', subdomain: null, status: 'active', priority: 1, description: 'Agent identities, capabilities, tool entitlements, role definitions, lane ownership.' },
+  { id: 'models', label: 'Model Policy & Routing', subdomain: 'models.atlasarchitect.ai', status: 'active', priority: 1, description: 'Model registry, cost vs reasoning policy, routing rules, provider health.' },
+  { id: 'workflow', label: 'Workflow & Orchestration', subdomain: null, status: 'building', priority: 1, description: 'Multistep agent work as execution objects with retries, approvals, cross-agent handoffs.' },
+  { id: 'observability', label: 'Observability & Traces', subdomain: null, status: 'building', priority: 1, description: 'Traces, spans, prompt/tool logs, latency, cost, anomaly detection, failure clustering.' },
+  { id: 'evals', label: 'Evaluation & Experimentation', subdomain: null, status: 'planned', priority: 1, description: 'Regression tests, prompt/model comparisons, human review queues, scorer definitions.' },
+  { id: 'data', label: 'Data & Context Fabric', subdomain: 'data.atlasarchitect.ai', status: 'active', priority: 2, description: 'Governed context, memory layers, document retrieval, source freshness, entity lineage.' },
+  { id: 'patterns', label: 'Pattern Recognition', subdomain: 'patterns.atlasarchitect.ai', status: 'planned', priority: 2, description: 'Pattern clustering, narrative detection, cross-session discovery, theme synthesis.' },
+  { id: 'signals', label: 'Signals & Output', subdomain: 'signals.atlasarchitect.ai', status: 'planned', priority: 2, description: 'Alerts, briefs, dashboards, staff updates, trigger-based outbound actions.' },
+  { id: 'api', label: 'API & Tooling', subdomain: 'api.atlasarchitect.ai', status: 'active', priority: 2, description: 'Internal APIs, tool abstractions, service adapters, automation endpoints.' },
+  { id: 'governance', label: 'Governance & Risk', subdomain: null, status: 'planned', priority: 2, description: 'Policy rules, access control, audit trail, human approval rules, guardrails.' },
+  { id: 'deploy', label: 'Deployment & Release', subdomain: null, status: 'building', priority: 2, description: 'Releases, canaries, rollback, config drift detection, version tracking.' },
+  { id: 'feedback', label: 'Feedback & Learning', subdomain: null, status: 'planned', priority: 3, description: 'Acceptance/rejection capture, annotation queues, improvement backlog, memory-to-eval loops.' },
+  { id: 'economics', label: 'Economics & Usage', subdomain: null, status: 'building', priority: 3, description: 'Token cost tracking, cost per workflow, value per workflow, provider spend reporting.' },
+  { id: 'growth', label: 'Growth & Product Ops', subdomain: null, status: 'planned', priority: 3, description: 'Customer loop tracking, acquisition signals, AI-assisted product iteration.' },
+];
+
 const rolePermissions = {
   owner: ['chat.write', 'notes.write', 'tasks.write', 'staff.manage', 'system.read', 'data.read'],
   staff: ['chat.write', 'notes.write', 'tasks.write', 'system.read', 'data.read'],
@@ -1757,6 +1806,8 @@ function getDashboardModel(hostname = '') {
         },
       ],
     },
+    modelLanePolicy,
+    operatingModules,
     mlSystem: {
       summary: 'Model, memory, routing, and delivery layers for Atlas and Zeus with backend awareness.',
       layers: [
@@ -2309,6 +2360,14 @@ app.get('/api/ml-observability', authRequired, requirePermission('data.read'), (
   const data = getMlObservability();
   if (!data) return res.json({ observability: null });
   res.json({ observability: data });
+});
+
+app.get('/api/model-policy', authRequired, requirePermission('data.read'), (req, res) => {
+  res.json({ modelLanePolicy });
+});
+
+app.get('/api/operating-modules', authRequired, requirePermission('system.read'), (req, res) => {
+  res.json({ modules: operatingModules });
 });
 
 app.get('/api/ops', authRequired, requirePermission('system.read'), (req, res) => {
