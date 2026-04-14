@@ -76,6 +76,8 @@ const els = {
   securityAuditPanels: document.querySelector('#securityAuditPanels'),
   deploymentPanels: document.querySelector('#deploymentPanels'),
   pillarGrid: document.querySelector('#pillarGrid'),
+  agentRegistrySummary: document.querySelector('#agentRegistrySummary'),
+  agentRegistry: document.querySelector('#agentRegistry'),
   agentOperations: document.querySelector('#agentOperations'),
   backendCards: document.querySelector('#backendCards'),
   mlSummary: document.querySelector('#mlSummary'),
@@ -381,6 +383,7 @@ function renderDashboard() {
   renderSecurityAudit();
   renderDeployments();
   renderPillars();
+  renderAgentRegistry();
   renderAgentOperations();
   renderBackendCards();
   renderMlSystem();
@@ -1198,6 +1201,65 @@ function renderPillars() {
       </div>
     `;
     els.pillarGrid.appendChild(article);
+  });
+}
+
+function renderAgentRegistry() {
+  if (els.agentRegistrySummary) els.agentRegistrySummary.innerHTML = '';
+  if (els.agentRegistry) els.agentRegistry.innerHTML = '';
+
+  const registry = state.dashboardModel?.agentRegistry;
+  if (!registry?.entries?.length) {
+    if (els.agentRegistry) els.agentRegistry.appendChild(emptyState('No agent registry entries are available yet.'));
+    return;
+  }
+
+  (registry.summary?.metrics || []).forEach((metric) => {
+    const article = document.createElement('article');
+    article.className = 'metric-card';
+    article.innerHTML = `
+      <span>${escapeHtml(metric.label)}</span>
+      <strong>${escapeHtml(metric.value)}</strong>
+    `;
+    els.agentRegistrySummary?.appendChild(article);
+  });
+
+  registry.entries.forEach((agent) => {
+    const article = document.createElement('article');
+    article.className = 'agent-card';
+    article.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(agent.name)}</strong>
+        <span class="pill ${statusClass(agent.runtimeStatus || agent.status)}">${escapeHtml(agent.runtimeStatus || agent.status)}</span>
+      </div>
+      <p class="muted small">${escapeHtml(agent.category)} · ${escapeHtml(agent.lane)} · ${escapeHtml(agent.provider || 'unknown')}</p>
+      <p>${escapeHtml(agent.role || agent.purpose || '')}</p>
+      <div class="mini-metric-grid two-up">
+        <div class="mini-metric"><span>Primary model</span><strong>${escapeHtml(agent.primaryModel || agent.model || 'unknown')}</strong></div>
+        <div class="mini-metric"><span>Secondary</span><strong>${escapeHtml(agent.secondaryModel || 'n/a')}</strong></div>
+        <div class="mini-metric"><span>Route</span><strong>${escapeHtml(agent.routeSummary || 'unknown')}</strong></div>
+        <div class="mini-metric"><span>Workspace</span><strong>${escapeHtml(agent.workspace || '.')}</strong></div>
+      </div>
+      <div class="memory-preview">
+        <div class="memory-head">
+          <strong>Responsibilities</strong>
+          <span>${escapeHtml(String((agent.responsibilities || []).length))} lane(s)</span>
+        </div>
+        <ul class="line-list compact-list">
+          ${(agent.responsibilities || []).map((line) => `<li>${escapeHtml(line)}</li>`).join('')}
+        </ul>
+      </div>
+      <div class="memory-preview">
+        <div class="memory-head">
+          <strong>Dependencies</strong>
+          <span>${escapeHtml(agent.id)}</span>
+        </div>
+        <ul class="line-list compact-list">
+          ${(agent.dependencies || []).map((line) => `<li>${escapeHtml(line)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+    els.agentRegistry?.appendChild(article);
   });
 }
 

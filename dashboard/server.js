@@ -1458,6 +1458,57 @@ function getDashboardModel(hostname = '') {
     ],
   };
 
+  const assignmentByAgent = new Map((modelLanePolicy.agentAssignments || []).map((assignment) => [assignment.agent, assignment]));
+  const agentRegistry = {
+    summary: {
+      title: 'Agent registry online',
+      detail: `${agentOperations.length} agent lane(s) are tracked with routing, model, workspace, and runtime posture visible in one place.`,
+      metrics: [
+        { label: 'Tracked lanes', value: String(agentOperations.length) },
+        { label: 'Live routes', value: String(agentOperations.filter((agent) => agent.routeSummary && agent.routeSummary !== 'No route configured').length) },
+        { label: 'Active runtimes', value: String(activeAgents) },
+        { label: 'Core models', value: String(new Set(agentOperations.map((agent) => agent.model).filter(Boolean)).size) },
+      ],
+    },
+    entries: agentOperations.map((agent) => {
+      const assignment = assignmentByAgent.get(agent.id) || {};
+      const provider = agent.model && agent.model.includes('/') ? agent.model.split('/')[0] : 'unknown';
+      const role = assignment.role || agent.purpose || 'Operational lane';
+      const responsibilities = {
+        atlas: [
+          'Lead orchestration and integration',
+          'Hold control-plane continuity',
+          'Route cross-lane work and high-stakes decisions',
+        ],
+        zeus: [
+          'Research external systems, markets, and trends',
+          'Consume narrative flow and synthesize signal',
+          'Return operator-ready briefs to Atlas',
+        ],
+        heracles: [
+          'Own backend, infrastructure, and runtime plumbing',
+          'Handle deep implementation and system-level work',
+          'Operate beneath the visible interface and domain layer',
+        ],
+      }[agent.id] || [role];
+      const dependencies = {
+        atlas: ['Architect command', 'OpenClaw gateway', 'Workspace memory', assignment.primary || agent.model],
+        zeus: ['OpenClaw gateway', 'Telegram zeus route', 'Zeus workspace', assignment.primary || agent.model],
+        heracles: ['OpenClaw gateway', 'Anthropic API path', 'Heracles workspace', assignment.primary || agent.model],
+      }[agent.id] || ['Gateway', agent.model || 'model'];
+
+      return {
+        ...agent,
+        provider,
+        role,
+        primaryModel: assignment.primary || agent.model,
+        secondaryModel: assignment.secondary || assignment.escalation || assignment.future || '',
+        responsibilities,
+        dependencies,
+      };
+    }),
+  };
+
   const telemetryPlane = {
     panels: [
       {
@@ -1768,6 +1819,7 @@ function getDashboardModel(hostname = '') {
     securityAudit,
     deploymentPlane,
     pillars,
+    agentRegistry,
     agentOperations,
     backend: {
       cards: [

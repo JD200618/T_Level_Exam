@@ -214,8 +214,22 @@
 
         <section class="card" data-page-section="agents">
           <div class="section-head">
-            <h2>Atlas and Zeus operations</h2>
-            <p class="muted small">Direct view of both operating lanes, routes, workspaces, and memory surfaces.</p>
+            <div>
+              <h2>Agent registry</h2>
+              <p class="muted small">Roles, lanes, model assignments, dependencies, and responsibilities for Atlas, Zeus, and Heracles.</p>
+            </div>
+          </div>
+          <div id="agentRegistrySummary" class="hero-metrics compact-metrics"></div>
+          <div class="section-head compact-top">
+            <h2>Registry entries</h2>
+          </div>
+          <div id="agentRegistry" class="agent-grid"></div>
+        </section>
+
+        <section class="card" data-page-section="agents">
+          <div class="section-head">
+            <h2>Agent operations</h2>
+            <p class="muted small">Direct runtime, route, workspace, and memory view of the active operational lanes.</p>
           </div>
           <div id="agentOperations" class="agent-grid"></div>
         </section>

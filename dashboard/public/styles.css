@@ -72,6 +72,7 @@ h2 { margin-bottom: 4px; font-size: 22px; }
 h3 { margin-bottom: 6px; font-size: 20px; }
 p { line-height: 1.55; }
 pre { white-space: pre-wrap; }
+.compact-list { margin: 0; padding-left: 18px; }
 
 .eyebrow {
   margin: 0 0 6px;
@@ -380,6 +381,7 @@ button.surface-map-card {
 }
 
 .hero-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.compact-metrics { margin-bottom: 12px; }
 .operational-level-shell { grid-template-columns: 280px minmax(0, 1fr); margin-bottom: 12px; }
 .capability-matrix { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .gain-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
