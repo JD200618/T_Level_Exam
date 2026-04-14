@@ -876,6 +876,13 @@ button.surface-map-card {
   border-radius: 6px;
   font-size: 0.78rem;
 }
+.pill-attention {
+  background: rgba(255, 123, 135, 0.18);
+  color: var(--danger);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
 .pill-planned {
   background: rgba(153, 163, 196, 0.15);
   color: var(--muted);

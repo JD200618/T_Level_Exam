@@ -87,6 +87,7 @@ const els = {
   modelRegistry: document.querySelector('#modelRegistry'),
   mlObservability: document.querySelector('#mlObservability'),
   modelTiers: document.querySelector('#modelTiers'),
+  providerGateWatch: document.querySelector('#providerGateWatch'),
   modelRouting: document.querySelector('#modelRouting'),
   agentAssignments: document.querySelector('#agentAssignments'),
   modelPricing: document.querySelector('#modelPricing'),
@@ -1597,6 +1598,26 @@ function renderModelPolicy() {
         <div class="obs-token-cloud">${models}</div>
       `;
       els.modelTiers.appendChild(card);
+    });
+  }
+
+  // Provider gates
+  if (els.providerGateWatch) {
+    els.providerGateWatch.innerHTML = '';
+    (state.dashboardModel?.providerGateWatch?.providers || []).forEach((provider) => {
+      const card = document.createElement('article');
+      card.className = 'ml-obs-card';
+      const statusClassName = provider.status === 'attention' ? 'pill-attention' : provider.status === 'planned' ? 'pill-planned' : 'pill-active';
+      card.innerHTML = `
+        <div class="note-meta"><strong>${escapeHtml(provider.label)}</strong><span class="pill ${statusClassName}">${escapeHtml(provider.status)}</span></div>
+        <p class="muted small">${escapeHtml(provider.detail || '')}</p>
+        <div class="obs-bar-row"><span class="obs-bar-label">Agents</span><span></span><span>${escapeHtml((provider.agents || []).join(', ') || 'n/a')}</span></div>
+        <div class="obs-bar-row"><span class="obs-bar-label">Models</span><span></span><span>${escapeHtml((provider.models || []).join(', ') || 'n/a')}</span></div>
+        <ul class="line-list compact-list">
+          ${(provider.risks || []).map((risk) => `<li>${escapeHtml(risk)}</li>`).join('')}
+        </ul>
+      `;
+      els.providerGateWatch.appendChild(card);
     });
   }
 

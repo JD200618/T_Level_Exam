@@ -1761,6 +1761,50 @@ function getDashboardModel(hostname = '') {
     ],
   };
 
+  const providerGateWatch = {
+    providers: [
+      {
+        id: 'openai',
+        label: 'OpenAI',
+        status: agentOperations.some((agent) => agent.model?.startsWith('openai/')) ? 'ready' : 'limited',
+        detail: 'Primary command and orchestration provider currently serving Atlas and Zeus.',
+        agents: agentOperations.filter((agent) => agent.model?.startsWith('openai/')).map((agent) => agent.name),
+        models: Array.from(new Set(agentOperations.filter((agent) => agent.model?.startsWith('openai/')).map((agent) => agent.model))),
+        risks: ['Provider path currently serving core orchestration lanes.'],
+      },
+      {
+        id: 'anthropic',
+        label: 'Anthropic',
+        status: 'attention',
+        detail: 'Deep engineering and Claude support lane provider, but recent Heracles runtime tests hit a billing-enforcement gate.',
+        agents: agentOperations.filter((agent) => agent.model?.startsWith('anthropic/')).map((agent) => agent.name),
+        models: Array.from(new Set(agentOperations.filter((agent) => agent.model?.startsWith('anthropic/')).map((agent) => agent.model))),
+        risks: [
+          'Key exists, but provider acceptance is not guaranteed by key visibility alone.',
+          'Workspace billing, spend caps, or enforcement can still block runtime execution.',
+        ],
+      },
+      {
+        id: 'google',
+        label: 'Google / Gemini',
+        status: 'planned',
+        detail: 'Planned long-context research lane for Zeus and comparative model routing.',
+        agents: ['Zeus (future)'],
+        models: ['google/gemini-3.1-pro'],
+        risks: ['Provider access and credentials not yet configured.'],
+      },
+      {
+        id: 'local',
+        label: 'Local / Open-weight',
+        status: 'planned',
+        detail: 'Future low-cost worker lane for batch processing, classification, and background enrichment.',
+        agents: ['Worker lanes (future)'],
+        models: ['deepseek/deepseek-v4', 'qwen/qwen-3.5'],
+        risks: ['Serving stack, observability, and governance not yet implemented.'],
+      },
+    ],
+  };
+
   const governanceStack = {
     panels: [
       {
@@ -2025,6 +2069,7 @@ function getDashboardModel(hostname = '') {
       ],
     },
     modelLanePolicy,
+    providerGateWatch,
     operatingModules,
     mlSystem: {
       summary: 'Model, memory, routing, and delivery layers for Atlas and Zeus with backend awareness.',
