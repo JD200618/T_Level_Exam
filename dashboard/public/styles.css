@@ -768,6 +768,106 @@ button.surface-map-card {
   }
 }
 
+/* ML Observability */
+.ml-obs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+.ml-obs-card {
+  background: var(--panel-2);
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+}
+.obs-bar-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 56px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.obs-bar-label {
+  font-size: 0.82rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.obs-bar-track {
+  height: 8px;
+  background: var(--panel-3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.obs-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.obs-bar-value {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.obs-training-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 100px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.obs-dual-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.obs-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 0.82rem;
+}
+.obs-matrix th, .obs-matrix td {
+  padding: 8px 10px;
+  text-align: center;
+  border: 1px solid var(--line);
+}
+.obs-matrix th {
+  color: var(--muted);
+  font-weight: 600;
+}
+.obs-matrix-diag {
+  background: rgba(61, 217, 180, 0.18);
+  font-weight: 700;
+}
+.obs-token-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.obs-token {
+  background: var(--panel-3);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: 'SF Mono', monospace;
+}
+.obs-token small {
+  color: var(--muted);
+  margin-left: 4px;
+}
+.pill-active {
+  background: rgba(61, 217, 180, 0.2);
+  color: var(--accent-2);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
 @media (max-width: 720px) {
   .shell { padding: 10px; gap: 10px; }
   .sidebar,

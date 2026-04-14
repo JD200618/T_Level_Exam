@@ -30,6 +30,10 @@ const AGENT_RUNTIME_MAP = {
     configId: 'zeus',
     sessionsDir: path.join(OPENCLAW_HOME, 'agents', 'zeus', 'sessions'),
   },
+  heracles: {
+    configId: 'heracles',
+    sessionsDir: path.join(OPENCLAW_HOME, 'agents', 'heracles', 'sessions'),
+  },
 };
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -196,6 +200,13 @@ const staffModels = [
     lane: 'Companion Intelligence',
     category: 'Core',
     purpose: 'A separate conversational intelligence for Architect to speak with directly.',
+  },
+  {
+    id: 'heracles',
+    name: 'Heracles',
+    lane: 'Backend / ML',
+    category: 'Core',
+    purpose: 'Backend operator, programmer, pattern recognition, and data systems.',
   },
   {
     id: 'architect',
@@ -921,6 +932,18 @@ function getAgentHeartbeat(agentId) {
   };
 }
 
+const ML_OBSERVABILITY_PATH = path.join(DATA_DIR, 'ml-observability.json');
+
+function getMlObservability() {
+  try {
+    if (!fs.existsSync(ML_OBSERVABILITY_PATH)) return null;
+    const raw = fs.readFileSync(ML_OBSERVABILITY_PATH, 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 function getDataSources() {
   const candidates = [
     { key: 'soul', label: 'SOUL.md', path: path.join(WORKSPACE_ROOT, 'SOUL.md') },
@@ -997,11 +1020,11 @@ function routeSummary(routes = []) {
 function getAgentOperations(staffDirectory, opsSnapshot) {
   const repoByPath = new Map(opsSnapshot.repos.map((repo) => [path.resolve(repo.path), repo]));
 
-  return ['atlas', 'zeus'].map((agentId) => {
+  return ['atlas', 'zeus', 'heracles'].map((agentId) => {
     const staff = staffDirectory.find((entry) => entry.id === agentId);
     const configId = AGENT_RUNTIME_MAP[agentId]?.configId || agentId;
     const configAgent = opsSnapshot.agents.find((entry) => entry.id === configId) || opsSnapshot.agents.find((entry) => entry.id === agentId);
-    const workspaceRoot = agentId === 'zeus' ? path.join(WORKSPACE_ROOT, 'zeus') : WORKSPACE_ROOT;
+    const workspaceRoot = agentId === 'zeus' ? path.join(WORKSPACE_ROOT, 'zeus') : agentId === 'heracles' ? path.join(WORKSPACE_ROOT, 'heracles') : WORKSPACE_ROOT;
     const repo = repoByPath.get(path.resolve(workspaceRoot)) || repoSummary(workspaceRoot, `${agentId} workspace`);
     const latestMemory = filePreview(latestMemoryPath(workspaceRoot), 220);
     const heartbeat = getAgentHeartbeat(agentId);
@@ -1783,6 +1806,7 @@ function getDashboardModel(hostname = '') {
         notes: agent.stateNotes,
         heartbeat: agent.heartbeat,
       })),
+      observability: getMlObservability(),
     },
     analytics: {
       sections: [
@@ -2279,6 +2303,12 @@ app.patch('/api/staff/:id', authRequired, requirePermission('staff.manage'), (re
 
 app.get('/api/data-sources', authRequired, requirePermission('data.read'), (req, res) => {
   res.json({ dataSources: getDataSources() });
+});
+
+app.get('/api/ml-observability', authRequired, requirePermission('data.read'), (req, res) => {
+  const data = getMlObservability();
+  if (!data) return res.json({ observability: null });
+  res.json({ observability: data });
 });
 
 app.get('/api/ops', authRequired, requirePermission('system.read'), (req, res) => {

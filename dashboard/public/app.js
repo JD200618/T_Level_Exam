@@ -81,6 +81,7 @@ const els = {
   mlSummary: document.querySelector('#mlSummary'),
   mlLayerGrid: document.querySelector('#mlLayerGrid'),
   modelRegistry: document.querySelector('#modelRegistry'),
+  mlObservability: document.querySelector('#mlObservability'),
   progressChartSections: document.querySelector('#progressChartSections'),
   chartGuide: document.querySelector('#chartGuide'),
 };
@@ -378,6 +379,7 @@ function renderDashboard() {
   renderAgentOperations();
   renderBackendCards();
   renderMlSystem();
+  renderMlObservability();
   renderAnalytics();
   applyPageSections();
 }
@@ -1316,6 +1318,136 @@ function renderMlSystem() {
     `;
     els.modelRegistry.appendChild(article);
   });
+}
+
+function renderMlObservability() {
+  if (!els.mlObservability) return;
+  els.mlObservability.innerHTML = '';
+  const obs = state.dashboardModel?.mlSystem?.observability;
+  if (!obs) {
+    els.mlObservability.appendChild(emptyState('No ML observability data available yet.'));
+    return;
+  }
+
+  // Feature importance
+  if (obs.explainability?.featureImportance?.length) {
+    const card = document.createElement('article');
+    card.className = 'ml-obs-card';
+    const bars = obs.explainability.featureImportance
+      .map(f => `<div class="obs-bar-row"><span class="obs-bar-label">${escapeHtml(f.name)}</span><div class="obs-bar-track"><div class="obs-bar-fill" style="width:${Math.round(f.value * 100)}%"></div></div><span class="obs-bar-value">${f.value.toFixed(2)}</span></div>`)
+      .join('');
+    card.innerHTML = `<div class="note-meta"><strong>Feature Importance</strong></div>${bars}`;
+    els.mlObservability.appendChild(card);
+  }
+
+  // SHAP values
+  if (obs.explainability?.shap?.length) {
+    const card = document.createElement('article');
+    card.className = 'ml-obs-card';
+    const bars = obs.explainability.shap
+      .map(f => {
+        const abs = Math.abs(f.value);
+        const maxAbs = Math.max(...obs.explainability.shap.map(s => Math.abs(s.value)));
+        const pct = maxAbs > 0 ? Math.round((abs / maxAbs) * 100) : 0;
+        const color = f.value >= 0 ? 'var(--color-success)' : 'var(--color-danger, #e74c3c)';
+        return `<div class="obs-bar-row"><span class="obs-bar-label">${escapeHtml(f.name)}</span><div class="obs-bar-track"><div class="obs-bar-fill" style="width:${pct}%;background:${color}"></div></div><span class="obs-bar-value">${f.value >= 0 ? '+' : ''}${f.value.toFixed(2)}</span></div>`;
+      })
+      .join('');
+    card.innerHTML = `<div class="note-meta"><strong>SHAP Values</strong></div>${bars}`;
+    els.mlObservability.appendChild(card);
+  }
+
+  // Confusion matrix
+  if (obs.performance?.confusionMatrix) {
+    const cm = obs.performance.confusionMatrix;
+    const card = document.createElement('article');
+    card.className = 'ml-obs-card';
+    let tableHtml = '<table class="obs-matrix"><thead><tr><th></th>';
+    cm.labels.forEach(l => { tableHtml += `<th>${escapeHtml(l)}</th>`; });
+    tableHtml += '</tr></thead><tbody>';
+    cm.values.forEach((row, i) => {
+      tableHtml += `<tr><th>${escapeHtml(cm.labels[i])}</th>`;
+      row.forEach((val, j) => {
+        const isDiag = i === j;
+        tableHtml += `<td class="${isDiag ? 'obs-matrix-diag' : ''}">${val}</td>`;
+      });
+      tableHtml += '</tr>';
+    });
+    tableHtml += '</tbody></table>';
+    card.innerHTML = `<div class="note-meta"><strong>Confusion Matrix</strong></div>${tableHtml}`;
+    els.mlObservability.appendChild(card);
+  }
+
+  // Training history
+  if (obs.performance?.trainingHistory?.length) {
+    const card = document.createElement('article');
+    card.className = 'ml-obs-card';
+    const history = obs.performance.trainingHistory;
+    const maxLoss = Math.max(...history.map(h => h.loss));
+    const rows = history
+      .map(h => {
+        const lossPct = maxLoss > 0 ? Math.round((h.loss / maxLoss) * 100) : 0;
+        const accPct = Math.round(h.accuracy * 100);
+        return `<div class="obs-training-row">
+          <span class="obs-bar-label">Epoch ${h.epoch}</span>
+          <div class="obs-dual-bars">
+            <div class="obs-bar-track"><div class="obs-bar-fill" style="width:${lossPct}%;background:var(--color-danger, #e74c3c)"></div></div>
+            <div class="obs-bar-track"><div class="obs-bar-fill" style="width:${accPct}%;background:var(--color-success)"></div></div>
+          </div>
+          <span class="obs-bar-value">L:${h.loss.toFixed(2)} A:${(h.accuracy * 100).toFixed(0)}%</span>
+        </div>`;
+      })
+      .join('');
+    card.innerHTML = `<div class="note-meta"><strong>Training History</strong><span class="muted small">Loss (red) · Accuracy (green)</span></div>${rows}`;
+    els.mlObservability.appendChild(card);
+  }
+
+  // ROC curve as simple text representation
+  if (obs.performance?.rocCurve?.length) {
+    const card = document.createElement('article');
+    card.className = 'ml-obs-card';
+    const points = obs.performance.rocCurve;
+    const auc = points.reduce((sum, p, i) => {
+      if (i === 0) return 0;
+      const prev = points[i - 1];
+      return sum + (p.x - prev.x) * (p.y + prev.y) / 2;
+    }, 0);
+    card.innerHTML = `<div class="note-meta"><strong>ROC Curve</strong><span class="pill pill-active">AUC: ${auc.toFixed(3)}</span></div><p class="muted small">${points.length} points · FPR range [${points[0].x}, ${points[points.length-1].x}]</p>`;
+    els.mlObservability.appendChild(card);
+  }
+
+  // Attention tokens
+  if (obs.explainability?.attentionTokens?.length) {
+    const card = document.createElement('article');
+    card.className = 'ml-obs-card';
+    const tokens = obs.explainability.attentionTokens
+      .map(t => `<span class="obs-token" style="opacity:${0.4 + t.weight * 0.6};font-size:${0.75 + t.weight * 0.5}rem">${escapeHtml(t.token)} <small>${t.weight.toFixed(2)}</small></span>`)
+      .join(' ');
+    card.innerHTML = `<div class="note-meta"><strong>Attention Tokens</strong></div><div class="obs-token-cloud">${tokens}</div>`;
+    els.mlObservability.appendChild(card);
+  }
+
+  // Correlation heatmap
+  if (obs.explainability?.correlationHeatmap) {
+    const hm = obs.explainability.correlationHeatmap;
+    const card = document.createElement('article');
+    card.className = 'ml-obs-card';
+    let tableHtml = '<table class="obs-matrix"><thead><tr><th></th>';
+    hm.labels.forEach(l => { tableHtml += `<th>${escapeHtml(l)}</th>`; });
+    tableHtml += '</tr></thead><tbody>';
+    hm.values.forEach((row, i) => {
+      tableHtml += `<tr><th>${escapeHtml(hm.labels[i])}</th>`;
+      row.forEach(val => {
+        const intensity = Math.abs(val);
+        const hue = val >= 0 ? '142' : '0';
+        tableHtml += `<td style="background:hsla(${hue},70%,50%,${intensity * 0.6});color:#fff;text-align:center">${val.toFixed(2)}</td>`;
+      });
+      tableHtml += '</tr>';
+    });
+    tableHtml += '</tbody></table>';
+    card.innerHTML = `<div class="note-meta"><strong>Correlation Heatmap</strong></div>${tableHtml}`;
+    els.mlObservability.appendChild(card);
+  }
 }
 
 function renderAnalytics() {
