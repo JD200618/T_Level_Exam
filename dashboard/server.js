@@ -1761,6 +1761,77 @@ function getDashboardModel(hostname = '') {
     ],
   };
 
+  const governanceStack = {
+    panels: [
+      {
+        id: 'users',
+        title: 'User layers',
+        status: 'active',
+        summary: 'Identity, workspace presence, role, and action permissions for humans and operators.',
+        lines: [
+          'Identity -> workspace -> role -> action -> runtime access',
+          'Architect remains the approving authority and principal operator.',
+          `Tracked local roles: ${Object.keys(rolePermissions).join(', ')}`,
+        ],
+      },
+      {
+        id: 'dev',
+        title: 'Developer layers',
+        status: 'active',
+        summary: 'Prompt, application, agent, model, tool, data, infrastructure, and observability layers.',
+        lines: [
+          'Prompt/behavior -> application -> agents -> models -> tools -> data -> infra -> observability',
+          'OpenClaw runtime and dashboard backend now expose this stack as visible surfaces.',
+          `Current core agents: ${agentOperations.map((agent) => agent.name).join(', ')}`,
+        ],
+      },
+      {
+        id: 'billing',
+        title: 'Billing layers',
+        status: 'attention',
+        summary: 'Account billing, workspace billing, payment method, usage, caps, settlement, and enforcement layers.',
+        lines: [
+          'A visible API key does not prove the billing-enforcement layer is open.',
+          'Usage amount, spend cap, and provider acceptance are separate control points.',
+          'Heracles/Anthropic is the active example of this risk.',
+        ],
+      },
+      {
+        id: 'contract',
+        title: 'Contract layers',
+        status: 'active',
+        summary: 'Terms, account agreement, workspace agreement, product entitlement, and operational enforcement.',
+        lines: [
+          'App subscription and API entitlement can be different operational lanes.',
+          'Commercial relationship sits above provider execution gates.',
+          'If contract or entitlement is misaligned, runtime fails downstream.',
+        ],
+      },
+      {
+        id: 'security',
+        title: 'Security layers',
+        status: 'active',
+        summary: 'Identity security, workspace permissions, credential handling, runtime controls, infrastructure security, and audit.',
+        lines: [
+          'Human auth -> workspace roles -> key storage -> runtime permissions -> host security -> audit trail',
+          'The control plane now exposes auth posture and audit coverage separately from infra state.',
+          'Credential existence is only one layer in the security chain.',
+        ],
+      },
+      {
+        id: 'ecosystem',
+        title: 'Ecosystem layers',
+        status: 'active',
+        summary: 'Human command, control plane, agents, models, tools, data/memory, infrastructure, outputs, and product surfaces.',
+        lines: [
+          'Architect -> control plane -> Atlas/Zeus/Heracles -> models -> tools -> memory/data -> infra -> outputs',
+          'The dashboard is gradually exposing each ecosystem layer as a first-class surface.',
+          'Active control-plane pages: Overview, Operations, Workflows, Agents, Models/Data, Model Policy, Modules, Lineage, Infra, Security/Audit, Deployments',
+        ],
+      },
+    ],
+  };
+
   const deploymentPlane = {
     panels: [
       {
@@ -1911,6 +1982,7 @@ function getDashboardModel(hostname = '') {
     telemetryPlane,
     infrastructurePlane,
     securityAudit,
+    governanceStack,
     deploymentPlane,
     pillars,
     agentRegistry,

@@ -75,6 +75,7 @@ const els = {
   telemetryPanels: document.querySelector('#telemetryPanels'),
   infraNetworkPanels: document.querySelector('#infraNetworkPanels'),
   securityAuditPanels: document.querySelector('#securityAuditPanels'),
+  governanceStack: document.querySelector('#governanceStack'),
   deploymentPanels: document.querySelector('#deploymentPanels'),
   pillarGrid: document.querySelector('#pillarGrid'),
   agentRegistrySummary: document.querySelector('#agentRegistrySummary'),
@@ -383,6 +384,7 @@ function renderDashboard() {
   renderTelemetryPlane();
   renderInfrastructurePlane();
   renderSecurityAudit();
+  renderGovernanceStack();
   renderDeployments();
   renderPillars();
   renderAgentRegistry();
@@ -1165,6 +1167,33 @@ function renderSecurityAudit() {
       </ul>
     `;
     els.securityAuditPanels.appendChild(article);
+  });
+}
+
+function renderGovernanceStack() {
+  const governanceStack = state.dashboardModel?.governanceStack;
+  if (!els.governanceStack) return;
+  els.governanceStack.innerHTML = '';
+
+  if (!governanceStack?.panels?.length) {
+    els.governanceStack.appendChild(emptyState('No governance stack panels available yet.'));
+    return;
+  }
+
+  governanceStack.panels.forEach((panel) => {
+    const article = document.createElement('article');
+    article.className = 'telemetry-card';
+    article.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(panel.title)}</strong>
+        <span class="pill ${statusClass(panel.status || 'info')}">${escapeHtml(panel.status || 'info')}</span>
+      </div>
+      <p class="muted small">${escapeHtml(panel.summary || '')}</p>
+      <ul class="line-list">
+        ${(panel.lines || []).map((line) => `<li>${escapeHtml(line)}</li>`).join('')}
+      </ul>
+    `;
+    els.governanceStack.appendChild(article);
   });
 }
 
