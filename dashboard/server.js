@@ -1353,6 +1353,99 @@ function getDashboardModel(hostname = '') {
     ],
   };
 
+  const runtimeAnatomy = {
+    cards: [
+      {
+        id: 'ingress',
+        title: 'Ingress layer',
+        status: opsSnapshot.telegram.accounts.length ? 'ready' : 'limited',
+        summary: 'Messages physically enter through channel surfaces before any reasoning starts.',
+        lines: [
+          `Channels: ${opsSnapshot.telegram.accounts.length ? opsSnapshot.telegram.accounts.map((account) => `${account.channel}:${account.accountId}`).join(', ') : 'no active channel routes'}`,
+          'Dashboard and direct runtime surfaces can also inject work.',
+          'This is transport, not reasoning.',
+        ],
+      },
+      {
+        id: 'routing',
+        title: 'Route binding',
+        status: agentOperations.length ? 'active' : 'limited',
+        summary: 'Bindings map an inbound message to a specific agent, workspace, and runtime lane.',
+        lines: [
+          'Config source: openclaw.json',
+          `Tracked agents: ${agentOperations.map((agent) => `${agent.name} -> ${agent.routeSummary}`).join(' · ')}`,
+          'Channel -> binding -> agent selection happens here.',
+        ],
+      },
+      {
+        id: 'agent-auth',
+        title: 'Agent and auth load',
+        status: 'active',
+        summary: 'The runtime loads agent-specific workspace, model defaults, auth profiles, and session state.',
+        lines: [
+          `Atlas workspace: ${agentOperations.find((agent) => agent.id === 'atlas')?.workspace || '.'}`,
+          `Zeus workspace: ${agentOperations.find((agent) => agent.id === 'zeus')?.workspace || 'zeus'}`,
+          `Heracles workspace: ${agentOperations.find((agent) => agent.id === 'heracles')?.workspace || 'heracles'}`,
+        ],
+      },
+      {
+        id: 'prompt-build',
+        title: 'Prompt assembly',
+        status: dataSources.length ? 'ready' : 'limited',
+        summary: 'System rules, developer rules, workspace files, recent history, and tool schemas are assembled into the actual model request.',
+        lines: [
+          `Grounding files visible: ${dataSources.length}`,
+          'Identity and operating files shape the request before the model sees it.',
+          'This is the main prompt nerve bundle.',
+        ],
+      },
+      {
+        id: 'provider-gate',
+        title: 'Provider gate',
+        status: opsSnapshot.services.gateway === 'active' ? 'active' : 'attention',
+        summary: 'The provider checks key validity, billing, model entitlement, and rate or policy gates before inference starts.',
+        lines: [
+          'Auth, billing, and model access are enforced here.',
+          'A key can exist and still fail at this layer.',
+          'This is the current Heracles risk zone.',
+        ],
+      },
+      {
+        id: 'inference',
+        title: 'Model inference',
+        status: activeAgents ? 'active' : 'limited',
+        summary: 'Only after provider admission does the actual model reason over the assembled context.',
+        lines: [
+          `Live model lanes: ${agentOperations.map((agent) => `${agent.name}: ${agent.model}`).join(' · ')}`,
+          'This is the brain, not the whole organism.',
+          'No inference happens if the provider gate blocks the call.',
+        ],
+      },
+      {
+        id: 'tool-loop',
+        title: 'Tool dispatcher',
+        status: 'ready',
+        summary: 'If the model requests actions, the runtime dispatches local tools and feeds results back into the model loop.',
+        lines: [
+          'Examples: files, shell, web, messaging, memory search.',
+          'The model requests tools, but the runtime executes them.',
+          'This is the real motor nerve layer.',
+        ],
+      },
+      {
+        id: 'persistence-output',
+        title: 'Persistence and output',
+        status: 'active',
+        summary: 'Replies, events, notes, tasks, memory files, and dashboard state are persisted and exposed back to humans.',
+        lines: [
+          'Output surfaces: Telegram, dashboard, APIs.',
+          'State stores: workspace files and dashboard SQLite.',
+          'This closes the operational loop back into visible system state.',
+        ],
+      },
+    ],
+  };
+
   const lineage = {
     entities: [
       {
@@ -1813,6 +1906,7 @@ function getDashboardModel(hostname = '') {
     },
     workflowGraph,
     executionStore: getExecutionStore(5),
+    runtimeAnatomy,
     lineage,
     telemetryPlane,
     infrastructurePlane,

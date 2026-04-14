@@ -68,6 +68,7 @@ const els = {
   topologyNodes: document.querySelector('#topologyNodes'),
   topologyEdges: document.querySelector('#topologyEdges'),
   workflowGraph: document.querySelector('#workflowGraph'),
+  runtimeAnatomy: document.querySelector('#runtimeAnatomy'),
   executionRuns: document.querySelector('#executionRuns'),
   lineageEntities: document.querySelector('#lineageEntities'),
   lineageRelations: document.querySelector('#lineageRelations'),
@@ -376,6 +377,7 @@ function renderDashboard() {
   renderOperationalLevel();
   renderTopology();
   renderWorkflowGraph();
+  renderRuntimeAnatomy();
   renderExecutionRuns();
   renderLineage();
   renderTelemetryPlane();
@@ -950,6 +952,33 @@ function renderWorkflowGraph() {
       arrow.textContent = '→';
       els.workflowGraph.appendChild(arrow);
     }
+  });
+}
+
+function renderRuntimeAnatomy() {
+  const anatomy = state.dashboardModel?.runtimeAnatomy;
+  if (!els.runtimeAnatomy) return;
+  els.runtimeAnatomy.innerHTML = '';
+
+  if (!anatomy?.cards?.length) {
+    els.runtimeAnatomy.appendChild(emptyState('No runtime anatomy cards are available yet.'));
+    return;
+  }
+
+  anatomy.cards.forEach((card) => {
+    const article = document.createElement('article');
+    article.className = 'telemetry-card';
+    article.innerHTML = `
+      <div class="note-meta">
+        <strong>${escapeHtml(card.title)}</strong>
+        <span class="pill ${statusClass(card.status || 'info')}">${escapeHtml(card.status || 'info')}</span>
+      </div>
+      <p class="muted small">${escapeHtml(card.summary || '')}</p>
+      <ul class="line-list">
+        ${(card.lines || []).map((line) => `<li>${escapeHtml(line)}</li>`).join('')}
+      </ul>
+    `;
+    els.runtimeAnatomy.appendChild(article);
   });
 }
 
