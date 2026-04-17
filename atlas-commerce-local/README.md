@@ -45,7 +45,12 @@ The prototype is designed to help GLH:
 - frontend production build
 
 ## Documentation
-Project-facing documentation is stored in `docs/`:
+Project-facing documentation is stored in `docs/`.
+
+Start with:
+- `docs/README.md`
+
+Core project documents:
 - `client-brief.md`
 - `features-map.md`
 - `assets-log.md`

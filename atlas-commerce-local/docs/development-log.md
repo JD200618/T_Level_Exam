@@ -15,6 +15,8 @@ Use this file to record iterative development changes and the reason for each ch
   - maintainability guidelines
 - Added demo seed support documentation so the local project can be started in a usable state.
 - Removed internal coordination material from the project-facing structure.
+- Added a documentation landing page so opening the repository gives a clearer project-first view.
+- Reduced script clutter by standardising around the `.cmd` and `.sh` launch paths.
 
 ## Suggested ongoing log format
 For each iteration, record:
