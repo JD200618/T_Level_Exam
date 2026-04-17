@@ -45,7 +45,11 @@ npm run dev
 - `POST /api/orders/checkout/preview/`
 - `GET /api/dashboard/summary/`
 
-## 6. Notes
+## 6. Demo accounts after seeding
+- Admin: `admin@atlas.local` / `admin1234`
+- Customer: `sarah@atlas.local` / `demo1234`
+
+## 7. Notes
 - Keep repo private.
 - Keep `.env` local.
 - No personal information should be pushed publicly.

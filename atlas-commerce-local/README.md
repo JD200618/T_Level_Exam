@@ -50,6 +50,10 @@ A demo seed command is included in the backend:
 python manage.py seed_demo_data
 ```
 
+Seeded demo credentials:
+- Admin: `admin@atlas.local` / `admin1234`
+- Customer: `sarah@atlas.local` / `demo1234`
+
 ## Next move
 When Architect is back at the desktop, copy or clone this folder to:
 
