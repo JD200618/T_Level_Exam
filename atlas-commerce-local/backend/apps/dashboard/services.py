@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Count, F, Sum
+from django.db.models import Count, Sum
 
 from apps.orders.models import Order, OrderItem
 from apps.products.models import InventoryRecord, Product
@@ -118,7 +118,7 @@ def build_admin_analytics():
 
     top_products = []
     rows = (
-        OrderItem.objects.values(product_name=F('product_name'))
+        OrderItem.objects.values('product_name')
         .annotate(total_sold=Sum('quantity'), revenue=Sum('line_total'))
         .order_by('-total_sold', '-revenue')
     )

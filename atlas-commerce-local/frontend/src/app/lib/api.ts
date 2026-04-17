@@ -133,10 +133,21 @@ interface ApiEnvelope<T> {
 const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined)
   || (window.location.port === '5173' ? 'http://127.0.0.1:8000/api' : `${window.location.origin}/api`);
 
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 async function requestData<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers || {});
   if (!headers.has('Content-Type') && init.body) {
     headers.set('Content-Type', 'application/json');
+  }
+
+  const method = (init.method || 'GET').toUpperCase();
+  const csrfToken = getCookie('csrftoken');
+  if (csrfToken && !['GET', 'HEAD', 'OPTIONS', 'TRACE'].includes(method)) {
+    headers.set('X-CSRFToken', csrfToken);
   }
 
   const response = await fetch(`${API_BASE}${path}`, {

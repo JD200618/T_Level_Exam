@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
@@ -25,6 +27,7 @@ from .services import (
 )
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class CurrentUserView(APIView):
     permission_classes = [AllowAny]
 
