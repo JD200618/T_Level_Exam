@@ -91,8 +91,8 @@ class Command(BaseCommand):
         self._seed_products(categories)
         self._seed_users()
         self.stdout.write(self.style.SUCCESS('Demo ecommerce data is ready.'))
-        self.stdout.write('Admin login: admin@atlas.local / admin1234')
-        self.stdout.write('Customer login: sarah@atlas.local / demo1234')
+        self.stdout.write('Admin login: admin@glh.local / admin1234')
+        self.stdout.write('Customer login: sarah@glh.local / demo1234')
 
     def _seed_categories(self):
         categories = {}
@@ -131,17 +131,17 @@ class Command(BaseCommand):
 
     def _seed_users(self):
         admin_user = self._upsert_user(
-            username='atlas-admin',
-            email='admin@atlas.local',
+            username='glh-admin',
+            email='admin@glh.local',
             password=ADMIN_PASSWORD,
-            first_name='Atlas',
+            first_name='GLH',
             last_name='Admin',
             is_staff=True,
             is_superuser=True,
         )
         self._seed_profile_data(
             admin_user,
-            full_name='Atlas Admin',
+            full_name='GLH Admin',
             line_1='1 Control Plane Way',
             city='London',
             postcode='EC1A 1AA',
@@ -150,7 +150,7 @@ class Command(BaseCommand):
 
         customer_user = self._upsert_user(
             username='sarah-johnson',
-            email='sarah@atlas.local',
+            email='sarah@glh.local',
             password=DEMO_PASSWORD,
             first_name='Sarah',
             last_name='Johnson',

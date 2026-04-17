@@ -1,11 +1,25 @@
+# GLH frontend
 
-  # E-commerce website design
+This folder contains the React frontend for the Greenfield Local Hub (GLH) digital solution prototype.
 
-  This is a code bundle for E-commerce website design. The original project is available at https://www.figma.com/design/H9RsT0CUZmIj7V8C5JivAM/E-commerce-website-design.
+## Purpose
+The frontend provides:
+- customer-facing product browsing
+- cart and checkout flow
+- account and order history views
+- producer/admin dashboard views
+- project documentation pages such as system architecture, data dictionary, and flowcharts
 
-  ## Running the code
+## Run locally
+```powershell
+npm install
+npm run dev
+```
 
-  Run `npm i` to install the dependencies.
+Default development URL:
+- `http://127.0.0.1:5173/`
 
-  Run `npm run dev` to start the development server.
-  
+## Notes
+- The frontend expects the Django backend to be running locally.
+- API calls default to `http://127.0.0.1:8000/api` during local development unless `VITE_API_BASE` is set.
+- Third-party attributions are recorded in `ATTRIBUTIONS.md`.
