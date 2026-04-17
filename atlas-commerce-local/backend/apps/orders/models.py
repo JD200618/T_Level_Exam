@@ -7,10 +7,14 @@ from apps.products.models import Product
 
 class Order(models.Model):
     STATUS_PENDING = 'pending'
-    STATUS_CONFIRMED = 'confirmed'
+    STATUS_PAID = 'paid'
+    STATUS_DELIVERED = 'delivered'
+    STATUS_COLLECTED = 'collected'
     STATUS_CHOICES = [
         (STATUS_PENDING, 'Pending'),
-        (STATUS_CONFIRMED, 'Confirmed'),
+        (STATUS_PAID, 'Paid'),
+        (STATUS_DELIVERED, 'Delivered'),
+        (STATUS_COLLECTED, 'Collected'),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='orders', on_delete=models.SET_NULL, null=True, blank=True)

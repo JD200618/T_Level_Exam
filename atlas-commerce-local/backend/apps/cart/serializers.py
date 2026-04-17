@@ -6,8 +6,14 @@ from .models import Cart, CartItem
 
 
 class AddCartItemSerializer(serializers.Serializer):
-    product_slug = serializers.SlugField()
+    product_id = serializers.IntegerField(required=False)
+    product_slug = serializers.SlugField(required=False)
     quantity = serializers.IntegerField(min_value=1, default=1)
+
+    def validate(self, attrs):
+        if not attrs.get('product_id') and not attrs.get('product_slug'):
+            raise serializers.ValidationError('product_id or product_slug is required')
+        return attrs
 
 
 class UpdateCartItemSerializer(serializers.Serializer):
@@ -30,13 +36,17 @@ class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
     total_items = serializers.SerializerMethodField()
     subtotal = serializers.SerializerMethodField()
+    total = serializers.SerializerMethodField()
 
     class Meta:
         model = Cart
-        fields = ['id', 'status', 'items', 'total_items', 'subtotal']
+        fields = ['id', 'status', 'items', 'total_items', 'subtotal', 'total']
 
     def get_total_items(self, obj):
         return sum(item.quantity for item in obj.items.all())
 
     def get_subtotal(self, obj):
         return round(sum(float(item.product.price) * item.quantity for item in obj.items.all()), 2)
+
+    def get_total(self, obj):
+        return self.get_subtotal(obj)

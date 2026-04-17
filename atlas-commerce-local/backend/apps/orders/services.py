@@ -45,7 +45,7 @@ def place_order(*, cart, checkout_data, user=None):
         user=user if getattr(user, 'is_authenticated', False) else None,
         cart=cart,
         order_number=build_order_number(),
-        status=Order.STATUS_CONFIRMED,
+        status=Order.STATUS_PAID,
         full_name=checkout_data['full_name'],
         address_line_1=checkout_data['address'],
         address_line_2=checkout_data.get('address_line_2', ''),
@@ -79,3 +79,9 @@ def list_orders_for_user(user):
     if not user.is_authenticated:
         return Order.objects.none()
     return Order.objects.prefetch_related('items').filter(user=user)
+
+
+def get_order_for_user(user, order_id):
+    if not user.is_authenticated:
+        return None
+    return Order.objects.prefetch_related('items').filter(user=user, id=order_id).first()

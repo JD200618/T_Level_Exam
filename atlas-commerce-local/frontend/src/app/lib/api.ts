@@ -124,10 +124,16 @@ export interface AdminAnalytics {
   }>;
 }
 
+interface ApiEnvelope<T> {
+  ok: boolean;
+  message: string;
+  data?: T;
+}
+
 const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined)
   || (window.location.port === '5173' ? 'http://127.0.0.1:8000/api' : `${window.location.origin}/api`);
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+async function requestData<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers || {});
   if (!headers.has('Content-Type') && init.body) {
     headers.set('Content-Type', 'application/json');
@@ -139,13 +145,13 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     credentials: 'include',
   });
 
-  const data = await response.json().catch(() => ({}));
+  const payload = (await response.json().catch(() => ({}))) as ApiEnvelope<T> & Record<string, any>;
 
-  if (!response.ok || data?.ok === false) {
-    throw new Error(data?.error || 'Request failed');
+  if (!response.ok || payload?.ok === false) {
+    throw new Error((payload?.message as string) || 'Request failed');
   }
 
-  return data as T;
+  return (payload.data as T) ?? (payload as T);
 }
 
 function asNumber(value: unknown): number {
@@ -161,21 +167,35 @@ function toLoyaltyTier(totalSpend: number): 'bronze' | 'silver' | 'gold' | 'plat
   return 'bronze';
 }
 
+function mapRole(raw: any): UserRole {
+  if (raw?.role === 'admin' || raw?.is_staff) return 'admin';
+  return 'customer';
+}
+
+function mapProfile(raw: any): Profile {
+  return {
+    id: asNumber(raw.id),
+    name: raw.name,
+    email: raw.email,
+    role: mapRole(raw),
+    createdAt: raw.created_at,
+  };
+}
+
 export function mapStoreProduct(raw: any): StoreProduct {
-  const stockLevel = asNumber(raw.stock_level);
-  const lowStockThreshold = asNumber(raw.low_stock_threshold);
+  const stockLevel = asNumber(raw.available_stock);
   return {
     id: String(raw.id),
     productId: asNumber(raw.id),
     name: raw.name,
-    category: raw.category,
+    category: raw.category?.name || 'General',
     price: asNumber(raw.price),
-    unit: raw.unit,
-    image: raw.image_url,
-    description: raw.description,
-    inStock: stockLevel > 0,
+    unit: 'each',
+    image: raw.image_url || 'https://placehold.co/600x600?text=Product',
+    description: raw.description || raw.summary || '',
+    inStock: Boolean(raw.in_stock),
     stockLevel,
-    lowStockThreshold,
+    lowStockThreshold: 5,
   };
 }
 
@@ -183,11 +203,11 @@ function mapAddress(raw: any): Address {
   return {
     id: String(raw.id),
     fullName: raw.full_name,
-    address: raw.line1,
+    address: raw.address,
     city: raw.city,
     postcode: raw.postcode,
     country: raw.country,
-    isDefault: Boolean(asNumber(raw.is_default)),
+    isDefault: Boolean(raw.is_default),
   };
 }
 
@@ -199,14 +219,14 @@ function mapPaymentMethod(raw: any): PaymentMethod {
     brand: raw.brand,
     expiryMonth: String(raw.expiry_month),
     expiryYear: String(raw.expiry_year),
-    isDefault: Boolean(asNumber(raw.is_default)),
+    isDefault: Boolean(raw.is_default),
   };
 }
 
 function mapOrderItem(raw: any): OrderItem {
   return {
     productId: raw.product_id != null ? String(raw.product_id) : undefined,
-    productName: raw.product_name_snapshot || raw.productName || raw.product_name,
+    productName: raw.product_name || raw.productName,
     quantity: asNumber(raw.quantity),
     price: asNumber(raw.unit_price ?? raw.price),
   };
@@ -219,203 +239,196 @@ function mapOrder(raw: any): Order {
     date: raw.created_at,
     total: asNumber(raw.total),
     status: raw.status,
-    paymentStatus: raw.payment_status,
+    paymentStatus: raw.status,
     items: Array.isArray(raw.items) ? raw.items.map(mapOrderItem) : [],
   };
 }
 
+function mapCartItem(raw: any): CartItem {
+  const product = raw.product || {};
+  return {
+    id: String(raw.id),
+    productId: asNumber(product.id),
+    name: product.name,
+    category: product.category?.name || 'General',
+    price: asNumber(product.price),
+    unit: 'each',
+    image: product.image_url || 'https://placehold.co/600x600?text=Product',
+    description: product.description || product.summary || '',
+    inStock: Boolean(product.in_stock),
+    stockLevel: asNumber(product.available_stock),
+    lowStockThreshold: 5,
+    quantity: asNumber(raw.quantity),
+  };
+}
+
 export async function getProducts(): Promise<StoreProduct[]> {
-  const response = await request<{ ok: true; products: any[] }>('/products');
+  const response = await requestData<{ products: any[] }>('/products/');
   return response.products.map(mapStoreProduct);
 }
 
 export async function getCurrentUser(): Promise<Profile | null> {
-  const response = await request<{ ok: true; user: any | null }>('/auth/me');
-  if (!response.user) {
+  const response = await requestData<{ authenticated: boolean; user: any | null }>('/users/me/');
+  if (!response.authenticated || !response.user) {
     return null;
   }
-  return {
-    id: asNumber(response.user.id),
-    name: response.user.name,
-    email: response.user.email,
-    role: response.user.role,
-  };
+  return mapProfile(response.user);
 }
 
 export async function loginCustomer(email: string, password: string): Promise<Profile> {
-  const response = await request<{ ok: true; user: any }>('/auth/login', {
+  const response = await requestData<{ authenticated: boolean; user: any }>('/users/login/', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   });
-  return {
-    id: asNumber(response.user.id),
-    name: response.user.name,
-    email: response.user.email,
-    role: response.user.role,
-  };
+  return mapProfile(response.user);
 }
 
 export async function loginAdmin(email: string, password: string): Promise<Profile> {
-  const response = await request<{ ok: true; user: any }>('/admin/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  });
-  return {
-    id: asNumber(response.user.id),
-    name: response.user.name,
-    email: response.user.email,
-    role: response.user.role,
-  };
+  const profile = await loginCustomer(email, password);
+  if (profile.role !== 'admin') {
+    throw new Error('This account does not have admin access');
+  }
+  return profile;
 }
 
 export async function logoutUser(): Promise<void> {
-  await request<{ ok: true }>('/auth/logout', { method: 'POST' });
+  await requestData('/users/logout/', { method: 'POST' });
 }
 
 export async function getProfile(): Promise<Profile> {
-  const response = await request<{ ok: true; profile: any }>('/account/profile');
-  return {
-    id: asNumber(response.profile.id),
-    name: response.profile.name,
-    email: response.profile.email,
-    role: response.profile.role,
-    createdAt: response.profile.created_at,
-  };
+  const response = await requestData<{ profile: any }>('/users/profile/');
+  return mapProfile(response.profile);
 }
 
 export async function updateProfileName(name: string): Promise<void> {
-  await request<{ ok: true }>('/account/profile', {
+  await requestData('/users/profile/', {
     method: 'PATCH',
     body: JSON.stringify({ name }),
   });
 }
 
 export async function getAddresses(): Promise<Address[]> {
-  const response = await request<{ ok: true; addresses: any[] }>('/account/addresses');
+  const response = await requestData<{ addresses: any[] }>('/users/addresses/');
   return response.addresses.map(mapAddress);
 }
 
 export async function createAddress(address: Omit<Address, 'id'>): Promise<void> {
-  await request<{ ok: true }>('/account/addresses', {
+  await requestData('/users/addresses/', {
     method: 'POST',
-    body: JSON.stringify(address),
+    body: JSON.stringify({
+      full_name: address.fullName,
+      address: address.address,
+      city: address.city,
+      postcode: address.postcode,
+      country: address.country,
+      is_default: address.isDefault,
+    }),
   });
 }
 
 export async function updateAddress(addressId: string, address: Omit<Address, 'id'>): Promise<void> {
-  await request<{ ok: true }>(`/account/addresses/${addressId}`, {
+  await requestData(`/users/addresses/${addressId}/`, {
     method: 'PATCH',
-    body: JSON.stringify(address),
+    body: JSON.stringify({
+      full_name: address.fullName,
+      address: address.address,
+      city: address.city,
+      postcode: address.postcode,
+      country: address.country,
+      is_default: address.isDefault,
+    }),
   });
 }
 
 export async function deleteAddress(addressId: string): Promise<void> {
-  await request<{ ok: true }>(`/account/addresses/${addressId}`, {
+  await requestData(`/users/addresses/${addressId}/`, {
     method: 'DELETE',
   });
 }
 
 export async function getPaymentMethods(): Promise<PaymentMethod[]> {
-  const response = await request<{ ok: true; paymentMethods: any[] }>('/account/payment-methods');
-  return response.paymentMethods.map(mapPaymentMethod);
+  const response = await requestData<{ payment_methods: any[] }>('/users/payment-methods/');
+  return response.payment_methods.map(mapPaymentMethod);
 }
 
 export async function createPaymentMethod(method: Omit<PaymentMethod, 'id' | 'type'>): Promise<void> {
-  await request<{ ok: true }>('/account/payment-methods', {
+  await requestData('/users/payment-methods/', {
     method: 'POST',
-    body: JSON.stringify(method),
+    body: JSON.stringify({
+      brand: method.brand,
+      last4: method.last4,
+      expiry_month: Number(method.expiryMonth),
+      expiry_year: Number(method.expiryYear),
+      is_default: method.isDefault,
+    }),
   });
 }
 
 export async function deletePaymentMethod(paymentMethodId: string): Promise<void> {
-  await request<{ ok: true }>(`/account/payment-methods/${paymentMethodId}`, {
+  await requestData(`/users/payment-methods/${paymentMethodId}/`, {
     method: 'DELETE',
   });
 }
 
 export async function getOrders(): Promise<Order[]> {
-  const response = await request<{ ok: true; orders: any[] }>('/orders');
+  const response = await requestData<{ orders: any[] }>('/orders/');
   return response.orders.map(mapOrder);
 }
 
 export async function getOrderDetail(orderId: string): Promise<Order> {
-  const response = await request<{ ok: true; order: any }>(`/orders/${orderId}`);
+  const response = await requestData<{ order: any }>(`/orders/${orderId}/`);
   return mapOrder(response.order);
 }
 
 export async function getCart(): Promise<CartSnapshot> {
-  const response = await request<{ ok: true; items: any[]; totals: any }>('/cart');
-  const items: CartItem[] = response.items.map((item) => ({
-    id: String(item.product_id),
-    productId: asNumber(item.product_id),
-    name: item.name,
-    category: item.category,
-    price: asNumber(item.unit_price),
-    unit: item.unit,
-    image: item.image_url,
-    description: item.description,
-    inStock: true,
-    stockLevel: asNumber(item.stock_level),
-    lowStockThreshold: asNumber(item.low_stock_threshold),
-    quantity: asNumber(item.quantity),
-  }));
+  const response = await requestData<{ cart: any }>('/cart/');
+  const cart = response.cart;
+  const items: CartItem[] = Array.isArray(cart?.items) ? cart.items.map(mapCartItem) : [];
 
   return {
     items,
-    subtotal: asNumber(response.totals?.subtotal),
-    total: asNumber(response.totals?.total),
-    count: items.reduce((sum, item) => sum + item.quantity, 0),
+    subtotal: asNumber(cart?.subtotal),
+    total: asNumber(cart?.total),
+    count: asNumber(cart?.total_items),
   };
 }
 
 export async function addCartItem(productId: number, quantity = 1): Promise<void> {
-  await request<{ ok: true }>('/cart/items', {
+  await requestData('/cart/items/', {
     method: 'POST',
-    body: JSON.stringify({ productId, quantity }),
+    body: JSON.stringify({ product_id: productId, quantity }),
   });
 }
 
-export async function updateCartItem(productId: number, quantity: number): Promise<void> {
-  await request<{ ok: true }>(`/cart/items/${productId}`, {
+export async function updateCartItem(itemId: number, quantity: number): Promise<void> {
+  await requestData(`/cart/items/${itemId}/`, {
     method: 'PATCH',
     body: JSON.stringify({ quantity }),
   });
 }
 
-export async function removeCartItem(productId: number): Promise<void> {
-  await request<{ ok: true }>(`/cart/items/${productId}`, {
+export async function removeCartItem(itemId: number): Promise<void> {
+  await requestData(`/cart/items/${itemId}/`, {
     method: 'DELETE',
   });
 }
 
 export async function clearCartItems(): Promise<void> {
-  await request<{ ok: true }>('/cart', { method: 'DELETE' });
+  await requestData('/cart/', { method: 'DELETE' });
 }
 
 export async function previewCheckout(): Promise<{ items: CartItem[]; total: number }> {
-  const response = await request<{ ok: true; items: any[]; totals: any }>('/checkout/preview', {
-    method: 'POST',
-    body: JSON.stringify({}),
-  });
-
-  const items: CartItem[] = response.items.map((item) => ({
-    id: String(item.product_id),
-    productId: asNumber(item.product_id),
-    name: item.name,
-    category: item.category,
-    price: asNumber(item.unit_price),
-    unit: item.unit,
-    image: item.image_url,
-    description: item.description,
-    inStock: true,
-    stockLevel: asNumber(item.stock_level),
-    lowStockThreshold: asNumber(item.low_stock_threshold),
-    quantity: asNumber(item.quantity),
-  }));
+  const [cart, summary] = await Promise.all([
+    getCart(),
+    requestData<{ summary: { total: number } }>('/orders/checkout/preview/', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
+  ]);
 
   return {
-    items,
-    total: asNumber(response.totals?.total),
+    items: cart.items,
+    total: asNumber(summary.summary.total),
   };
 }
 
@@ -426,23 +439,21 @@ export async function placeOrder(payload: {
   postcode: string;
   country: string;
 }): Promise<Order> {
-  const response = await request<{ ok: true; order: any }>('/checkout/place', {
+  const response = await requestData<{ order: any }>('/orders/checkout/place/', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      full_name: payload.fullName,
+      address: payload.address,
+      city: payload.city,
+      postcode: payload.postcode,
+      country: payload.country,
+    }),
   });
-  return {
-    id: String(response.order.orderId),
-    orderNumber: response.order.orderNumber,
-    date: new Date().toISOString(),
-    total: asNumber(response.order.total),
-    status: 'paid',
-    paymentStatus: 'paid',
-    items: [],
-  };
+  return mapOrder(response.order);
 }
 
 export async function getAdminOverview(): Promise<AdminOverview> {
-  const response = await request<{ ok: true; overview: any }>('/admin/overview');
+  const response = await requestData<{ overview: any }>('/dashboard/admin/overview/');
   return {
     products: asNumber(response.overview.products),
     customers: asNumber(response.overview.customers),
@@ -452,53 +463,53 @@ export async function getAdminOverview(): Promise<AdminOverview> {
 }
 
 export async function getAdminInventory(): Promise<AdminInventoryItem[]> {
-  const response = await request<{ ok: true; inventory: any[] }>('/admin/inventory');
+  const response = await requestData<{ inventory: any[] }>('/dashboard/admin/inventory/');
   return response.inventory.map((item) => ({
     id: String(item.id),
-    productId: asNumber(item.id),
+    productId: asNumber(item.productId),
     name: item.name,
     category: item.category,
     price: asNumber(item.price),
     unit: item.unit,
-    stockLevel: asNumber(item.stock_level),
-    lowStockThreshold: asNumber(item.low_stock_threshold),
+    stockLevel: asNumber(item.stockLevel),
+    lowStockThreshold: asNumber(item.lowStockThreshold),
   }));
 }
 
 export async function updateAdminInventory(productId: number, stockLevel: number, lowStockThreshold: number): Promise<void> {
-  await request<{ ok: true }>(`/admin/inventory/${productId}`, {
+  await requestData(`/dashboard/admin/inventory/${productId}/`, {
     method: 'PATCH',
     body: JSON.stringify({ stockLevel, lowStockThreshold }),
   });
 }
 
 export async function getAdminOrders(): Promise<AdminOrder[]> {
-  const response = await request<{ ok: true; orders: any[] }>('/admin/orders');
+  const response = await requestData<{ orders: any[] }>('/dashboard/admin/orders/');
   return response.orders.map((order) => ({
     id: String(order.id),
-    orderId: asNumber(order.id),
-    orderNumber: order.order_number || `ORD-${order.id}`,
-    customerName: order.customer_name || 'Guest',
-    customerEmail: order.customer_email || 'guest@local',
-    date: order.created_at,
+    orderId: asNumber(order.orderId),
+    orderNumber: order.orderNumber,
+    customerName: order.customerName,
+    customerEmail: order.customerEmail,
+    date: order.date,
     total: asNumber(order.total),
     status: order.status,
-    paymentStatus: order.payment_status,
+    paymentStatus: order.paymentStatus,
   }));
 }
 
 export async function updateAdminOrderStatus(orderId: number, status: string): Promise<void> {
-  await request<{ ok: true }>(`/admin/orders/${orderId}/status`, {
+  await requestData(`/dashboard/admin/orders/${orderId}/status/`, {
     method: 'PATCH',
     body: JSON.stringify({ status }),
   });
 }
 
 export async function getAdminCustomers(): Promise<AdminCustomer[]> {
-  const response = await request<{ ok: true; customers: any[] }>('/admin/customers');
+  const response = await requestData<{ customers: any[] }>('/dashboard/admin/customers/');
   return response.customers.map((customer) => {
-    const totalSpend = asNumber(customer.total_spend);
-    const orderCount = asNumber(customer.order_count);
+    const totalSpend = asNumber(customer.totalSpend);
+    const orderCount = asNumber(customer.orderCount);
     return {
       id: String(customer.id),
       customerId: asNumber(customer.id),
@@ -506,14 +517,14 @@ export async function getAdminCustomers(): Promise<AdminCustomer[]> {
       email: customer.email,
       orderCount,
       totalSpend,
-      avgOrderValue: orderCount > 0 ? totalSpend / orderCount : 0,
+      avgOrderValue: asNumber(customer.avgOrderValue),
       loyaltyTier: toLoyaltyTier(totalSpend),
     };
   });
 }
 
 export async function getAdminAnalytics(): Promise<AdminAnalytics> {
-  const response = await request<{ ok: true; analytics: any }>('/admin/analytics');
+  const response = await requestData<{ analytics: any }>('/dashboard/admin/analytics/');
   return {
     revenueByStatus: (response.analytics.revenueByStatus || []).map((row: any) => ({
       status: row.status,
@@ -521,8 +532,8 @@ export async function getAdminAnalytics(): Promise<AdminAnalytics> {
       revenue: asNumber(row.revenue),
     })),
     topProducts: (response.analytics.topProducts || []).map((row: any) => ({
-      productName: row.product_name,
-      totalSold: asNumber(row.units_sold),
+      productName: row.productName,
+      totalSold: asNumber(row.totalSold),
       revenue: asNumber(row.revenue),
     })),
   };

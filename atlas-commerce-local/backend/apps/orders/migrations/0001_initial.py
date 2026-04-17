@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('order_number', models.CharField(max_length=32, unique=True)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('confirmed', 'Confirmed')], default='pending', max_length=20)),
+                ('status', models.CharField(choices=[('pending', 'Pending'), ('paid', 'Paid'), ('delivered', 'Delivered'), ('collected', 'Collected')], default='pending', max_length=20)),
                 ('full_name', models.CharField(max_length=120)),
                 ('address_line_1', models.CharField(max_length=255)),
                 ('address_line_2', models.CharField(blank=True, max_length=255)),

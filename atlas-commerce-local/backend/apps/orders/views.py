@@ -5,7 +5,7 @@ from apps.cart.services import get_or_create_active_cart
 from apps.common.responses import success_response
 
 from .serializers import CheckoutSerializer, OrderSerializer
-from .services import list_orders_for_user, place_order, preview_checkout
+from .services import get_order_for_user, list_orders_for_user, place_order, preview_checkout
 
 
 class CheckoutPreviewView(APIView):
@@ -37,3 +37,13 @@ class OrderListView(APIView):
         orders = list_orders_for_user(request.user)
         serializer = OrderSerializer(orders, many=True)
         return success_response(data={'orders': serializer.data}, message='Orders loaded')
+
+
+class OrderDetailView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, order_id):
+        order = get_order_for_user(request.user, order_id)
+        if not order:
+            return success_response(message='Order not found', status_code=404)
+        return success_response(data={'order': OrderSerializer(order).data}, message='Order loaded')

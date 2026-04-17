@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Q
 
 from apps.products.models import Product
 
@@ -20,12 +21,19 @@ def get_or_create_active_cart(request):
     return cart
 
 
-def get_cart_item_by_id(cart, item_id):
-    return cart.items.select_related('product', 'product__category', 'product__inventory').filter(id=item_id).first()
+def get_cart_item_by_lookup(cart, item_lookup):
+    return cart.items.select_related('product', 'product__category', 'product__inventory').filter(
+        Q(id=item_lookup) | Q(product_id=item_lookup)
+    ).first()
 
 
-def get_product_for_cart(product_slug):
-    return Product.objects.select_related('inventory', 'category').filter(slug=product_slug, is_active=True).first()
+def get_product_for_cart(*, product_slug=None, product_id=None):
+    queryset = Product.objects.select_related('inventory', 'category').filter(is_active=True)
+    if product_id:
+        return queryset.filter(id=product_id).first()
+    if product_slug:
+        return queryset.filter(slug=product_slug).first()
+    return None
 
 
 def build_cart_queryset(cart):
@@ -51,3 +59,8 @@ def update_cart_item_quantity(cart_item, quantity):
 @transaction.atomic
 def remove_cart_item(cart_item):
     cart_item.delete()
+
+
+@transaction.atomic
+def clear_cart(cart):
+    cart.items.all().delete()

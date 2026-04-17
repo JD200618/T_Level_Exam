@@ -7,7 +7,8 @@ from .serializers import AddCartItemSerializer, CartSerializer, UpdateCartItemSe
 from .services import (
     add_item_to_cart,
     build_cart_queryset,
-    get_cart_item_by_id,
+    clear_cart,
+    get_cart_item_by_lookup,
     get_or_create_active_cart,
     get_product_for_cart,
     remove_cart_item,
@@ -22,6 +23,12 @@ class CartDetailView(APIView):
         cart = build_cart_queryset(get_or_create_active_cart(request))
         return success_response(data={'cart': CartSerializer(cart).data}, message='Cart loaded')
 
+    def delete(self, request):
+        cart = get_or_create_active_cart(request)
+        clear_cart(cart)
+        cart = build_cart_queryset(cart)
+        return success_response(data={'cart': CartSerializer(cart).data}, message='Cart cleared')
+
 
 class CartItemCreateView(APIView):
     permission_classes = [AllowAny]
@@ -30,7 +37,10 @@ class CartItemCreateView(APIView):
         serializer = AddCartItemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         cart = get_or_create_active_cart(request)
-        product = get_product_for_cart(serializer.validated_data['product_slug'])
+        product = get_product_for_cart(
+            product_slug=serializer.validated_data.get('product_slug'),
+            product_id=serializer.validated_data.get('product_id'),
+        )
         if not product:
             return success_response(message='Product not found', status_code=404)
         add_item_to_cart(cart, product, serializer.validated_data['quantity'])
@@ -41,20 +51,20 @@ class CartItemCreateView(APIView):
 class CartItemUpdateView(APIView):
     permission_classes = [AllowAny]
 
-    def patch(self, request, item_id):
+    def patch(self, request, item_lookup):
         serializer = UpdateCartItemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         cart = get_or_create_active_cart(request)
-        cart_item = get_cart_item_by_id(cart, item_id)
+        cart_item = get_cart_item_by_lookup(cart, item_lookup)
         if not cart_item:
             return success_response(message='Cart item not found', status_code=404)
         update_cart_item_quantity(cart_item, serializer.validated_data['quantity'])
         cart = build_cart_queryset(cart)
         return success_response(data={'cart': CartSerializer(cart).data}, message='Cart updated')
 
-    def delete(self, request, item_id):
+    def delete(self, request, item_lookup):
         cart = get_or_create_active_cart(request)
-        cart_item = get_cart_item_by_id(cart, item_id)
+        cart_item = get_cart_item_by_lookup(cart, item_lookup)
         if not cart_item:
             return success_response(message='Cart item not found', status_code=404)
         remove_cart_item(cart_item)
