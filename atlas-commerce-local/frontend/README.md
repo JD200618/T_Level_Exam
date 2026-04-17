@@ -1,7 +1,11 @@
-Put the existing frontend code in this folder.
 
-Expected use:
-- keep the current frontend structure here
-- install dependencies with `npm install`
-- run locally with `npm run dev`
-- point it to the Django API at `http://127.0.0.1:8000/`
+  # E-commerce website design
+
+  This is a code bundle for E-commerce website design. The original project is available at https://www.figma.com/design/H9RsT0CUZmIj7V8C5JivAM/E-commerce-website-design.
+
+  ## Running the code
+
+  Run `npm i` to install the dependencies.
+
+  Run `npm run dev` to start the development server.
+  
