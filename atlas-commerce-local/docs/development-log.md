@@ -42,6 +42,8 @@ Use this file to record iterative development changes and the reason for each ch
 - Archived a large set of unused UI-kit component files so the active `src/app/components/ui` folder now matches the parts the app actually uses.
 - Replaced the older split-out button/card/input/label/textarea/badge wrappers with a simpler shared `src/app/components/ui/core.tsx` file, then archived the old primitives under `docs/archive/legacy-ui-primitives/`.
 - Removed the unused `components/figma/ImageWithFallback.tsx` helper from the active frontend and archived it under `docs/archive/unused-figma-helper/`.
+- Removed leftover Next.js-style `"use client"` directives from the active frontend UI primitives and cleaned a small duplicate class in `tabs.tsx` to keep the local React code simpler.
+- Updated the demo seed command to stay quiet when run with `verbosity=0`, which keeps automated tests cleaner without changing functionality.
 - Trimmed the frontend dependency list to the libraries that are still needed by the working application, reducing package noise and making the stack easier to explain.
 - Added repo-local VS Code settings to hide `__pycache__`, `*.pyc`, `node_modules`, `dist`, and the backend virtual environment from normal file browsing.
 - Simplified the toast wrapper so it no longer depends on theme plumbing that the project was not otherwise using.

@@ -171,9 +171,11 @@ class Command(BaseCommand):
         categories = self._seed_categories()
         self._seed_products(categories)
         self._seed_users()
-        self.stdout.write(self.style.SUCCESS('Demo ecommerce data is ready.'))
-        self.stdout.write('Admin login: admin@glh.local / admin1234')
-        self.stdout.write('Customer login: sarah@glh.local / demo1234')
+
+        if options.get('verbosity', 1) > 0:
+            self.stdout.write(self.style.SUCCESS('Demo ecommerce data is ready.'))
+            self.stdout.write('Admin login: admin@glh.local / admin1234')
+            self.stdout.write('Customer login: sarah@glh.local / demo1234')
 
     def _seed_categories(self):
         categories = {}
