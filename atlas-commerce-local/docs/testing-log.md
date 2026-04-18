@@ -16,6 +16,7 @@ Use this file to record iterative testing during development.
 | 2026-04-18 | Dashboard inventory editor | Shared API payload and product-edit UI review | Passed in build-validated prototype | Continue browser-side interaction review |
 | 2026-04-18 | Frontend production build after GLH feature pass | Vite production build | Passed | Bundle is still large and could be split later |
 | 2026-04-18 | Account management forms | Frontend state and API wiring review | Passed in build-validated prototype | Continue desktop interaction review |
+| 2026-04-18 | Layered backend integration verification | `python3 manage.py test apps.common.tests -v 2` | Passed | Covers customer profile, addresses, payment methods, cart, checkout, order history, admin inventory, admin order status, analytics, and access control |
 | 2026-04-18 | Frontend login credential alignment | Static review and seeded credential cross-check | Passed after correction | Re-test on desktop after pulling changes |
 | 2026-04-18 | Checkout fulfilment flow | Code review of frontend and backend contract | Passed in code | Re-test with migrate + seed on desktop |
 | 2026-04-18 | Producer metadata and expanded catalogue | Seed review plus frontend mapping check | Passed in code | Re-seed local database to load new catalogue rows |

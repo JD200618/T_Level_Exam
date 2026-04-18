@@ -73,6 +73,15 @@ Demo credentials after seeding:
 - Admin: `admin@glh.local` / `admin1234`
 - Customer: `sarah@glh.local` / `demo1234`
 
+## Dependability checks
+The project now includes repeatable backend integration tests for the main layered flows:
+
+```powershell
+python manage.py test apps.common.tests -v 2
+```
+
+This verifies the main session, API, service, and database paths for customer and admin operations.
+
 ## Local runtime target
 Recommended local project path:
 

@@ -53,6 +53,15 @@ npm run dev
 - Admin: `admin@glh.local` / `admin1234`
 - Customer: `sarah@glh.local` / `demo1234`
 
+## Automated dependability test
+Run this in `backend` after migrations and seeding:
+
+```powershell
+python manage.py test apps.common.tests -v 2
+```
+
+This checks the main layered flows across session, API, service, and database behavior.
+
 ## Suggested smoke test order
 1. Open the frontend home page
 2. Check the backend health endpoint
