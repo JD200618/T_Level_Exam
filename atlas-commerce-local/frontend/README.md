@@ -9,7 +9,7 @@ The frontend provides:
 - account and order history views
 - producer/admin dashboard views
 
-Technical reference material that does not need to be part of the live student demo has been moved into `../docs/archive/frontend-reference-ui/`.
+Only the active frontend needed for the live GLH demo is kept in this folder. Older reference/demo UI material was removed from the tracked deliverable repo during cleanup.
 
 ## Run locally
 ```powershell

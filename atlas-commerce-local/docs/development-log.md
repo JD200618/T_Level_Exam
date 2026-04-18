@@ -38,10 +38,10 @@ Use this file to record iterative development changes and the reason for each ch
 
 ## 2026-04-18
 - Simplified the active frontend surface so the working GLH demo feels more like a student project and less like a generated component showcase.
-- Removed the live routes for system architecture, data dictionary, and flowchart pages, then archived those files under `docs/archive/frontend-reference-ui/` instead of keeping them in the runtime app.
-- Archived a large set of unused UI-kit component files so the active `src/app/components/ui` folder now matches the parts the app actually uses.
-- Replaced the older split-out button/card/input/label/textarea/badge wrappers with a simpler shared `src/app/components/ui/core.tsx` file, then archived the old primitives under `docs/archive/legacy-ui-primitives/`.
-- Removed the unused `components/figma/ImageWithFallback.tsx` helper from the active frontend and archived it under `docs/archive/unused-figma-helper/`.
+- Removed the live routes for system architecture, data dictionary, and flowchart pages so they no longer add clutter to the runtime app or the tracked deliverable repo.
+- Removed a large set of unused UI-kit component files so the active `src/app/components/ui` folder now matches the parts the app actually uses.
+- Replaced the older split-out button/card/input/label/textarea/badge wrappers with a simpler shared `src/app/components/ui/core.tsx` file, then removed the old primitive copies from the tracked deliverable repo.
+- Removed the unused `components/figma/ImageWithFallback.tsx` helper from the active frontend and removed its old reference copy from the tracked deliverable repo.
 - Removed leftover Next.js-style `"use client"` directives from the active frontend UI primitives and cleaned a small duplicate class in `tabs.tsx` to keep the local React code simpler.
 - Updated the demo seed command to stay quiet when run with `verbosity=0`, which keeps automated tests cleaner without changing functionality.
 - Trimmed the frontend dependency list to the libraries that are still needed by the working application, reducing package noise and making the stack easier to explain.
