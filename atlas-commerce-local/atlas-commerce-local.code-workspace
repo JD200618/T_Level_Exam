@@ -1,0 +1,21 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "frontend/node_modules": true,
+      "frontend/dist": true,
+      "backend/db.sqlite3": true
+    },
+    "search.exclude": {
+      "frontend/node_modules": true,
+      "frontend/dist": true,
+      "**/__pycache__": true
+    }
+  }
+}

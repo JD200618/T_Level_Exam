@@ -7,6 +7,22 @@ Save the project locally at:
 
 If the repository is cloned under a different folder name, open the `atlas-commerce-local` project folder inside it.
 
+## Open in VS Code or Visual Studio
+To see the whole program together, open the project root, not just `frontend` or `backend`.
+
+Recommended options:
+- VS Code: open `atlas-commerce-local.code-workspace`
+- VS Code: or open the folder `C:\Projects\ecommerce-prototype\atlas-commerce-local\`
+- Visual Studio: use **Open a Local Folder** and select `C:\Projects\ecommerce-prototype\atlas-commerce-local\`
+
+When opened from the root, the editor should show:
+- `backend/`
+- `frontend/`
+- `docs/`
+- `scripts/`
+- `README.md`
+- `SETUP.md`
+
 ## Prerequisites
 Install these tools on the desktop machine:
 - VS Code
