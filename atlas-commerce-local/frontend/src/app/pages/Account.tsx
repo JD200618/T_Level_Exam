@@ -1,11 +1,31 @@
+import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
-import { User, MapPin, CreditCard, Package, Settings, LogOut, Plus, Trash2, RefreshCw } from 'lucide-react';
+import { User, MapPin, CreditCard, Package, Settings, LogOut, Plus, Trash2, RefreshCw, Save } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Badge } from '../components/ui/badge';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
 import { toast } from 'sonner';
+
+const EMPTY_ADDRESS_FORM = {
+  fullName: '',
+  address: '',
+  city: '',
+  postcode: '',
+  country: 'United Kingdom',
+  isDefault: false,
+};
+
+const EMPTY_CARD_FORM = {
+  brand: 'Visa',
+  last4: '',
+  expiryMonth: '',
+  expiryYear: '',
+  isDefault: false,
+};
 
 export function Account() {
   const {
@@ -14,12 +34,34 @@ export function Account() {
     isLoading,
     logout,
     refreshUser,
+    updateProfile,
     addAddress,
     deleteAddress,
     addPaymentMethod,
     deletePaymentMethod,
   } = useAuth();
   const navigate = useNavigate();
+
+  const [profileName, setProfileName] = useState('');
+  const [addressForm, setAddressForm] = useState(EMPTY_ADDRESS_FORM);
+  const [cardForm, setCardForm] = useState(EMPTY_CARD_FORM);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isSavingAddress, setIsSavingAddress] = useState(false);
+  const [isSavingCard, setIsSavingCard] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    setProfileName(user.name);
+    setAddressForm((prev) => ({
+      ...prev,
+      fullName: user.name,
+      isDefault: user.addresses.length === 0,
+    }));
+    setCardForm((prev) => ({
+      ...prev,
+      isDefault: user.paymentMethods.length === 0,
+    }));
+  }, [user]);
 
   if (isLoading) {
     return <div className="p-6" style={{ color: '#6B6B6B' }}>Loading account...</div>;
@@ -40,50 +82,81 @@ export function Account() {
     toast.success('Account refreshed from backend');
   };
 
-  const handleAddAddress = async () => {
-    const fullName = window.prompt('Full name', user.name) || user.name;
-    const address = window.prompt('Address line', '456 Market Lane');
-    const city = window.prompt('City', 'Springfield');
-    const postcode = window.prompt('Postcode', 'SP3 4EF');
-    const country = window.prompt('Country', 'United Kingdom');
-
-    if (!address || !city || !postcode || !country) {
+  const handleSaveProfile = async () => {
+    if (!profileName.trim()) {
+      toast.error('Please enter a profile name');
       return;
     }
 
+    setIsSavingProfile(true);
     try {
-      await addAddress({
-        fullName,
-        address,
-        city,
-        postcode,
-        country,
-        isDefault: user.addresses.length === 0,
+      await updateProfile({ name: profileName.trim() });
+      toast.success('Profile updated');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to update profile');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleAddressSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!addressForm.fullName || !addressForm.address || !addressForm.city || !addressForm.postcode || !addressForm.country) {
+      toast.error('Please complete all address fields');
+      return;
+    }
+
+    setIsSavingAddress(true);
+    try {
+      await addAddress(addressForm);
+      setAddressForm({
+        ...EMPTY_ADDRESS_FORM,
+        fullName: user.name,
+        country: 'United Kingdom',
+        isDefault: false,
       });
       toast.success('Address added');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to add address');
+    } finally {
+      setIsSavingAddress(false);
     }
   };
 
-  const handleAddCard = async () => {
-    const brand = window.prompt('Card brand', 'Visa') || 'Visa';
-    const last4 = window.prompt('Last 4 digits', '4242') || '4242';
-    const expiryMonth = window.prompt('Expiry month', '12') || '12';
-    const expiryYear = window.prompt('Expiry year', '2027') || '2027';
+  const handleCardSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
+    if (!cardForm.brand || !cardForm.last4 || !cardForm.expiryMonth || !cardForm.expiryYear) {
+      toast.error('Please complete all card fields');
+      return;
+    }
+
+    if (cardForm.last4.length !== 4) {
+      toast.error('Card last 4 digits must be exactly 4 numbers');
+      return;
+    }
+
+    setIsSavingCard(true);
     try {
       await addPaymentMethod({
         type: 'card',
-        brand,
-        last4,
-        expiryMonth,
-        expiryYear,
-        isDefault: user.paymentMethods.length === 0,
+        brand: cardForm.brand,
+        last4: cardForm.last4,
+        expiryMonth: cardForm.expiryMonth,
+        expiryYear: cardForm.expiryYear,
+        isDefault: cardForm.isDefault,
+      });
+      setCardForm({
+        ...EMPTY_CARD_FORM,
+        brand: 'Visa',
+        isDefault: false,
       });
       toast.success('Payment method added');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to add payment method');
+    } finally {
+      setIsSavingCard(false);
     }
   };
 
@@ -116,7 +189,7 @@ export function Account() {
                 My Account
               </h1>
               <p style={{ color: '#6B6B6B' }}>
-                Live account data from the backend
+                Manage profile details, saved addresses, payment methods, and order history.
               </p>
             </div>
             <div className="flex gap-2">
@@ -166,17 +239,32 @@ export function Account() {
 
           <TabsContent value="profile" className="space-y-6">
             <Card className="p-6">
-              <h3 className="mb-6" style={{ color: '#2E2E2E' }}>
-                Profile Information
-              </h3>
-              <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
                 <div>
-                  <p className="text-sm mb-1" style={{ color: '#6B6B6B' }}>Full Name</p>
-                  <p className="text-lg" style={{ color: '#2E2E2E' }}>{user.name}</p>
+                  <h3 style={{ color: '#2E2E2E' }}>Profile Information</h3>
+                  <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>
+                    Update the core customer account details stored through the backend.
+                  </p>
                 </div>
-                <div>
-                  <p className="text-sm mb-1" style={{ color: '#6B6B6B' }}>Email Address</p>
-                  <p className="text-lg" style={{ color: '#2E2E2E' }}>{user.email}</p>
+                <Button onClick={() => void handleSaveProfile()} disabled={isSavingProfile} style={{ backgroundColor: '#2E7D32' }}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {isSavingProfile ? 'Saving...' : 'Save profile'}
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="profile-name">Full Name</Label>
+                  <Input
+                    id="profile-name"
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                    style={{ borderColor: '#A5D6A7' }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="profile-email">Email Address</Label>
+                  <Input id="profile-email" value={user.email} disabled style={{ borderColor: '#E5E5E5' }} />
                 </div>
                 <div>
                   <p className="text-sm mb-1" style={{ color: '#6B6B6B' }}>Role</p>
@@ -208,7 +296,7 @@ export function Account() {
                   <Card key={order.id} className="p-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
                       <div>
-                        <div className="flex items-center gap-3 mb-2">
+                        <div className="flex items-center gap-3 mb-2 flex-wrap">
                           <h4 style={{ color: '#2E2E2E' }}>Order #{order.orderNumber}</h4>
                           <Badge style={getStatusColor(order.status)}>
                             {order.status}
@@ -229,7 +317,7 @@ export function Account() {
                       <div className="text-right">
                         <p className="text-sm mb-1" style={{ color: '#6B6B6B' }}>Total</p>
                         <p className="text-xl" style={{ color: '#2E7D32', fontWeight: 600 }}>
-                          ${order.total.toFixed(2)}
+                          £{order.total.toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -242,7 +330,7 @@ export function Account() {
                               {item.productName} <span style={{ color: '#6B6B6B' }}>×{item.quantity}</span>
                             </p>
                             <p style={{ color: '#6B6B6B' }}>
-                              ${(item.price * item.quantity).toFixed(2)}
+                              £{(item.price * item.quantity).toFixed(2)}
                             </p>
                           </div>
                         ))
@@ -257,17 +345,75 @@ export function Account() {
           </TabsContent>
 
           <TabsContent value="addresses" className="space-y-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 style={{ color: '#2E2E2E' }}>Saved Addresses</h3>
-              <Button
-                size="sm"
-                style={{ backgroundColor: '#2E7D32' }}
-                onClick={() => void handleAddAddress()}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Address
-              </Button>
-            </div>
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Plus className="h-4 w-4" style={{ color: '#2E7D32' }} />
+                <h3 style={{ color: '#2E2E2E' }}>Add Address</h3>
+              </div>
+
+              <form onSubmit={(event) => void handleAddressSubmit(event)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="address-full-name">Full name</Label>
+                  <Input
+                    id="address-full-name"
+                    value={addressForm.fullName}
+                    onChange={(e) => setAddressForm((prev) => ({ ...prev, fullName: e.target.value }))}
+                    style={{ borderColor: '#A5D6A7' }}
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="address-line">Address</Label>
+                  <Input
+                    id="address-line"
+                    value={addressForm.address}
+                    onChange={(e) => setAddressForm((prev) => ({ ...prev, address: e.target.value }))}
+                    style={{ borderColor: '#A5D6A7' }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address-city">City</Label>
+                  <Input
+                    id="address-city"
+                    value={addressForm.city}
+                    onChange={(e) => setAddressForm((prev) => ({ ...prev, city: e.target.value }))}
+                    style={{ borderColor: '#A5D6A7' }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address-postcode">Postcode</Label>
+                  <Input
+                    id="address-postcode"
+                    value={addressForm.postcode}
+                    onChange={(e) => setAddressForm((prev) => ({ ...prev, postcode: e.target.value }))}
+                    style={{ borderColor: '#A5D6A7' }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address-country">Country</Label>
+                  <Input
+                    id="address-country"
+                    value={addressForm.country}
+                    onChange={(e) => setAddressForm((prev) => ({ ...prev, country: e.target.value }))}
+                    style={{ borderColor: '#A5D6A7' }}
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    variant={addressForm.isDefault ? 'default' : 'outline'}
+                    onClick={() => setAddressForm((prev) => ({ ...prev, isDefault: !prev.isDefault }))}
+                    style={addressForm.isDefault ? { backgroundColor: '#2E7D32' } : { borderColor: '#2E7D32', color: '#2E7D32' }}
+                  >
+                    {addressForm.isDefault ? 'Default address' : 'Set as default'}
+                  </Button>
+                </div>
+                <div className="md:col-span-2">
+                  <Button type="submit" disabled={isSavingAddress} style={{ backgroundColor: '#2E7D32' }}>
+                    {isSavingAddress ? 'Saving...' : 'Add address'}
+                  </Button>
+                </div>
+              </form>
+            </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {user.addresses.map((address) => (
@@ -303,17 +449,69 @@ export function Account() {
           </TabsContent>
 
           <TabsContent value="payment" className="space-y-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 style={{ color: '#2E2E2E' }}>Payment Methods</h3>
-              <Button
-                size="sm"
-                style={{ backgroundColor: '#2E7D32' }}
-                onClick={() => void handleAddCard()}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Card
-              </Button>
-            </div>
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Plus className="h-4 w-4" style={{ color: '#2E7D32' }} />
+                <h3 style={{ color: '#2E2E2E' }}>Add Payment Method</h3>
+              </div>
+
+              <form onSubmit={(event) => void handleCardSubmit(event)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="card-brand">Card brand</Label>
+                  <Input
+                    id="card-brand"
+                    value={cardForm.brand}
+                    onChange={(e) => setCardForm((prev) => ({ ...prev, brand: e.target.value }))}
+                    style={{ borderColor: '#A5D6A7' }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="card-last4">Last 4 digits</Label>
+                  <Input
+                    id="card-last4"
+                    maxLength={4}
+                    value={cardForm.last4}
+                    onChange={(e) => setCardForm((prev) => ({ ...prev, last4: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                    style={{ borderColor: '#A5D6A7' }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="card-expiry-month">Expiry month</Label>
+                  <Input
+                    id="card-expiry-month"
+                    maxLength={2}
+                    value={cardForm.expiryMonth}
+                    onChange={(e) => setCardForm((prev) => ({ ...prev, expiryMonth: e.target.value.replace(/\D/g, '').slice(0, 2) }))}
+                    style={{ borderColor: '#A5D6A7' }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="card-expiry-year">Expiry year</Label>
+                  <Input
+                    id="card-expiry-year"
+                    maxLength={4}
+                    value={cardForm.expiryYear}
+                    onChange={(e) => setCardForm((prev) => ({ ...prev, expiryYear: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                    style={{ borderColor: '#A5D6A7' }}
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    variant={cardForm.isDefault ? 'default' : 'outline'}
+                    onClick={() => setCardForm((prev) => ({ ...prev, isDefault: !prev.isDefault }))}
+                    style={cardForm.isDefault ? { backgroundColor: '#2E7D32' } : { borderColor: '#2E7D32', color: '#2E7D32' }}
+                  >
+                    {cardForm.isDefault ? 'Default card' : 'Set as default'}
+                  </Button>
+                </div>
+                <div className="md:col-span-2">
+                  <Button type="submit" disabled={isSavingCard} style={{ backgroundColor: '#2E7D32' }}>
+                    {isSavingCard ? 'Saving...' : 'Add payment method'}
+                  </Button>
+                </div>
+              </form>
+            </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {user.paymentMethods.map((method) => (
@@ -352,9 +550,9 @@ export function Account() {
               </h3>
 
               <div className="space-y-4" style={{ color: '#6B6B6B' }}>
-                <p>This account page is now backed by the API for profile, addresses, cards, and order history.</p>
-                <p>Payments remain demo-recorded, but the order itself is created for real in the database.</p>
-                <p>Inventory, orders, customer stats, and analytics are visible from the admin dashboard.</p>
+                <p>This account area is backed by the API for profile, addresses, cards, and order history.</p>
+                <p>Payments remain demo-recorded, but the order itself is created and stored in the database.</p>
+                <p>Inventory, orders, customer stats, and analytics are available in the producer dashboard.</p>
               </div>
             </Card>
           </TabsContent>

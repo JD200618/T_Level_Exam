@@ -32,6 +32,7 @@ Use this file to record iterative development changes and the reason for each ch
 - Added a dedicated producer-information page so the GLH prototype shows named producers, locations, methods, and linked catalogue items more clearly.
 - Updated home-page messaging and navigation so the storefront better reflects the GLH brief rather than a generic shop front.
 - Strengthened the producer dashboard inventory flow by fixing the shared update payload path and adding a full local detail editor for stock, price, summary, producer details, and featured state.
+- Replaced prompt-based account management with structured in-page forms for profile updates, address entry, and payment-method entry.
 - Added `functional-flow.md` to explain the layered system and the shared-vs-local logic boundary for future maintenance.
 
 ## Suggested ongoing log format
