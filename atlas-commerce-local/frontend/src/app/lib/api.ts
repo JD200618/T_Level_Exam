@@ -144,7 +144,9 @@ interface ApiEnvelope<T> {
 }
 
 const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined)
-  || (window.location.port === '5173' ? 'http://127.0.0.1:8000/api' : `${window.location.origin}/api`);
+  || (window.location.port === '5173'
+    ? `${window.location.protocol}//${window.location.hostname}:8000/api`
+    : `${window.location.origin}/api`);
 
 function getCookie(name: string): string | null {
   const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
