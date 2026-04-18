@@ -34,6 +34,38 @@ class SessionApiTestCase(APITestCase):
 
 
 class CustomerCommerceFlowTests(SessionApiTestCase):
+    def test_browser_style_local_frontend_origin_can_complete_session_and_cart_requests(self):
+        call_command('seed_demo_data', verbosity=0)
+        client = APIClient(enforce_csrf_checks=True)
+        origin = 'http://127.0.0.1:5173'
+
+        me_response = client.get('/api/users/me/', HTTP_ORIGIN=origin)
+        self.assertEqual(me_response.status_code, 200)
+        self.assertEqual(me_response.headers.get('access-control-allow-origin'), origin)
+        csrf_token = client.cookies['csrftoken'].value
+
+        login_response = client.post(
+            '/api/users/login/',
+            {'email': 'sarah@glh.local', 'password': 'demo1234'},
+            format='json',
+            HTTP_ORIGIN=origin,
+            HTTP_X_CSRFTOKEN=csrf_token,
+        )
+        self.assertEqual(login_response.status_code, 200)
+        self.assertTrue(login_response.data['data']['authenticated'])
+
+        refreshed_csrf_token = client.cookies['csrftoken'].value
+        add_to_cart_response = client.post(
+            '/api/cart/items/',
+            {'product_id': Product.objects.get(slug='organic-tomatoes').id, 'quantity': 1},
+            format='json',
+            HTTP_ORIGIN=origin,
+            HTTP_X_CSRFTOKEN=refreshed_csrf_token,
+        )
+        self.assertEqual(add_to_cart_response.status_code, 201)
+        self.assertEqual(add_to_cart_response.headers.get('access-control-allow-origin'), origin)
+        self.assertEqual(add_to_cart_response.data['data']['cart']['total_items'], 1)
+
     def setUp(self):
         super().setUp()
         call_command('seed_demo_data', verbosity=0)
