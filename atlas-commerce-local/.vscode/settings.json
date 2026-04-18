@@ -3,14 +3,18 @@
     "**/__pycache__": true,
     "**/*.pyc": true,
     "backend/.venv": true,
+    "backend/db.sqlite3": true,
     "frontend/node_modules": true,
-    "frontend/dist": true
+    "frontend/dist": true,
+    "docs/archive": true
   },
   "search.exclude": {
     "**/__pycache__": true,
     "**/*.pyc": true,
     "backend/.venv": true,
+    "backend/db.sqlite3": true,
     "frontend/node_modules": true,
-    "frontend/dist": true
+    "frontend/dist": true,
+    "docs/archive": true
   }
 }
