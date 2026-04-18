@@ -8,7 +8,8 @@ The frontend provides:
 - cart and checkout flow
 - account and order history views
 - producer/admin dashboard views
-- project documentation pages such as system architecture, data dictionary, and flowcharts
+
+Technical reference material that does not need to be part of the live student demo has been moved into `../docs/archive/frontend-reference-ui/`.
 
 ## Run locally
 ```powershell

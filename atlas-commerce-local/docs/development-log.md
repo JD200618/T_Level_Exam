@@ -36,6 +36,14 @@ Use this file to record iterative development changes and the reason for each ch
 - Added repeatable Django integration tests to verify the main customer and admin flows across session, API, service, and database layers.
 - Added `functional-flow.md` to explain the layered system and the shared-vs-local logic boundary for future maintenance.
 
+## 2026-04-18
+- Simplified the active frontend surface so the working GLH demo feels more like a student project and less like a generated component showcase.
+- Removed the live routes for system architecture, data dictionary, and flowchart pages, then archived those files under `docs/archive/frontend-reference-ui/` instead of keeping them in the runtime app.
+- Archived a large set of unused UI-kit component files so the active `src/app/components/ui` folder now matches the parts the app actually uses.
+- Trimmed the frontend dependency list to the libraries that are still needed by the working application, reducing package noise and making the stack easier to explain.
+- Added repo-local VS Code settings to hide `__pycache__`, `*.pyc`, `node_modules`, `dist`, and the backend virtual environment from normal file browsing.
+- Simplified the toast wrapper so it no longer depends on theme plumbing that the project was not otherwise using.
+
 ## Suggested ongoing log format
 For each iteration, record:
 - what changed

@@ -14,9 +14,6 @@ import { DashboardInventory } from './pages/dashboard/Inventory';
 import { DashboardOrders } from './pages/dashboard/Orders';
 import { DashboardCustomers } from './pages/dashboard/Customers';
 import { DashboardAnalytics } from './pages/dashboard/Analytics';
-import { SystemArchitecture } from './pages/SystemArchitecture';
-import { DataDictionary } from './pages/DataDictionary';
-import { Flowcharts } from './pages/Flowcharts';
 
 export const router = createBrowserRouter(
   [
@@ -39,18 +36,6 @@ export const router = createBrowserRouter(
     {
       path: '/admin-login',
       Component: AdminLogin,
-    },
-    {
-      path: '/system-architecture',
-      Component: SystemArchitecture,
-    },
-    {
-      path: '/data-dictionary',
-      Component: DataDictionary,
-    },
-    {
-      path: '/flowcharts',
-      Component: Flowcharts,
     },
     {
       path: '/dashboard',

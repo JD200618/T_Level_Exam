@@ -33,6 +33,9 @@ Avoid vague names where a more meaningful name is possible.
 - keep shared API logic in shared client files
 - keep component-specific handlers inside the relevant component unless reuse is justified
 - avoid repeated fetch logic across multiple pages when a shared helper is cleaner
+- prefer straightforward pages over large showcase-style component systems
+- remove or archive unused UI files instead of leaving generated component kits in the active app
+- keep the visible dependency stack small enough that a new developer can explain why each package exists
 
 ## Backend guidance
 - keep request transport handling in views or endpoints
