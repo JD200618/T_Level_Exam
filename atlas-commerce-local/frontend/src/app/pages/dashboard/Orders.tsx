@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
-import { Card } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
+import { Card, Badge } from '../../components/ui/core';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { getAdminOrders, updateAdminOrderStatus } from '../../lib/api';
 import { toast } from 'sonner';

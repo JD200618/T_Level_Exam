@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BarChart3, TrendingUp, DollarSign } from 'lucide-react';
-import { Card } from '../../components/ui/card';
+import { Card } from '../../components/ui/core';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getAdminAnalytics } from '../../lib/api';
 

@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { User, MapPin, CreditCard, Package, Settings, LogOut, Plus, Trash2, RefreshCw, Save } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/ui/button';
-import { Card } from '../components/ui/card';
+import { Button, Card, Badge, Input, Label } from '../components/ui/core';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Badge } from '../components/ui/badge';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
+
+
+
 import { toast } from 'sonner';
 
 const EMPTY_ADDRESS_FORM = {

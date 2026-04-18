@@ -2,10 +2,8 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { Mail, Lock, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Card } from '../components/ui/card';
+import { Button, Input, Label, Card } from '../components/ui/core';
+
 import { Logo } from '../components/Logo';
 import { toast } from 'sonner';
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ProductCard } from '../components/ProductCard';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
+import { Button, Input } from '../components/ui/core';
+
 import { Search } from 'lucide-react';
 import { StoreProduct, getProducts } from '../lib/api';
 

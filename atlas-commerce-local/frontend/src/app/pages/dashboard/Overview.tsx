@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DollarSign, ShoppingCart, Package, Users, TrendingUp, AlertTriangle, BarChart3 } from 'lucide-react';
-import { Card } from '../../components/ui/card';
+import { Card, Button } from '../../components/ui/core';
+
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getAdminInventory, getAdminOrders, getAdminOverview } from '../../lib/api';
 import { Link } from 'react-router';
-import { Button } from '../../components/ui/button';
 
 export function DashboardOverview() {
   const [overview, setOverview] = useState({ products: 0, customers: 0, orders: 0, revenue: 0 });

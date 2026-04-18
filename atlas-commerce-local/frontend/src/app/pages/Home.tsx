@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { ArrowRight, Leaf, Truck, ShieldCheck, MapPin } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Card } from '../components/ui/card';
+import { Button, Card } from '../components/ui/core';
+
 import { ProductCard } from '../components/ProductCard';
 import { StoreProduct, getProducts } from '../lib/api';
 
