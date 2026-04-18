@@ -10,8 +10,8 @@ import { Logo } from '../components/Logo';
 import { toast } from 'sonner';
 
 export function AdminLogin() {
-  const [email, setEmail] = useState('admin@greenfieldhub.local');
-  const [password, setPassword] = useState('DemoPass123!');
+  const [email, setEmail] = useState('admin@glh.local');
+  const [password, setPassword] = useState('admin1234');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { adminLogin } = useAuth();
   const navigate = useNavigate();
@@ -66,7 +66,7 @@ export function AdminLogin() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@greenfieldhub.local"
+                  placeholder="admin@glh.local"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
@@ -103,7 +103,7 @@ export function AdminLogin() {
 
             <div className="p-3 rounded-lg" style={{ backgroundColor: '#A5D6A7', color: '#2E2E2E' }}>
               <p className="text-sm text-center">
-                <strong>Demo admin:</strong> admin@greenfieldhub.local / DemoPass123!
+                <strong>Demo admin:</strong> admin@glh.local / admin1234
               </p>
             </div>
           </form>

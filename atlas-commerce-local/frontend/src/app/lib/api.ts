@@ -5,6 +5,9 @@ export interface StoreProduct {
   productId: number;
   name: string;
   category: string;
+  producerName: string;
+  producerLocation: string;
+  productionMethod: string;
   price: number;
   unit: string;
   image: string;
@@ -55,6 +58,9 @@ export interface Order {
   date: string;
   total: number;
   status: string;
+  fulfillmentMethod: 'collection' | 'delivery';
+  requestedWindow?: string;
+  customerNote?: string;
   paymentStatus?: string;
   items: OrderItem[];
 }
@@ -82,10 +88,15 @@ export interface AdminInventoryItem {
   productId: number;
   name: string;
   category: string;
+  summary: string;
+  producerName: string;
+  producerLocation: string;
+  productionMethod: string;
   price: number;
   unit: string;
   stockLevel: number;
   lowStockThreshold: number;
+  isFeatured: boolean;
 }
 
 export interface AdminOrder {
@@ -97,6 +108,8 @@ export interface AdminOrder {
   date: string;
   total: number;
   status: string;
+  fulfillmentMethod: 'collection' | 'delivery';
+  requestedWindow?: string;
   paymentStatus: string;
 }
 
@@ -200,6 +213,9 @@ export function mapStoreProduct(raw: any): StoreProduct {
     productId: asNumber(raw.id),
     name: raw.name,
     category: raw.category?.name || 'General',
+    producerName: raw.producer_name || 'GLH Local Producer',
+    producerLocation: raw.producer_location || 'United Kingdom',
+    productionMethod: raw.production_method || 'Locally sourced and quality checked by GLH.',
     price: asNumber(raw.price),
     unit: 'each',
     image: raw.image_url || 'https://placehold.co/600x600?text=Product',
@@ -250,6 +266,9 @@ function mapOrder(raw: any): Order {
     date: raw.created_at,
     total: asNumber(raw.total),
     status: raw.status,
+    fulfillmentMethod: raw.fulfillment_method || 'collection',
+    requestedWindow: raw.requested_window || '',
+    customerNote: raw.customer_note || '',
     paymentStatus: raw.status,
     items: Array.isArray(raw.items) ? raw.items.map(mapOrderItem) : [],
   };
@@ -262,6 +281,9 @@ function mapCartItem(raw: any): CartItem {
     productId: asNumber(product.id),
     name: product.name,
     category: product.category?.name || 'General',
+    producerName: product.producer_name || 'GLH Local Producer',
+    producerLocation: product.producer_location || 'United Kingdom',
+    productionMethod: product.production_method || 'Locally sourced and quality checked by GLH.',
     price: asNumber(product.price),
     unit: 'each',
     image: product.image_url || 'https://placehold.co/600x600?text=Product',
@@ -449,6 +471,9 @@ export async function placeOrder(payload: {
   city: string;
   postcode: string;
   country: string;
+  fulfillmentMethod: 'collection' | 'delivery';
+  requestedWindow?: string;
+  customerNote?: string;
 }): Promise<Order> {
   const response = await requestData<{ order: any }>('/orders/checkout/place/', {
     method: 'POST',
@@ -458,6 +483,9 @@ export async function placeOrder(payload: {
       city: payload.city,
       postcode: payload.postcode,
       country: payload.country,
+      fulfillment_method: payload.fulfillmentMethod,
+      requested_window: payload.requestedWindow || '',
+      customer_note: payload.customerNote || '',
     }),
   });
   return mapOrder(response.order);
@@ -480,17 +508,30 @@ export async function getAdminInventory(): Promise<AdminInventoryItem[]> {
     productId: asNumber(item.productId),
     name: item.name,
     category: item.category,
+    summary: item.summary || '',
+    producerName: item.producerName || '',
+    producerLocation: item.producerLocation || '',
+    productionMethod: item.productionMethod || '',
     price: asNumber(item.price),
     unit: item.unit,
     stockLevel: asNumber(item.stockLevel),
     lowStockThreshold: asNumber(item.lowStockThreshold),
+    isFeatured: Boolean(item.isFeatured),
   }));
 }
 
-export async function updateAdminInventory(productId: number, stockLevel: number, lowStockThreshold: number): Promise<void> {
+export async function updateAdminInventory(productId: number, payload: {
+  stockLevel?: number;
+  price?: number;
+  summary?: string;
+  producerName?: string;
+  producerLocation?: string;
+  productionMethod?: string;
+  isFeatured?: boolean;
+}): Promise<void> {
   await requestData(`/dashboard/admin/inventory/${productId}/`, {
     method: 'PATCH',
-    body: JSON.stringify({ stockLevel, lowStockThreshold }),
+    body: JSON.stringify(payload),
   });
 }
 
@@ -505,6 +546,8 @@ export async function getAdminOrders(): Promise<AdminOrder[]> {
     date: order.date,
     total: asNumber(order.total),
     status: order.status,
+    fulfillmentMethod: order.fulfillmentMethod || 'collection',
+    requestedWindow: order.requestedWindow || '',
     paymentStatus: order.paymentStatus,
   }));
 }

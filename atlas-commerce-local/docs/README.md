@@ -6,6 +6,7 @@ Open this folder first if you want the quickest project-facing view of the proto
 - `client-brief.md` - the GLH brief and required digital solution outcomes
 - `features-map.md` - what is implemented, partial, or still missing
 - `assets-log.md` - third-party and gathered asset sources, purpose, and retrieval dates
+- `functional-flow.md` - layered system view and global vs local logic explanation
 - `testing-log.md` - iterative testing record
 - `development-log.md` - iterative development and cleanup record
 - `security-accessibility-legal.md` - security, accessibility, and compliance notes
@@ -16,8 +17,9 @@ Open this folder first if you want the quickest project-facing view of the proto
 2. `features-map.md`
 3. `testing-log.md`
 4. `development-log.md`
-5. `security-accessibility-legal.md`
-6. `assets-log.md`
+5. `functional-flow.md`
+6. `security-accessibility-legal.md`
+7. `assets-log.md`
 
 ## Project surface
 - `../frontend/` - user interface

@@ -18,6 +18,22 @@ Use this file to record iterative development changes and the reason for each ch
 - Added a documentation landing page so opening the repository gives a clearer project-first view.
 - Reduced script clutter by standardising around the `.cmd` and `.sh` launch paths.
 
+## 2026-04-18
+- Corrected the seeded demo credentials in the frontend login and admin-login screens so the UI matches the actual backend seed command.
+- Expanded the seeded product catalogue with more categories and products so the shop looks like a real GLH catalogue instead of a near-empty stub.
+- Added producer metadata to products, including producer name, location, and production method, then surfaced that information in the customer-facing catalogue.
+- Reworked the homepage so it explains GLH as a cooperative, highlights producer value, and points users into the real catalogue and dashboard flow.
+- Upgraded checkout so customers can choose collection or delivery, select a requested time window, and attach an order note.
+- Extended stored orders so fulfilment method and requested time window appear in the account area and dashboard order management view.
+- Upgraded the producer inventory screen so staff can edit price, summary, producer details, featured state, and stock from the dashboard, not just nudge stock up or down.
+- Added migrations to persist the new producer and fulfilment fields in the backend data model.
+
+## 2026-04-18
+- Added a dedicated producer-information page so the GLH prototype shows named producers, locations, methods, and linked catalogue items more clearly.
+- Updated home-page messaging and navigation so the storefront better reflects the GLH brief rather than a generic shop front.
+- Strengthened the producer dashboard inventory flow by fixing the shared update payload path and adding a full local detail editor for stock, price, summary, producer details, and featured state.
+- Added `functional-flow.md` to explain the layered system and the shared-vs-local logic boundary for future maintenance.
+
 ## Suggested ongoing log format
 For each iteration, record:
 - what changed

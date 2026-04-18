@@ -26,27 +26,48 @@ export function Shop() {
     const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
     const matchesSearch =
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase());
+      product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.producerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.producerLocation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.productionMethod.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  const inStockCount = products.filter((product) => product.inStock).length;
+  const localProducerCount = new Set(products.map((product) => product.producerName)).size;
 
   return (
     <div className="min-h-screen py-12" style={{ backgroundColor: '#FAFAF5' }}>
       <div className="container mx-auto px-4">
         <div className="mb-8">
           <h1 className="mb-2" style={{ color: '#2E2E2E' }}>
-            Shop Fresh Produce
+            GLH Product Catalogue
           </h1>
           <p className="text-lg" style={{ color: '#6B6B6B' }}>
-            Browse our complete selection of farm-fresh fruits and vegetables
+            Transparent pricing, live availability, and local producer sourcing in one place.
           </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="p-4 rounded-lg bg-white border">
+            <p className="text-sm" style={{ color: '#6B6B6B' }}>Live products</p>
+            <p className="text-2xl" style={{ color: '#2E2E2E', fontWeight: 700 }}>{products.length}</p>
+          </div>
+          <div className="p-4 rounded-lg bg-white border">
+            <p className="text-sm" style={{ color: '#6B6B6B' }}>Currently in stock</p>
+            <p className="text-2xl" style={{ color: '#2E7D32', fontWeight: 700 }}>{inStockCount}</p>
+          </div>
+          <div className="p-4 rounded-lg bg-white border">
+            <p className="text-sm" style={{ color: '#6B6B6B' }}>Local producers represented</p>
+            <p className="text-2xl" style={{ color: '#2E2E2E', fontWeight: 700 }}>{localProducerCount}</p>
+          </div>
         </div>
 
         <div className="mb-6 relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: '#6B6B6B' }} />
           <Input
             type="text"
-            placeholder="Search products..."
+            placeholder="Search products, producers, or methods..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"

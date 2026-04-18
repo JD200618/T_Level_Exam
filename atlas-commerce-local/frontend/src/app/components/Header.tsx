@@ -44,6 +44,16 @@ export function Header() {
             >
               Shop
             </Link>
+            <Link
+              to="/producers"
+              className={`transition-colors ${
+                location.pathname === '/producers'
+                  ? 'text-[#2E7D32] font-medium'
+                  : 'text-[#6B6B6B] hover:text-[#2E7D32]'
+              }`}
+            >
+              Producers
+            </Link>
             {isAdmin && (
               <Link
                 to="/dashboard"
@@ -157,6 +167,17 @@ export function Header() {
               }`}
             >
               Shop
+            </Link>
+            <Link
+              to="/producers"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`transition-colors ${
+                location.pathname === '/producers'
+                  ? 'text-[#2E7D32] font-medium'
+                  : 'text-[#6B6B6B]'
+              }`}
+            >
+              Producers
             </Link>
             {isAdmin && (
               <Link

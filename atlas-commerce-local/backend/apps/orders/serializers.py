@@ -10,6 +10,9 @@ class CheckoutSerializer(serializers.Serializer):
     city = serializers.CharField(max_length=120)
     postcode = serializers.CharField(max_length=30)
     country = serializers.CharField(max_length=120, default='United Kingdom')
+    fulfillment_method = serializers.ChoiceField(choices=Order.FULFILLMENT_CHOICES, default=Order.FULFILLMENT_COLLECTION)
+    requested_window = serializers.CharField(max_length=120, required=False, allow_blank=True)
+    customer_note = serializers.CharField(required=False, allow_blank=True)
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -24,6 +27,6 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'order_number', 'status', 'full_name', 'city', 'postcode',
-            'country', 'subtotal', 'total', 'created_at', 'items',
+            'id', 'order_number', 'status', 'fulfillment_method', 'requested_window', 'customer_note',
+            'full_name', 'city', 'postcode', 'country', 'subtotal', 'total', 'created_at', 'items',
         ]

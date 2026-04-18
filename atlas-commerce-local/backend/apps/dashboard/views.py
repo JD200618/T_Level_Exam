@@ -11,7 +11,7 @@ from .services import (
     list_admin_inventory,
     list_admin_orders,
     update_admin_order_status,
-    update_inventory_stock,
+    update_inventory_and_product,
 )
 
 
@@ -40,8 +40,18 @@ class AdminInventoryDetailView(APIView):
     permission_classes = [IsAdminUser]
 
     def patch(self, request, product_id):
-        stock_level = int(request.data.get('stockLevel', 0))
-        inventory = update_inventory_stock(product_id, stock_level)
+        stock_level = request.data.get('stockLevel')
+        price = request.data.get('price')
+        inventory = update_inventory_and_product(
+            product_id,
+            stock_level=int(stock_level) if stock_level is not None else None,
+            price=price,
+            summary=request.data.get('summary'),
+            producer_name=request.data.get('producerName'),
+            producer_location=request.data.get('producerLocation'),
+            production_method=request.data.get('productionMethod'),
+            is_featured=request.data.get('isFeatured'),
+        )
         if not inventory:
             return success_response(message='Product inventory not found', status_code=404)
         return success_response(data={'inventory': list_admin_inventory()}, message='Inventory updated')

@@ -41,7 +41,7 @@ export function DashboardLayout() {
               <Logo size="md" showText={true} showTagline={false} />
               <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full" style={{ backgroundColor: '#A5D6A7' }}>
                 <span className="text-sm" style={{ color: '#2E2E2E', fontWeight: 600 }}>
-                  Owner Dashboard
+                  Producer Dashboard
                 </span>
               </div>
             </div>

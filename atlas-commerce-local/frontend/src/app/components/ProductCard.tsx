@@ -12,6 +12,11 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   const isSeasonal = ['1', '2', '3'].includes(product.id);
+  const stockLabel = !product.inStock
+    ? 'Sold out'
+    : product.stockLevel <= product.lowStockThreshold
+      ? `Low stock, ${product.stockLevel} left`
+      : `${product.stockLevel} in stock`;
 
   const handleAddToCart = async () => {
     try {
@@ -50,11 +55,26 @@ export function ProductCard({ product }: ProductCardProps) {
           <h3 className="text-lg mt-1" style={{ color: '#2E2E2E' }}>
             {product.name}
           </h3>
+          <p className="text-sm mt-1" style={{ color: '#2E7D32' }}>
+            {product.producerName}, {product.producerLocation}
+          </p>
         </div>
 
         <p className="text-sm line-clamp-2" style={{ color: '#6B6B6B' }}>
           {product.description}
         </p>
+
+        <div className="space-y-1">
+          <p className="text-xs" style={{ color: '#6B6B6B' }}>
+            {product.productionMethod}
+          </p>
+          <p
+            className="text-xs font-medium"
+            style={{ color: product.inStock ? '#2E7D32' : '#B91C1C' }}
+          >
+            {stockLabel}
+          </p>
+        </div>
 
         <div className="flex items-center justify-between pt-2">
           <div>

@@ -10,8 +10,8 @@ import { Logo } from '../components/Logo';
 import { toast } from 'sonner';
 
 export function Login() {
-  const [email, setEmail] = useState('sarah.johnson@example.com');
-  const [password, setPassword] = useState('DemoPass123!');
+  const [email, setEmail] = useState('sarah@glh.local');
+  const [password, setPassword] = useState('demo1234');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -96,7 +96,7 @@ export function Login() {
 
             <div className="p-3 rounded-lg" style={{ backgroundColor: '#A5D6A7', color: '#2E2E2E' }}>
               <p className="text-sm text-center">
-                <strong>Demo customer:</strong> sarah.johnson@example.com / DemoPass123!
+                <strong>Demo customer:</strong> sarah@glh.local / demo1234
               </p>
             </div>
 

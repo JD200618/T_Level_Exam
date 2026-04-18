@@ -6,6 +6,13 @@ from apps.products.models import Product
 
 
 class Order(models.Model):
+    FULFILLMENT_COLLECTION = 'collection'
+    FULFILLMENT_DELIVERY = 'delivery'
+    FULFILLMENT_CHOICES = [
+        (FULFILLMENT_COLLECTION, 'Collection'),
+        (FULFILLMENT_DELIVERY, 'Delivery'),
+    ]
+
     STATUS_PENDING = 'pending'
     STATUS_PAID = 'paid'
     STATUS_DELIVERED = 'delivered'
@@ -21,12 +28,15 @@ class Order(models.Model):
     cart = models.OneToOneField(Cart, related_name='order', on_delete=models.SET_NULL, null=True, blank=True)
     order_number = models.CharField(max_length=32, unique=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    fulfillment_method = models.CharField(max_length=20, choices=FULFILLMENT_CHOICES, default=FULFILLMENT_COLLECTION)
     full_name = models.CharField(max_length=120)
     address_line_1 = models.CharField(max_length=255)
     address_line_2 = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=120)
     postcode = models.CharField(max_length=30)
     country = models.CharField(max_length=120)
+    requested_window = models.CharField(max_length=120, blank=True)
+    customer_note = models.TextField(blank=True)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Navigate, Link, useNavigate } from 'react-router';
-import { Lock, CreditCard, MapPin, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { Clock3, Lock, CreditCard, MapPin, ShoppingBag, ArrowLeft, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
@@ -8,8 +8,23 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card } from '../components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Textarea } from '../components/ui/textarea';
 import { placeOrder } from '../lib/api';
 import { toast } from 'sonner';
+
+const COLLECTION_WINDOWS = [
+  'Tomorrow, 09:00 to 12:00',
+  'Tomorrow, 12:00 to 15:00',
+  'Tomorrow, 15:00 to 18:00',
+  'Saturday, 09:00 to 12:00',
+];
+
+const DELIVERY_WINDOWS = [
+  'Tomorrow evening, 18:00 to 21:00',
+  'Next weekday, 09:00 to 13:00',
+  'Next weekday, 13:00 to 17:00',
+  'Saturday route, 10:00 to 14:00',
+];
 
 export function Checkout() {
   const { cart, getCartTotal, clearCart } = useCart();
@@ -17,26 +32,35 @@ export function Checkout() {
   const navigate = useNavigate();
   const total = getCartTotal();
 
-  const [billingInfo, setBillingInfo] = useState({
+  const [checkoutInfo, setCheckoutInfo] = useState({
     fullName: '',
     address: '',
     city: '',
     postcode: '',
     country: 'United Kingdom',
+    fulfillmentMethod: 'collection' as 'collection' | 'delivery',
+    requestedWindow: COLLECTION_WINDOWS[0],
+    customerNote: '',
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     const defaultAddress = user?.addresses.find((address) => address.isDefault) || user?.addresses[0];
-    setBillingInfo({
+    setCheckoutInfo((prev) => ({
+      ...prev,
       fullName: user?.name || '',
       address: defaultAddress?.address || '',
       city: defaultAddress?.city || '',
       postcode: defaultAddress?.postcode || '',
       country: defaultAddress?.country || 'United Kingdom',
-    });
+    }));
   }, [user]);
+
+  const availableWindows = useMemo(
+    () => (checkoutInfo.fulfillmentMethod === 'delivery' ? DELIVERY_WINDOWS : COLLECTION_WINDOWS),
+    [checkoutInfo.fulfillmentMethod],
+  );
 
   if (isLoading) {
     return <div className="p-6" style={{ color: '#6B6B6B' }}>Loading checkout...</div>;
@@ -51,26 +75,35 @@ export function Checkout() {
   }
 
   const handleInputChange = (field: string, value: string) => {
-    setBillingInfo((prev) => ({ ...prev, [field]: value }));
+    setCheckoutInfo((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleFulfillmentChange = (value: 'collection' | 'delivery') => {
+    const windows = value === 'delivery' ? DELIVERY_WINDOWS : COLLECTION_WINDOWS;
+    setCheckoutInfo((prev) => ({
+      ...prev,
+      fulfillmentMethod: value,
+      requestedWindow: windows[0],
+    }));
   };
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!billingInfo.fullName || !billingInfo.address || !billingInfo.city || !billingInfo.postcode) {
-      toast.error('Please fill in all billing details');
+    if (!checkoutInfo.fullName || !checkoutInfo.address || !checkoutInfo.city || !checkoutInfo.postcode) {
+      toast.error('Please fill in the customer and address details');
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      const order = await placeOrder(billingInfo);
+      const order = await placeOrder(checkoutInfo);
       await clearCart();
       await refreshUser();
 
       toast.success(`Order ${order.orderNumber} placed successfully`, {
-        description: 'The backend created and stored your order.',
+        description: `Stored as ${order.fulfillmentMethod} with the selected time window.`,
         duration: 4000,
       });
 
@@ -103,7 +136,7 @@ export function Checkout() {
                 Backend checkout connected
               </p>
               <p className="text-xs" style={{ color: '#2E2E2E' }}>
-                Orders are now stored through the live API.
+                Orders now store fulfilment method, requested slot, and customer notes.
               </p>
             </div>
           </div>
@@ -115,9 +148,62 @@ export function Checkout() {
               <Card className="p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: '#A5D6A7' }}>
+                    <Truck className="h-5 w-5" style={{ color: '#2E7D32' }} />
+                  </div>
+                  <div>
+                    <h3 style={{ color: '#2E2E2E' }}>Fulfilment</h3>
+                    <p className="text-sm" style={{ color: '#6B6B6B' }}>Choose collection or delivery and request a preferred time window.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => handleFulfillmentChange('collection')}
+                    className="rounded-lg border p-4 text-left transition-colors"
+                    style={{
+                      borderColor: checkoutInfo.fulfillmentMethod === 'collection' ? '#2E7D32' : '#D9D9D9',
+                      backgroundColor: checkoutInfo.fulfillmentMethod === 'collection' ? '#F0FFF4' : '#FFFFFF',
+                    }}
+                  >
+                    <p style={{ color: '#2E2E2E', fontWeight: 600 }}>Collection</p>
+                    <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>Pickup from the GLH hub point during your selected slot.</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFulfillmentChange('delivery')}
+                    className="rounded-lg border p-4 text-left transition-colors"
+                    style={{
+                      borderColor: checkoutInfo.fulfillmentMethod === 'delivery' ? '#2E7D32' : '#D9D9D9',
+                      backgroundColor: checkoutInfo.fulfillmentMethod === 'delivery' ? '#F0FFF4' : '#FFFFFF',
+                    }}
+                  >
+                    <p style={{ color: '#2E2E2E', fontWeight: 600 }}>Delivery</p>
+                    <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>Local route drop-off to the saved customer address.</p>
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="requestedWindow">Preferred time window</Label>
+                  <Select value={checkoutInfo.requestedWindow} onValueChange={(value) => handleInputChange('requestedWindow', value)}>
+                    <SelectTrigger id="requestedWindow" style={{ borderColor: '#A5D6A7' }}>
+                      <SelectValue placeholder="Choose a time window" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableWindows.map((window) => (
+                        <SelectItem key={window} value={window}>{window}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: '#A5D6A7' }}>
                     <MapPin className="h-5 w-5" style={{ color: '#2E7D32' }} />
                   </div>
-                  <h3 style={{ color: '#2E2E2E' }}>Billing Details</h3>
+                  <h3 style={{ color: '#2E2E2E' }}>Customer Details</h3>
                 </div>
 
                 <div className="space-y-4">
@@ -125,7 +211,7 @@ export function Checkout() {
                     <Label htmlFor="fullName">Full Name *</Label>
                     <Input
                       id="fullName"
-                      value={billingInfo.fullName}
+                      value={checkoutInfo.fullName}
                       onChange={(e) => handleInputChange('fullName', e.target.value)}
                       placeholder="John Smith"
                       required
@@ -137,7 +223,7 @@ export function Checkout() {
                     <Label htmlFor="address">Address *</Label>
                     <Input
                       id="address"
-                      value={billingInfo.address}
+                      value={checkoutInfo.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
                       placeholder="123 Green Street"
                       required
@@ -150,9 +236,9 @@ export function Checkout() {
                       <Label htmlFor="city">City *</Label>
                       <Input
                         id="city"
-                        value={billingInfo.city}
+                        value={checkoutInfo.city}
                         onChange={(e) => handleInputChange('city', e.target.value)}
-                        placeholder="Springfield"
+                        placeholder="Manchester"
                         required
                         style={{ borderColor: '#A5D6A7' }}
                       />
@@ -161,9 +247,9 @@ export function Checkout() {
                       <Label htmlFor="postcode">Postcode *</Label>
                       <Input
                         id="postcode"
-                        value={billingInfo.postcode}
+                        value={checkoutInfo.postcode}
                         onChange={(e) => handleInputChange('postcode', e.target.value)}
-                        placeholder="SP1 2AB"
+                        placeholder="M1 1AE"
                         required
                         style={{ borderColor: '#A5D6A7' }}
                       />
@@ -172,21 +258,27 @@ export function Checkout() {
 
                   <div className="space-y-2">
                     <Label htmlFor="country">Country *</Label>
-                    <Select
-                      value={billingInfo.country}
-                      onValueChange={(value) => handleInputChange('country', value)}
-                    >
+                    <Select value={checkoutInfo.country} onValueChange={(value) => handleInputChange('country', value)}>
                       <SelectTrigger style={{ borderColor: '#A5D6A7' }}>
                         <SelectValue placeholder="Select country" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="United Kingdom">United Kingdom</SelectItem>
                         <SelectItem value="Ireland">Ireland</SelectItem>
-                        <SelectItem value="France">France</SelectItem>
-                        <SelectItem value="Germany">Germany</SelectItem>
-                        <SelectItem value="Spain">Spain</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="customerNote">Order note</Label>
+                    <Textarea
+                      id="customerNote"
+                      value={checkoutInfo.customerNote}
+                      onChange={(e) => handleInputChange('customerNote', e.target.value)}
+                      placeholder="Add delivery guidance, collection requests, or allergy notes"
+                      className="min-h-24"
+                      style={{ borderColor: '#A5D6A7' }}
+                    />
                   </div>
                 </div>
               </Card>
@@ -269,8 +361,12 @@ export function Checkout() {
                     <span style={{ color: '#2E2E2E' }}>${total.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span style={{ color: '#6B6B6B' }}>Delivery</span>
-                    <span style={{ color: '#2E7D32' }}>Free</span>
+                    <span style={{ color: '#6B6B6B' }}>Fulfilment</span>
+                    <span style={{ color: '#2E7D32', textTransform: 'capitalize' }}>{checkoutInfo.fulfillmentMethod}</span>
+                  </div>
+                  <div className="flex justify-between items-start gap-3">
+                    <span style={{ color: '#6B6B6B' }}>Requested slot</span>
+                    <span className="text-right text-sm" style={{ color: '#2E2E2E' }}>{checkoutInfo.requestedWindow}</span>
                   </div>
                   <div className="border-t pt-3" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
                     <div className="flex justify-between items-center">
@@ -306,8 +402,17 @@ export function Checkout() {
 
                 <div className="text-center p-3 rounded" style={{ backgroundColor: '#FAFAF5' }}>
                   <p className="text-xs" style={{ color: '#6B6B6B' }}>
-                    Demo payment, real order record
+                    Demo payment, real order record with slot tracking
                   </p>
+                </div>
+
+                <div className="mt-4 p-3 rounded-lg" style={{ backgroundColor: '#FFF9E6' }}>
+                  <div className="flex items-start gap-2">
+                    <Clock3 className="h-4 w-4 mt-0.5" style={{ color: '#B7791F' }} />
+                    <p className="text-xs" style={{ color: '#6B6B6B' }}>
+                      Collection orders are marked for hub pickup. Delivery orders use the saved address and note.
+                    </p>
+                  </div>
                 </div>
               </Card>
             </div>

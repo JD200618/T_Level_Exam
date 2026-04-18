@@ -42,20 +42,51 @@ def list_admin_inventory():
             'productId': product.id,
             'name': product.name,
             'category': product.category.name,
+            'summary': product.summary,
+            'producerName': product.producer_name,
+            'producerLocation': product.producer_location,
+            'productionMethod': product.production_method,
             'price': float(product.price),
             'unit': 'each',
             'stockLevel': stock_level,
             'lowStockThreshold': LOW_STOCK_THRESHOLD,
+            'isFeatured': product.is_featured,
         })
     return rows
 
 
-def update_inventory_stock(product_id, stock_level):
+def update_inventory_and_product(product_id, *, stock_level=None, price=None, summary=None, producer_name=None, producer_location=None, production_method=None, is_featured=None):
     inventory = InventoryRecord.objects.select_related('product').filter(product_id=product_id).first()
     if not inventory:
         return None
-    inventory.stock_on_hand = max(0, stock_level)
-    inventory.save(update_fields=['stock_on_hand', 'updated_at'])
+    if stock_level is not None:
+        inventory.stock_on_hand = max(0, stock_level)
+        inventory.save(update_fields=['stock_on_hand', 'updated_at'])
+
+    product = inventory.product
+    product_fields = []
+
+    if price is not None:
+        product.price = price
+        product_fields.append('price')
+    if summary is not None:
+        product.summary = summary
+        product_fields.append('summary')
+    if producer_name is not None:
+        product.producer_name = producer_name
+        product_fields.append('producer_name')
+    if producer_location is not None:
+        product.producer_location = producer_location
+        product_fields.append('producer_location')
+    if production_method is not None:
+        product.production_method = production_method
+        product_fields.append('production_method')
+    if is_featured is not None:
+        product.is_featured = is_featured
+        product_fields.append('is_featured')
+
+    if product_fields:
+        product.save(update_fields=product_fields + ['updated_at'])
     return inventory
 
 
@@ -72,6 +103,8 @@ def list_admin_orders():
             'date': order.created_at.isoformat(),
             'total': float(order.total),
             'status': order.status,
+            'fulfillmentMethod': order.fulfillment_method,
+            'requestedWindow': order.requested_window,
             'paymentStatus': order.status,
         })
     return rows

@@ -112,7 +112,7 @@ export function DashboardOrders() {
                     <h3 style={{ color: '#2E2E2E' }}>Order #{order.orderNumber}</h3>
                     <Badge style={statusBadge.style}>{statusBadge.label}</Badge>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-sm">
                     <div>
                       <p style={{ color: '#6B6B6B' }}>Customer</p>
                       <p style={{ color: '#2E2E2E', fontWeight: 600 }}>{order.customerName}</p>
@@ -125,6 +125,13 @@ export function DashboardOrders() {
                     <div>
                       <p style={{ color: '#6B6B6B' }}>Payment</p>
                       <p style={{ color: '#2E2E2E', fontWeight: 600 }}>{order.paymentStatus}</p>
+                    </div>
+                    <div>
+                      <p style={{ color: '#6B6B6B' }}>Fulfilment</p>
+                      <p style={{ color: '#2E2E2E', fontWeight: 600, textTransform: 'capitalize' }}>{order.fulfillmentMethod}</p>
+                      {order.requestedWindow && (
+                        <p className="text-xs" style={{ color: '#6B6B6B' }}>{order.requestedWindow}</p>
+                      )}
                     </div>
                     <div>
                       <p style={{ color: '#6B6B6B' }}>Total</p>

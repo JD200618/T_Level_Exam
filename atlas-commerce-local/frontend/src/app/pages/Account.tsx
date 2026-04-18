@@ -213,10 +213,18 @@ export function Account() {
                           <Badge style={getStatusColor(order.status)}>
                             {order.status}
                           </Badge>
+                          <Badge variant="outline" style={{ borderColor: '#2E7D32', color: '#2E7D32' }}>
+                            {order.fulfillmentMethod}
+                          </Badge>
                         </div>
                         <p className="text-sm" style={{ color: '#6B6B6B' }}>
                           {formatDate(order.date)}
                         </p>
+                        {order.requestedWindow && (
+                          <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>
+                            Requested slot: {order.requestedWindow}
+                          </p>
+                        )}
                       </div>
                       <div className="text-right">
                         <p className="text-sm mb-1" style={{ color: '#6B6B6B' }}>Total</p>

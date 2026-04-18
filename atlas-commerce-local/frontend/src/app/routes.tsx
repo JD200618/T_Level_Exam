@@ -3,6 +3,7 @@ import { Layout } from './components/Layout';
 import { DashboardLayout } from './components/DashboardLayout';
 import { Home } from './pages/Home';
 import { Shop } from './pages/Shop';
+import { Producers } from './pages/Producers';
 import { Cart } from './pages/Cart';
 import { Login } from './pages/Login';
 import { Account } from './pages/Account';
@@ -25,6 +26,7 @@ export const router = createBrowserRouter(
       children: [
         { index: true, Component: Home },
         { path: 'shop', Component: Shop },
+        { path: 'producers', Component: Producers },
         { path: 'cart', Component: Cart },
         { path: 'checkout', Component: Checkout },
         { path: 'account', Component: Account },

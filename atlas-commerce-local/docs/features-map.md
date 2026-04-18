@@ -4,8 +4,9 @@
 
 ### 1. Producer and local-buying information
 Current status:
-- partially covered through the frontend structure
-- needs stronger content about producers, production methods, and local-buying benefits
+- implemented at prototype level
+- homepage and catalogue now surface producer names, locations, production methods, and local-buying value
+- could still be improved later with dedicated producer profile pages if required
 
 ### 2. Product catalogue with transparent pricing and availability
 Current status:
@@ -15,8 +16,8 @@ Current status:
 
 ### 3. Orders for collection or delivery
 Current status:
-- order placement flow is implemented
-- collection and delivery selection should be reviewed and tightened as a project requirement
+- implemented
+- checkout now stores collection or delivery choice plus a requested time window and customer note
 
 ### 4. Customer accounts and order history
 Current status:
@@ -27,13 +28,13 @@ Current status:
 Current status:
 - implemented in prototype form
 - inventory, orders, customers, and analytics surfaces exist
-- product-detail editing flow should be reviewed against the final brief
+- producers can now edit stock, price, summary, producer details, and featured state from the dashboard
 
 ### 6. Order management, scheduling, and tracking
 Current status:
-- partially implemented
-- order management exists
-- scheduling and tracking need explicit review and possibly expansion
+- partially implemented with a stronger base
+- order management exists and requested time windows are now stored and shown to staff and customers
+- later work could add more explicit dispatch or tracking milestones if required
 
 ### 7. Loyalty scheme
 Current status:

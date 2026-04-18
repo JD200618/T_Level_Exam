@@ -33,13 +33,15 @@ The prototype is designed to help GLH:
 
 ## Current implemented flows
 - customer login
+- admin login
 - session-backed account flow
-- product listing and availability
+- product listing with producer metadata and live availability
 - add to cart and update cart
 - checkout preview and order placement
+- collection or delivery selection with requested time window and order note
 - customer order history
 - admin overview
-- inventory read and update
+- inventory read and product-detail update
 - order status update
 - customer analytics view
 - frontend production build
@@ -54,6 +56,7 @@ Core project documents:
 - `client-brief.md`
 - `features-map.md`
 - `assets-log.md`
+- `functional-flow.md`
 - `testing-log.md`
 - `development-log.md`
 - `security-accessibility-legal.md`
