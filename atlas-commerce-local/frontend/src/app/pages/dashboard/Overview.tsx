@@ -11,6 +11,7 @@ export function DashboardOverview() {
   const [inventory, setInventory] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     void Promise.all([getAdminOverview(), getAdminInventory(), getAdminOrders()])
@@ -18,6 +19,10 @@ export function DashboardOverview() {
         setOverview(overviewData);
         setInventory(inventoryData);
         setOrders(orderData);
+        setLoadError('');
+      })
+      .catch((error) => {
+        setLoadError(error instanceof Error ? error.message : 'Unable to load dashboard data.');
       })
       .finally(() => setIsLoading(false));
   }, []);
@@ -93,6 +98,13 @@ export function DashboardOverview() {
           Live operational snapshot from the connected backend.
         </p>
       </div>
+
+      {loadError && (
+        <Card className="p-4" style={{ borderLeft: '4px solid #FF9800', backgroundColor: '#FFF9E6' }}>
+          <p style={{ color: '#2E2E2E', fontWeight: 600 }}>Dashboard connection issue</p>
+          <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>{loadError}</p>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpiCards.map((kpi) => {

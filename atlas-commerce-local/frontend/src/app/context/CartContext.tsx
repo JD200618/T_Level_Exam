@@ -13,6 +13,7 @@ import {
 interface CartContextType {
   cart: CartItem[];
   isLoading: boolean;
+  error: string;
   addToCart: (product: StoreProduct) => Promise<void>;
   removeFromCart: (productId: string) => Promise<void>;
   updateQuantity: (productId: string, quantity: number) => Promise<void>;
@@ -27,6 +28,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
   const { user } = useAuth();
 
   const refreshCart = async () => {
@@ -34,8 +36,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       const snapshot = await getCart();
       setCart(snapshot.items);
-    } catch {
-      setCart([]);
+      setError('');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to load cart.');
     } finally {
       setIsLoading(false);
     }
@@ -73,6 +76,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => ({
       cart,
       isLoading,
+      error,
       addToCart,
       removeFromCart: removeFromCartAction,
       updateQuantity,
@@ -81,7 +85,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       getCartTotal: () => cart.reduce((total, item) => total + item.price * item.quantity, 0),
       getCartCount: () => cart.reduce((count, item) => count + item.quantity, 0),
     }),
-    [cart, isLoading],
+    [cart, isLoading, error],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

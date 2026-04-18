@@ -6,7 +6,7 @@ import { Card } from '../components/ui/card';
 import { toast } from 'sonner';
 
 export function Cart() {
-  const { cart, isLoading, updateQuantity, removeFromCart, getCartTotal } = useCart();
+  const { cart, isLoading, error, updateQuantity, removeFromCart, getCartTotal } = useCart();
   const navigate = useNavigate();
   const total = getCartTotal();
 
@@ -66,6 +66,13 @@ export function Cart() {
         <h1 className="mb-8" style={{ color: '#2E2E2E' }}>
           Shopping Cart
         </h1>
+
+        {error && (
+          <Card className="p-4 mb-6" style={{ borderLeft: '4px solid #FF9800', backgroundColor: '#FFF9E6' }}>
+            <p style={{ color: '#2E2E2E', fontWeight: 600 }}>Cart connection issue</p>
+            <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>{error}</p>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
