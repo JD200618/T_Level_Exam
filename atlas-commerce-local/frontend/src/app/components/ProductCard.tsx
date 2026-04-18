@@ -1,8 +1,8 @@
 import { ShoppingCart } from 'lucide-react';
 import { StoreProduct } from '../lib/api';
 import { useCart } from '../context/CartContext';
-import { Button } from './ui/button';
-import { Card } from './ui/card';
+import { Button } from './ui/core';
+import { Card } from './ui/core';
 import { toast } from 'sonner';
 
 interface ProductCardProps {

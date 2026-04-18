@@ -1,8 +1,8 @@
 import { Link, useNavigate } from 'react-router';
 import { Minus, Plus, Trash2, ShoppingBag, LoaderCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { Button } from '../components/ui/button';
-import { Card } from '../components/ui/card';
+import { Button, Card } from '../components/ui/core';
+
 import { toast } from 'sonner';
 
 export function Cart() {

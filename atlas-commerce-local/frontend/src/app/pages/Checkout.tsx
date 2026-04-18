@@ -3,12 +3,10 @@ import { Navigate, Link, useNavigate } from 'react-router';
 import { Clock3, Lock, CreditCard, MapPin, ShoppingBag, ArrowLeft, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Card } from '../components/ui/card';
+import { Button, Input, Label, Card, Textarea } from '../components/ui/core';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Textarea } from '../components/ui/textarea';
+
 import { placeOrder } from '../lib/api';
 import { toast } from 'sonner';
 

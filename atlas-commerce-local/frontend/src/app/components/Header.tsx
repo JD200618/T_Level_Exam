@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router';
 import { ShoppingCart, Menu, X, User, LayoutDashboard } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { Button } from './ui/button';
+import { Button } from './ui/core';
 import { Logo } from './Logo';
 import { useState } from 'react';
 

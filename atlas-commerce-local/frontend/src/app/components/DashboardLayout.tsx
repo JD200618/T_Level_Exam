@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router';
 import { LayoutDashboard, Package, ShoppingCart, Users, BarChart3, LogOut, Store } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Button } from './ui/button';
+import { Button } from './ui/core';
 import { Logo } from './Logo';
 import { toast } from 'sonner';
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Users, TrendingUp, Star, Award } from 'lucide-react';
-import { Card } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
+import { Card, Badge } from '../../components/ui/core';
+
 import { getAdminCustomers } from '../../lib/api';
 
 export function DashboardCustomers() {
