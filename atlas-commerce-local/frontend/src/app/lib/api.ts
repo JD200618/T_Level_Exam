@@ -165,16 +165,25 @@ async function requestData<T>(path: string, init: RequestInit = {}): Promise<T> 
     headers.set('X-CSRFToken', csrfToken);
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers,
-    credentials: 'include',
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers,
+      credentials: 'include',
+    });
+  } catch {
+    throw new Error(`Cannot reach backend at ${API_BASE}. Make sure the local Django server is running.`);
+  }
 
   const payload = (await response.json().catch(() => ({}))) as ApiEnvelope<T> & Record<string, any>;
+  const message = (payload?.message as string)
+    || (payload?.detail as string)
+    || (Array.isArray(payload?.non_field_errors) ? String(payload.non_field_errors[0]) : '')
+    || 'Request failed';
 
   if (!response.ok || payload?.ok === false) {
-    throw new Error((payload?.message as string) || 'Request failed');
+    throw new Error(message);
   }
 
   return (payload.data as T) ?? (payload as T);

@@ -8,11 +8,18 @@ import { StoreProduct, getProducts } from '../lib/api';
 
 export function Home() {
   const [products, setProducts] = useState<StoreProduct[]>([]);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     void getProducts()
-      .then((items) => setProducts(items))
-      .catch(() => setProducts([]));
+      .then((items) => {
+        setProducts(items);
+        setLoadError('');
+      })
+      .catch((error) => {
+        setProducts([]);
+        setLoadError(error instanceof Error ? error.message : 'Unable to load the product catalogue.');
+      });
   }, []);
 
   const featuredProducts = useMemo(() => products.filter((product) => product.inStock).slice(0, 4), [products]);
@@ -85,6 +92,17 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      {loadError && (
+        <section className="py-6" style={{ backgroundColor: '#FFF9E6' }}>
+          <div className="container mx-auto px-4">
+            <Card className="p-4" style={{ borderLeft: '4px solid #FF9800' }}>
+              <p style={{ color: '#2E2E2E', fontWeight: 600 }}>Catalogue connection issue</p>
+              <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>{loadError}</p>
+            </Card>
+          </div>
+        </section>
+      )}
 
       <section className="py-16" style={{ backgroundColor: '#FFFFFF' }}>
         <div className="container mx-auto px-4">

@@ -130,8 +130,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const profile = await loginCustomer(email, password);
       await hydrate(profile);
       return true;
-    } catch {
-      return false;
+    } catch (error) {
+      setUser(null);
+      if (error instanceof Error && error.message === 'Invalid credentials') {
+        return false;
+      }
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -143,8 +147,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const profile = await loginAdminRequest(email, password);
       await hydrate(profile);
       return true;
-    } catch {
-      return false;
+    } catch (error) {
+      setUser(null);
+      if (error instanceof Error && (
+        error.message === 'Invalid credentials'
+        || error.message === 'This account does not have admin access'
+      )) {
+        return false;
+      }
+      throw error;
     } finally {
       setIsLoading(false);
     }
