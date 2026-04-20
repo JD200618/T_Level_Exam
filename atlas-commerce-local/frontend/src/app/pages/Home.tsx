@@ -1,10 +1,38 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { ArrowRight, Leaf, Truck, ShieldCheck, MapPin } from 'lucide-react';
 import { Button, Card } from '../components/ui/core';
 
 import { ProductCard } from '../components/ProductCard';
 import { StoreProduct, getProducts } from '../lib/api';
+
+const LOCAL_BENEFITS = [
+  {
+    title: 'Transparent producer information',
+    description: 'Customers can see who produced the item, where it comes from, and how it was grown or prepared.',
+    icon: Leaf,
+  },
+  {
+    title: 'Clear collection and delivery flow',
+    description: 'Orders can be placed for local collection or delivery with live availability and time-window choices.',
+    icon: Truck,
+  },
+  {
+    title: 'Reliable local stock visibility',
+    description: 'The catalogue shows current pricing and stock position so customers order from what is actually available.',
+    icon: ShieldCheck,
+  },
+];
+
+function getProducerHighlights(products: StoreProduct[]) {
+  const seen = new Set<string>();
+  return products.filter((product) => {
+    const key = `${product.producerName}::${product.producerLocation}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 3);
+}
 
 export function Home() {
   const [products, setProducts] = useState<StoreProduct[]>([]);
@@ -22,34 +50,8 @@ export function Home() {
       });
   }, []);
 
-  const featuredProducts = useMemo(() => products.filter((product) => product.inStock).slice(0, 4), [products]);
-  const producerHighlights = useMemo(() => {
-    const seen = new Set<string>();
-    return products.filter((product) => {
-      const key = `${product.producerName}::${product.producerLocation}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).slice(0, 3);
-  }, [products]);
-
-  const localBenefits = [
-    {
-      title: 'Transparent producer information',
-      description: 'Customers can see who produced the item, where it comes from, and how it was grown or prepared.',
-      icon: Leaf,
-    },
-    {
-      title: 'Clear collection and delivery flow',
-      description: 'Orders can be placed for local collection or delivery with live availability and time-window choices.',
-      icon: Truck,
-    },
-    {
-      title: 'Reliable local stock visibility',
-      description: 'The catalogue shows current pricing and stock position so customers order from what is actually available.',
-      icon: ShieldCheck,
-    },
-  ];
+  const featuredProducts = products.filter((product) => product.inStock).slice(0, 4);
+  const producerHighlights = getProducerHighlights(products);
 
   return (
     <div className="min-h-screen">
@@ -107,7 +109,7 @@ export function Home() {
       <section className="py-16" style={{ backgroundColor: '#FFFFFF' }}>
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {localBenefits.map((benefit) => {
+            {LOCAL_BENEFITS.map((benefit) => {
               const Icon = benefit.icon;
               return (
                 <Card key={benefit.title} className="p-6 text-center">
