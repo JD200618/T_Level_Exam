@@ -11,8 +11,8 @@ The prototype is designed to help GLH:
 - provide a producer dashboard for stock levels, product updates, and order visibility
 
 ## Technology stack
-- Frontend: React + Vite + TypeScript
-- Backend: Django + Django REST Framework
+- Frontend: React + Vite + TSX/TypeScript-style components, plus HTML and CSS in the browser
+- Backend: Python + Django + Django REST Framework
 - Database: SQLite
 - Runtime target: local desktop machine
 

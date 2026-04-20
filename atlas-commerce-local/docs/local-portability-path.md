@@ -41,6 +41,72 @@ Rather than removing the real stack, the project should reduce user effort by:
 - using startup/bootstrap scripts so the user does not have to remember many commands
 - using readable documentation that explains what is source code and what is local machine setup
 
+## Why runtime and generated folders exist
+These folders are used to make the program run, but they are not the project logic itself.
+
+### `backend/.venv/`
+- keeps backend Python packages isolated to this project
+- avoids conflicts with other Python projects on the same machine
+- can be recreated on a new desktop
+
+### `frontend/node_modules/`
+- stores installed frontend packages used by the React/Vite app
+- lets the frontend run and build locally
+- can be recreated on a new desktop
+
+### `__pycache__/`
+- stores Python bytecode cache files to speed up repeated imports
+- helps Python run a little faster locally
+- is not needed in git and can be deleted safely because Python will recreate it
+
+### `frontend/dist/`
+- stores generated build output for the frontend
+- is created from the real source code when the project is built
+- is not the authored source code
+
+### `backend/db.sqlite3`
+- stores local database state and test/demo records
+- is runtime data, not source code
+- should stay local rather than be treated as the coded program itself
+
+## Why machine-local support files exist
+These files help a specific desktop run the project, but they should not be judged as the programmer's main work.
+
+### `.env`
+- keeps local configuration and secrets out of source code
+- lets each desktop store its own local values safely
+
+### activation and startup scripts
+- reduce the number of commands the user has to remember
+- make the setup more repeatable on a new desktop
+- support the goal of a simpler local user experience
+
+## What is not needed in git
+These should stay out of the tracked deliverable repo whenever possible:
+
+- `.venv/`
+- `node_modules/`
+- `__pycache__/`
+- `*.pyc`
+- `dist/`
+- local `.env` files
+- other cache or machine-local generated folders
+
+## Languages used
+### Back end
+- Python
+- Django and Django REST Framework are the main backend libraries/frameworks
+
+### Front end
+- TSX / TypeScript-style React components
+- JavaScript runtime in the browser
+- HTML structure through React components
+- CSS for styling
+
+### Database
+- SQLite
+- SQL is the underlying query language concept used by the database layer
+
 ## Practical rule
 ### Source code should stay portable
 Portable project files include:
