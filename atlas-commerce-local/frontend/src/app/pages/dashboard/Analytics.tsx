@@ -1,8 +1,34 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BarChart3, TrendingUp, DollarSign } from 'lucide-react';
 import { Card } from '../../components/ui/core';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getAdminAnalytics, type AdminAnalytics } from '../../lib/api';
+
+function AnalyticsSectionHeader({
+  icon: Icon,
+  title,
+  description,
+  accent,
+}: {
+  icon: typeof DollarSign;
+  title: string;
+  description: string;
+  accent: { backgroundColor: string; color: string };
+}) {
+  return (
+    <div className="flex items-center gap-3 mb-6">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: accent.backgroundColor }}>
+        <Icon className="h-5 w-5" style={{ color: accent.color }} />
+      </div>
+      <div>
+        <h3 style={{ color: '#2E2E2E' }}>{title}</h3>
+        <p className="text-sm" style={{ color: '#6B6B6B' }}>
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export function DashboardAnalytics() {
   const [analytics, setAnalytics] = useState<AdminAnalytics>({ revenueByStatus: [], topProducts: [] });
@@ -15,10 +41,11 @@ export function DashboardAnalytics() {
   const totalUnitsSold = analytics.topProducts.reduce((sum, product) => sum + product.totalSold, 0);
   const totalRevenue = analytics.topProducts.reduce((sum, product) => sum + product.revenue, 0);
 
-  const chartData = useMemo(
-    () => analytics.revenueByStatus.map((row) => ({ status: row.status, revenue: row.revenue, orders: row.orders })),
-    [analytics.revenueByStatus],
-  );
+  const chartData = analytics.revenueByStatus.map((row) => ({
+    status: row.status,
+    revenue: row.revenue,
+    orders: row.orders,
+  }));
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6">
@@ -70,17 +97,12 @@ export function DashboardAnalytics() {
       </div>
 
       <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: '#FFE0B2' }}>
-            <DollarSign className="h-5 w-5" style={{ color: '#FF9800' }} />
-          </div>
-          <div>
-            <h3 style={{ color: '#2E2E2E' }}>Revenue by Order Status</h3>
-            <p className="text-sm" style={{ color: '#6B6B6B' }}>
-              Revenue and order counts grouped by status
-            </p>
-          </div>
-        </div>
+        <AnalyticsSectionHeader
+          icon={DollarSign}
+          title="Revenue by Order Status"
+          description="Revenue and order counts grouped by status"
+          accent={{ backgroundColor: '#FFE0B2', color: '#FF9800' }}
+        />
 
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={chartData}>
@@ -94,17 +116,12 @@ export function DashboardAnalytics() {
       </Card>
 
       <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: '#A5D6A7' }}>
-            <TrendingUp className="h-5 w-5" style={{ color: '#2E7D32' }} />
-          </div>
-          <div>
-            <h3 style={{ color: '#2E2E2E' }}>Top 5 Most Bought Products</h3>
-            <p className="text-sm" style={{ color: '#6B6B6B' }}>
-              Ranked by units sold
-            </p>
-          </div>
-        </div>
+        <AnalyticsSectionHeader
+          icon={TrendingUp}
+          title="Top 5 Most Bought Products"
+          description="Ranked by units sold"
+          accent={{ backgroundColor: '#A5D6A7', color: '#2E7D32' }}
+        />
 
         <div className="space-y-4">
           {topProducts.map((product, index) => (
