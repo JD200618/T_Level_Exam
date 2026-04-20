@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Package, AlertTriangle, PencilLine } from 'lucide-react';
 import { Card, Button, Input, Badge, Label, Textarea } from '../../components/ui/core';
 
@@ -26,6 +26,17 @@ interface InventoryEditorState {
   isFeatured: boolean;
 }
 
+function filterInventory(items: AdminInventoryItem[], searchTerm: string) {
+  const normalizedSearch = searchTerm.toLowerCase();
+
+  return items.filter(
+    (item) =>
+      item.name.toLowerCase().includes(normalizedSearch) ||
+      item.category.toLowerCase().includes(normalizedSearch) ||
+      item.producerName.toLowerCase().includes(normalizedSearch),
+  );
+}
+
 export function DashboardInventory() {
   const [inventory, setInventory] = useState<AdminInventoryItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,16 +52,7 @@ export function DashboardInventory() {
     void loadInventory();
   }, []);
 
-  const filteredInventory = useMemo(
-    () =>
-      inventory.filter(
-        (item) =>
-          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.producerName.toLowerCase().includes(searchTerm.toLowerCase()),
-      ),
-    [inventory, searchTerm],
-  );
+  const filteredInventory = filterInventory(inventory, searchTerm);
 
   const lowStockCount = inventory.filter((item) => item.stockLevel <= item.lowStockThreshold).length;
 
@@ -77,6 +79,10 @@ export function DashboardInventory() {
       stockLevel: item.stockLevel,
       isFeatured: item.isFeatured,
     });
+  };
+
+  const updateEditorField = <Field extends keyof InventoryEditorState>(field: Field, value: InventoryEditorState[Field]) => {
+    setEditor((prev) => (prev ? { ...prev, [field]: value } : prev));
   };
 
   const handleSaveProduct = async () => {
@@ -284,7 +290,7 @@ export function DashboardInventory() {
                 <Textarea
                   id="product-summary"
                   value={editor.summary}
-                  onChange={(e) => setEditor((prev) => (prev ? { ...prev, summary: e.target.value } : prev))}
+                  onChange={(e) => updateEditorField('summary', e.target.value)}
                 />
               </div>
 
@@ -294,7 +300,7 @@ export function DashboardInventory() {
                   <Input
                     id="producer-name"
                     value={editor.producerName}
-                    onChange={(e) => setEditor((prev) => (prev ? { ...prev, producerName: e.target.value } : prev))}
+                    onChange={(e) => updateEditorField('producerName', e.target.value)}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -302,7 +308,7 @@ export function DashboardInventory() {
                   <Input
                     id="producer-location"
                     value={editor.producerLocation}
-                    onChange={(e) => setEditor((prev) => (prev ? { ...prev, producerLocation: e.target.value } : prev))}
+                    onChange={(e) => updateEditorField('producerLocation', e.target.value)}
                   />
                 </div>
               </div>
@@ -312,7 +318,7 @@ export function DashboardInventory() {
                 <Textarea
                   id="production-method"
                   value={editor.productionMethod}
-                  onChange={(e) => setEditor((prev) => (prev ? { ...prev, productionMethod: e.target.value } : prev))}
+                  onChange={(e) => updateEditorField('productionMethod', e.target.value)}
                 />
               </div>
 
@@ -325,7 +331,7 @@ export function DashboardInventory() {
                     min="0"
                     step="0.01"
                     value={editor.price}
-                    onChange={(e) => setEditor((prev) => (prev ? { ...prev, price: Number(e.target.value) } : prev))}
+                    onChange={(e) => updateEditorField('price', Number(e.target.value))}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -336,7 +342,7 @@ export function DashboardInventory() {
                     min="0"
                     step="1"
                     value={editor.stockLevel}
-                    onChange={(e) => setEditor((prev) => (prev ? { ...prev, stockLevel: Number(e.target.value) } : prev))}
+                    onChange={(e) => updateEditorField('stockLevel', Number(e.target.value))}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -344,7 +350,7 @@ export function DashboardInventory() {
                   <button
                     id="product-featured"
                     type="button"
-                    onClick={() => setEditor((prev) => (prev ? { ...prev, isFeatured: !prev.isFeatured } : prev))}
+                    onClick={() => updateEditorField('isFeatured', !editor.isFeatured)}
                     className="h-10 rounded-md border px-4 text-sm text-left"
                     style={{ borderColor: '#A5D6A7', color: '#2E2E2E' }}
                   >
