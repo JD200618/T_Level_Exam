@@ -58,6 +58,7 @@ Use this file to record iterative development changes and the reason for each ch
 - Simplified the shared header by replacing repeated desktop/mobile route markup with one practical nav list and a small active-path helper.
 - Simplified the home page by pulling static benefit data and producer-highlight logic out of the render body and dropping unnecessary memo layers.
 - Simplified the shared dashboard layout by moving static nav configuration out of the component body and removing a few unnecessary optional checks after the admin/user guard.
+- Simplified the login and admin-login pages by moving their shared page shell into a small reusable frame while keeping each form's auth behavior local to the page.
 - Trimmed the frontend dependency list to the libraries that are still needed by the working application, reducing package noise and making the stack easier to explain.
 - Added repo-local VS Code settings to hide `__pycache__`, `*.pyc`, `node_modules`, `dist`, and the backend virtual environment from normal file browsing.
 - Simplified the toast wrapper so it no longer depends on theme plumbing that the project was not otherwise using.
