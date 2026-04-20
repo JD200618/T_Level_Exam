@@ -1,5 +1,17 @@
-import { Leaf, Mail, Phone, MapPin } from 'lucide-react';
+import { Leaf, Mail, Phone, MapPin, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router';
+
+const CONTACT_ITEMS: { icon: LucideIcon; text: string }[] = [
+  { icon: Phone, text: '(555) 123-4567' },
+  { icon: Mail, text: 'hello@greenfieldlocal.com' },
+  { icon: MapPin, text: '123 Farm Road, Greenfield' },
+];
+
+const STORE_HOURS = [
+  'Monday - Friday: 8am - 7pm',
+  'Saturday: 9am - 6pm',
+  'Sunday: 10am - 5pm',
+];
 
 export function Footer() {
   return (
@@ -26,24 +38,17 @@ export function Footer() {
           <div>
             <h4 className="mb-4" style={{ color: '#2E2E2E' }}>Contact Us</h4>
             <div className="space-y-3">
-              <div className="flex items-start gap-2">
-                <Phone className="h-4 w-4 mt-1" style={{ color: '#2E7D32' }} />
-                <span className="text-sm" style={{ color: '#6B6B6B' }}>
-                  (555) 123-4567
-                </span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Mail className="h-4 w-4 mt-1" style={{ color: '#2E7D32' }} />
-                <span className="text-sm" style={{ color: '#6B6B6B' }}>
-                  hello@greenfieldlocal.com
-                </span>
-              </div>
-              <div className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 mt-1" style={{ color: '#2E7D32' }} />
-                <span className="text-sm" style={{ color: '#6B6B6B' }}>
-                  123 Farm Road, Greenfield
-                </span>
-              </div>
+              {CONTACT_ITEMS.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.text} className="flex items-start gap-2">
+                    <Icon className="h-4 w-4 mt-1" style={{ color: '#2E7D32' }} />
+                    <span className="text-sm" style={{ color: '#6B6B6B' }}>
+                      {item.text}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -51,9 +56,9 @@ export function Footer() {
           <div>
             <h4 className="mb-4" style={{ color: '#2E2E2E' }}>Store Hours</h4>
             <div className="space-y-2 text-sm" style={{ color: '#6B6B6B' }}>
-              <p>Monday - Friday: 8am - 7pm</p>
-              <p>Saturday: 9am - 6pm</p>
-              <p>Sunday: 10am - 5pm</p>
+              {STORE_HOURS.map((hours) => (
+                <p key={hours}>{hours}</p>
+              ))}
             </div>
           </div>
         </div>
