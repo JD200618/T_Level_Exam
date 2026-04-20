@@ -2,8 +2,86 @@ import { Link, useNavigate } from 'react-router';
 import { Minus, Plus, Trash2, ShoppingBag, LoaderCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { Button, Card } from '../components/ui/core';
-
+import { CartItem } from '../lib/api';
 import { toast } from 'sonner';
+
+interface CartItemCardProps {
+  item: CartItem;
+  onRemove: (productName: string, productId: string) => Promise<void>;
+  onUpdateQuantity: (productId: string, quantity: number) => Promise<void>;
+}
+
+function CartItemCard({ item, onRemove, onUpdateQuantity }: CartItemCardProps) {
+  return (
+    <Card className="p-4">
+      <div className="flex gap-4">
+        <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+          <img
+            src={item.image}
+            alt={item.name}
+            className="w-full h-full object-cover"
+          />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <p className="text-xs uppercase tracking-wide" style={{ color: '#6B6B6B' }}>
+                {item.category}
+              </p>
+              <h3 className="text-lg" style={{ color: '#2E2E2E' }}>
+                {item.name}
+              </h3>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void onRemove(item.name, item.id)}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void onUpdateQuantity(item.id, item.quantity - 1)}
+                className="h-8 w-8 p-0"
+                style={{ borderColor: '#2E7D32' }}
+              >
+                <Minus className="h-4 w-4" style={{ color: '#2E7D32' }} />
+              </Button>
+              <span className="w-12 text-center" style={{ color: '#2E2E2E' }}>
+                {item.quantity}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void onUpdateQuantity(item.id, item.quantity + 1)}
+                className="h-8 w-8 p-0"
+                style={{ borderColor: '#2E7D32' }}
+              >
+                <Plus className="h-4 w-4" style={{ color: '#2E7D32' }} />
+              </Button>
+            </div>
+
+            <div className="text-right">
+              <p className="text-lg" style={{ color: '#2E7D32', fontWeight: 600 }}>
+                ${(item.price * item.quantity).toFixed(2)}
+              </p>
+              <p className="text-xs" style={{ color: '#6B6B6B' }}>
+                ${item.price.toFixed(2)} / {item.unit}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
 
 export function Cart() {
   const { cart, isLoading, error, updateQuantity, removeFromCart, getCartTotal } = useCart();
@@ -19,9 +97,7 @@ export function Cart() {
     }
   };
 
-  const handleCheckout = () => {
-    navigate('/checkout');
-  };
+  const handleCheckout = () => navigate('/checkout');
 
   if (isLoading) {
     return (
@@ -77,73 +153,12 @@ export function Cart() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
             {cart.map((item) => (
-              <Card key={item.id} className="p-4">
-                <div className="flex gap-4">
-                  <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <p className="text-xs uppercase tracking-wide" style={{ color: '#6B6B6B' }}>
-                          {item.category}
-                        </p>
-                        <h3 className="text-lg" style={{ color: '#2E2E2E' }}>
-                          {item.name}
-                        </h3>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => void handleRemoveFromCart(item.name, item.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => void updateQuantity(item.id, item.quantity - 1)}
-                          className="h-8 w-8 p-0"
-                          style={{ borderColor: '#2E7D32' }}
-                        >
-                          <Minus className="h-4 w-4" style={{ color: '#2E7D32' }} />
-                        </Button>
-                        <span className="w-12 text-center" style={{ color: '#2E2E2E' }}>
-                          {item.quantity}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => void updateQuantity(item.id, item.quantity + 1)}
-                          className="h-8 w-8 p-0"
-                          style={{ borderColor: '#2E7D32' }}
-                        >
-                          <Plus className="h-4 w-4" style={{ color: '#2E7D32' }} />
-                        </Button>
-                      </div>
-
-                      <div className="text-right">
-                        <p className="text-lg" style={{ color: '#2E7D32', fontWeight: 600 }}>
-                          ${(item.price * item.quantity).toFixed(2)}
-                        </p>
-                        <p className="text-xs" style={{ color: '#6B6B6B' }}>
-                          ${item.price.toFixed(2)} / {item.unit}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
+              <CartItemCard
+                key={item.id}
+                item={item}
+                onRemove={handleRemoveFromCart}
+                onUpdateQuantity={updateQuantity}
+              />
             ))}
           </div>
 
