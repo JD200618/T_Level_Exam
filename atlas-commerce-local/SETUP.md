@@ -23,30 +23,49 @@ When opened from the root, the editor should show:
 - `README.md`
 - `SETUP.md`
 
+## Recommended path
+This project is designed to stay readable and source-visible while still being portable across desktops.
+
+That means:
+- keep the real frontend/backend/database structure
+- keep `.venv` and `node_modules` as machine-local generated folders
+- reduce user effort through scripts instead of pretending the runtime layers do not exist
+
+See `docs/local-portability-path.md` for the reasoning behind this direction.
+
 ## Prerequisites
 Install these tools on the desktop machine:
 - VS Code
-- Python 3
+- Python 3 with the Windows `py` launcher available
 - Node.js
 - Git or GitHub Desktop
 
+## First-time bootstrap on a new desktop
+The easiest Windows-first flow is:
+
+```powershell
+cd scripts
+.\bootstrap-local.cmd
+```
+
+This creates the backend virtual environment, installs backend packages, runs migrations, seeds demo data, and installs frontend packages.
+
 ## Backend setup
-Open a terminal in:
+If you want to run the backend manually, open a terminal in:
 
 `backend`
 
 Run:
 
 ```powershell
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
+py -m venv .venv
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 python manage.py migrate
 python manage.py seed_demo_data
 python manage.py runserver
 ```
-
-If `python` is not available, try `py` instead.
 
 ## Frontend setup
 Open a second terminal in:
@@ -56,8 +75,8 @@ Open a second terminal in:
 Run:
 
 ```powershell
-npm install
-npm run dev
+npm.cmd install
+npm.cmd run dev
 ```
 
 ## Local URLs
@@ -91,4 +110,5 @@ This checks the main layered flows across session, API, service, and database be
 - Keep the repository private while the prototype is in development.
 - Keep `.env` files local.
 - Do not store personal or client-sensitive data in public locations.
+- Treat `.venv`, `node_modules`, and other generated folders as local machine setup, not as source code to judge the project by.
 - Use the logs in `docs/` to record assets, testing, and development changes.

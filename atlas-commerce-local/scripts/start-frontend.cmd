@@ -1,5 +1,5 @@
 @echo off
 setlocal
 cd /d %~dp0\..\frontend
-call npm install
-call npm run dev
+call npm.cmd install
+call npm.cmd run dev

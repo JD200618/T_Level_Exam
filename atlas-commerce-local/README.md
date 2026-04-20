@@ -20,7 +20,7 @@ The prototype is designed to help GLH:
 - `frontend/` customer-facing and dashboard user interface
 - `backend/` Django API, business logic, and data models
 - `docs/` project documentation, logs, and supporting records
-- `scripts/` local startup scripts
+- `scripts/` local bootstrap and startup scripts
 - `SETUP.md` local setup and run instructions
 
 ## Current implemented modules
@@ -61,6 +61,7 @@ Core project documents:
 - `development-log.md`
 - `security-accessibility-legal.md`
 - `maintainability-guidelines.md`
+- `local-portability-path.md`
 
 ## Demo seed support
 The backend includes a local demo seed command:
@@ -88,4 +89,4 @@ Recommended local project path:
 `C:\Projects\ecommerce-prototype\`
 
 ## Next step
-Follow `SETUP.md` to run the project locally.
+Follow `SETUP.md` to run the project locally. On a new Windows desktop, the recommended first run is `scripts\\bootstrap-local.cmd`.

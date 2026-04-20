@@ -44,6 +44,8 @@ Use this file to record iterative development changes and the reason for each ch
 - Removed the unused `components/figma/ImageWithFallback.tsx` helper from the active frontend and removed its old reference copy from the tracked deliverable repo.
 - Removed leftover Next.js-style `"use client"` directives from the active frontend UI primitives and cleaned a small duplicate class in `tabs.tsx` to keep the local React code simpler.
 - Updated the demo seed command to stay quiet when run with `verbosity=0`, which keeps automated tests cleaner without changing functionality.
+- Documented the chosen portability direction in `docs/local-portability-path.md`: keep the real local frontend/backend/database structure, but reduce user effort with bootstrap/start scripts rather than pretending the runtime does not exist.
+- Added a Windows-first `scripts/bootstrap-local.cmd` and tightened the existing start scripts so a new desktop can be prepared with fewer manual steps.
 - Trimmed the frontend dependency list to the libraries that are still needed by the working application, reducing package noise and making the stack easier to explain.
 - Added repo-local VS Code settings to hide `__pycache__`, `*.pyc`, `node_modules`, `dist`, and the backend virtual environment from normal file browsing.
 - Simplified the toast wrapper so it no longer depends on theme plumbing that the project was not otherwise using.

@@ -11,6 +11,7 @@ Open this folder first if you want the quickest project-facing view of the proto
 - `development-log.md` - iterative development and cleanup record
 - `security-accessibility-legal.md` - security, accessibility, and compliance notes
 - `maintainability-guidelines.md` - handover and maintainability rules for third-party developers
+- `local-portability-path.md` - recommended path for keeping the project readable, portable, and easier to run on new desktops
 
 ## Recommended reading order
 1. `client-brief.md`
@@ -18,8 +19,9 @@ Open this folder first if you want the quickest project-facing view of the proto
 3. `testing-log.md`
 4. `development-log.md`
 5. `functional-flow.md`
-6. `security-accessibility-legal.md`
-7. `assets-log.md`
+6. `local-portability-path.md`
+7. `security-accessibility-legal.md`
+8. `assets-log.md`
 
 ## Project surface
 - `../frontend/` - user interface
