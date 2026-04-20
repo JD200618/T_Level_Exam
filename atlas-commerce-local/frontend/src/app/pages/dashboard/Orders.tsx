@@ -3,13 +3,14 @@ import { ShoppingCart } from 'lucide-react';
 import { Card, Badge } from '../../components/ui/core';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { getAdminOrders, updateAdminOrderStatus } from '../../lib/api';
+import { getAdminOrders, updateAdminOrderStatus, type AdminOrder } from '../../lib/api';
 import { toast } from 'sonner';
 
 type OrderStatus = 'all' | 'pending' | 'paid' | 'delivered' | 'collected';
+type ManageableOrderStatus = Exclude<OrderStatus, 'all'>;
 
 export function DashboardOrders() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [filterStatus, setFilterStatus] = useState<OrderStatus>('all');
 
   const loadOrders = async () => {
@@ -41,7 +42,7 @@ export function DashboardOrders() {
     }
   };
 
-  const handleUpdateStatus = async (orderId: number, newStatus: 'pending' | 'paid' | 'delivered' | 'collected') => {
+  const handleUpdateStatus = async (orderId: number, newStatus: ManageableOrderStatus) => {
     try {
       await updateAdminOrderStatus(orderId, newStatus);
       await loadOrders();
@@ -140,7 +141,7 @@ export function DashboardOrders() {
                   </div>
                 </div>
 
-                <Select value={order.status} onValueChange={(value) => void handleUpdateStatus(order.orderId, value as any)}>
+                <Select value={order.status} onValueChange={(value) => void handleUpdateStatus(order.orderId, value as ManageableOrderStatus)}>
                   <SelectTrigger className="w-40" style={{ borderColor: '#2E7D32' }}>
                     <SelectValue />
                   </SelectTrigger>

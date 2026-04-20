@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { BarChart3, TrendingUp, DollarSign } from 'lucide-react';
 import { Card } from '../../components/ui/core';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { getAdminAnalytics } from '../../lib/api';
+import { getAdminAnalytics, type AdminAnalytics } from '../../lib/api';
 
 export function DashboardAnalytics() {
-  const [analytics, setAnalytics] = useState({ revenueByStatus: [], topProducts: [] as any[] });
+  const [analytics, setAnalytics] = useState<AdminAnalytics>({ revenueByStatus: [], topProducts: [] });
 
   useEffect(() => {
     void getAdminAnalytics().then(setAnalytics);
@@ -16,7 +16,7 @@ export function DashboardAnalytics() {
   const totalRevenue = analytics.topProducts.reduce((sum, product) => sum + product.revenue, 0);
 
   const chartData = useMemo(
-    () => analytics.revenueByStatus.map((row: any) => ({ status: row.status, revenue: row.revenue, orders: row.orders })),
+    () => analytics.revenueByStatus.map((row) => ({ status: row.status, revenue: row.revenue, orders: row.orders })),
     [analytics.revenueByStatus],
   );
 

@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
-import { getAdminInventory, updateAdminInventory } from '../../lib/api';
+import { getAdminInventory, updateAdminInventory, type AdminInventoryItem } from '../../lib/api';
 import { toast } from 'sonner';
 
 interface InventoryEditorState {
@@ -27,7 +27,7 @@ interface InventoryEditorState {
 }
 
 export function DashboardInventory() {
-  const [inventory, setInventory] = useState<any[]>([]);
+  const [inventory, setInventory] = useState<AdminInventoryItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [editor, setEditor] = useState<InventoryEditorState | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -54,7 +54,7 @@ export function DashboardInventory() {
 
   const lowStockCount = inventory.filter((item) => item.stockLevel <= item.lowStockThreshold).length;
 
-  const handleUpdateStock = async (item: any, newStock: number) => {
+  const handleUpdateStock = async (item: AdminInventoryItem, newStock: number) => {
     try {
       await updateAdminInventory(item.productId, { stockLevel: Math.max(0, newStock) });
       await loadInventory();
@@ -64,7 +64,7 @@ export function DashboardInventory() {
     }
   };
 
-  const handleOpenEditor = (item: any) => {
+  const handleOpenEditor = (item: AdminInventoryItem) => {
     setEditor({
       id: item.id,
       productId: item.productId,
@@ -102,7 +102,7 @@ export function DashboardInventory() {
     }
   };
 
-  const getStockStatus = (item: any) => {
+  const getStockStatus = (item: AdminInventoryItem) => {
     if (item.stockLevel === 0) {
       return { label: 'Out of Stock', color: 'bg-red-600', textColor: 'text-white' };
     }

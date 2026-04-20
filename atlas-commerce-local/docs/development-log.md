@@ -48,6 +48,7 @@ Use this file to record iterative development changes and the reason for each ch
 - Added a Windows-first `scripts/bootstrap-local.cmd` and tightened the existing start scripts so a new desktop can be prepared with fewer manual steps.
 - Expanded the portability documentation to explain why runtime/generated folders and machine-local support files exist, what should stay out of git, and which languages are used across the backend, frontend, and database layers.
 - Added explicit maintainability guardrails to keep future code changes from drifting toward overly polished, tutorial-style, or obviously AI-generated patterns.
+- Started an `Operation_Reconstruct` pass by giving the frontend a proper local TypeScript setup, fixing the main entry import for type-checking, moving `react` and `react-dom` into normal app dependencies, and replacing the loosest dashboard `any` usage with direct domain types.
 - Trimmed the frontend dependency list to the libraries that are still needed by the working application, reducing package noise and making the stack easier to explain.
 - Added repo-local VS Code settings to hide `__pycache__`, `*.pyc`, `node_modules`, `dist`, and the backend virtual environment from normal file browsing.
 - Simplified the toast wrapper so it no longer depends on theme plumbing that the project was not otherwise using.
