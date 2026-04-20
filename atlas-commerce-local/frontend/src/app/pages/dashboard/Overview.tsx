@@ -1,15 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DollarSign, ShoppingCart, Package, Users, TrendingUp, AlertTriangle, BarChart3 } from 'lucide-react';
 import { Card, Button } from '../../components/ui/core';
 
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { getAdminInventory, getAdminOrders, getAdminOverview } from '../../lib/api';
+import { getAdminInventory, getAdminOrders, getAdminOverview, type AdminInventoryItem, type AdminOrder, type AdminOverview } from '../../lib/api';
 import { Link } from 'react-router';
 
 export function DashboardOverview() {
-  const [overview, setOverview] = useState({ products: 0, customers: 0, orders: 0, revenue: 0 });
-  const [inventory, setInventory] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
+  const [overview, setOverview] = useState<AdminOverview>({ products: 0, customers: 0, orders: 0, revenue: 0 });
+  const [inventory, setInventory] = useState<AdminInventoryItem[]>([]);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
 
@@ -27,27 +27,22 @@ export function DashboardOverview() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const lowStockProducts = useMemo(
-    () => inventory.filter((item) => item.stockLevel <= item.lowStockThreshold),
-    [inventory],
-  );
+  const lowStockProducts = inventory.filter((item) => item.stockLevel <= item.lowStockThreshold);
 
-  const statusData = useMemo(() => {
-    const counts = orders.reduce((acc: Record<string, number>, order) => {
-      acc[order.status] = (acc[order.status] || 0) + 1;
-      return acc;
-    }, {});
-    return Object.entries(counts).map(([status, count]) => ({ status, count }));
-  }, [orders]);
+  const statusCounts = orders.reduce((counts: Record<string, number>, order) => {
+    counts[order.status] = (counts[order.status] || 0) + 1;
+    return counts;
+  }, {});
 
-  const revenueData = useMemo(() => {
-    const byMonth = orders.reduce((acc: Record<string, number>, order) => {
-      const key = new Date(order.date).toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
-      acc[key] = (acc[key] || 0) + order.total;
-      return acc;
-    }, {});
-    return Object.entries(byMonth).map(([month, revenue]) => ({ month, revenue }));
-  }, [orders]);
+  const statusData = Object.entries(statusCounts).map(([status, count]) => ({ status, count }));
+
+  const revenueByMonth = orders.reduce((months: Record<string, number>, order) => {
+    const key = new Date(order.date).toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
+    months[key] = (months[key] || 0) + order.total;
+    return months;
+  }, {});
+
+  const revenueData = Object.entries(revenueByMonth).map(([month, revenue]) => ({ month, revenue }));
 
   const kpiCards = [
     {
