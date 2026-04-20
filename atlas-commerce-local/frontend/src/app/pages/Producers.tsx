@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { Leaf, MapPin, ShoppingBasket, ArrowRight, Truck, Clock3 } from 'lucide-react';
 import { Button, Card } from '../components/ui/core';
@@ -12,6 +12,24 @@ interface ProducerView {
   method: string;
   products: StoreProduct[];
 }
+
+const PRODUCER_BENEFITS = [
+  {
+    title: 'Know who grows your food',
+    description: 'Each product can be traced back to a named local producer with a visible growing or production method.',
+    icon: Leaf,
+  },
+  {
+    title: 'Shorter supply chain',
+    description: 'GLH reduces food miles and keeps delivery, collection, and stock decisions closer to the local hub.',
+    icon: Truck,
+  },
+  {
+    title: 'Fresher seasonal planning',
+    description: 'Live stock and collection windows help customers order around what is actually available from local producers.',
+    icon: Clock3,
+  },
+];
 
 function buildProducerViews(products: StoreProduct[]): ProducerView[] {
   const producerMap = new Map<string, ProducerView>();
@@ -46,25 +64,8 @@ export function Producers() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const producers = useMemo(() => buildProducerViews(products), [products]);
-
-  const producerBenefits = [
-    {
-      title: 'Know who grows your food',
-      description: 'Each product can be traced back to a named local producer with a visible growing or production method.',
-      icon: Leaf,
-    },
-    {
-      title: 'Shorter supply chain',
-      description: 'GLH reduces food miles and keeps delivery, collection, and stock decisions closer to the local hub.',
-      icon: Truck,
-    },
-    {
-      title: 'Fresher seasonal planning',
-      description: 'Live stock and collection windows help customers order around what is actually available from local producers.',
-      icon: Clock3,
-    },
-  ];
+  const producers = buildProducerViews(products);
+  const inStockCount = products.filter((product) => product.inStock).length;
 
   return (
     <div className="min-h-screen py-12" style={{ backgroundColor: '#FAFAF5' }}>
@@ -83,7 +84,7 @@ export function Producers() {
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {producerBenefits.map((benefit) => {
+          {PRODUCER_BENEFITS.map((benefit) => {
             const Icon = benefit.icon;
             return (
               <Card key={benefit.title} className="p-6">
@@ -109,7 +110,7 @@ export function Producers() {
           <Card className="p-6">
             <p className="text-sm" style={{ color: '#6B6B6B' }}>Products currently in stock</p>
             <p className="text-3xl" style={{ color: '#2E7D32', fontWeight: 700 }}>
-              {products.filter((product) => product.inStock).length}
+              {inStockCount}
             </p>
           </Card>
         </section>
