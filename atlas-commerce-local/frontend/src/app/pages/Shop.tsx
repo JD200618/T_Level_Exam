@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ProductCard } from '../components/ProductCard';
 import { Button, Input } from '../components/ui/core';
 
@@ -17,20 +17,28 @@ export function Shop() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const categories = useMemo(
-    () => ['All', ...Array.from(new Set(products.map((product) => product.category)))],
-    [products],
-  );
+  const categories = ['All', ...Array.from(new Set(products.map((product) => product.category)))];
+  const normalizedSearch = searchQuery.trim().toLowerCase();
 
   const filteredProducts = products.filter((product) => {
     const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.producerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.producerLocation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.productionMethod.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    if (!matchesCategory) {
+      return false;
+    }
+
+    if (!normalizedSearch) {
+      return true;
+    }
+
+    const searchText = [
+      product.name,
+      product.description,
+      product.producerName,
+      product.producerLocation,
+      product.productionMethod,
+    ].join(' ').toLowerCase();
+
+    return searchText.includes(normalizedSearch);
   });
 
   const inStockCount = products.filter((product) => product.inStock).length;

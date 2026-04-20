@@ -52,6 +52,7 @@ Use this file to record iterative development changes and the reason for each ch
 - Continued the reconstruction pass by tightening `frontend/src/app/lib/api.ts` with practical raw response shapes instead of vague `any` values, keeping the live data flow more direct and easier to follow without changing the visible app behaviour.
 - Simplified the account page by replacing long inline delete handlers and repeated form-reset chunks with small practical local helpers, keeping the code chunky and readable without adding a new abstraction layer.
 - Simplified the checkout page by removing an unnecessary memo layer, tightening the local checkout state typing, and making the fulfilment-window flow more direct.
+- Simplified the shop page by dropping an unnecessary memo, reducing repeated search normalization work, and making the product filter flow more direct.
 - Trimmed the frontend dependency list to the libraries that are still needed by the working application, reducing package noise and making the stack easier to explain.
 - Added repo-local VS Code settings to hide `__pycache__`, `*.pyc`, `node_modules`, `dist`, and the backend virtual environment from normal file browsing.
 - Simplified the toast wrapper so it no longer depends on theme plumbing that the project was not otherwise using.
