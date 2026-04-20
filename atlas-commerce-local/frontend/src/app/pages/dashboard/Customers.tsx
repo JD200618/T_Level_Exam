@@ -1,11 +1,60 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Users, TrendingUp, Star, Award } from 'lucide-react';
 import { Card, Badge } from '../../components/ui/core';
 
 import { getAdminCustomers } from '../../lib/api';
 
+type LoyaltyTier = 'platinum' | 'gold' | 'silver' | 'bronze';
+
+interface DashboardCustomer {
+  id: string;
+  name: string;
+  email: string;
+  totalSpend: number;
+  orderCount: number;
+  avgOrderValue: number;
+  loyaltyTier: LoyaltyTier;
+}
+
+const LOYALTY_TIERS: LoyaltyTier[] = ['platinum', 'gold', 'silver', 'bronze'];
+
+function getTierCounts(customers: DashboardCustomer[]) {
+  return {
+    platinum: customers.filter((customer) => customer.loyaltyTier === 'platinum').length,
+    gold: customers.filter((customer) => customer.loyaltyTier === 'gold').length,
+    silver: customers.filter((customer) => customer.loyaltyTier === 'silver').length,
+    bronze: customers.filter((customer) => customer.loyaltyTier === 'bronze').length,
+  };
+}
+
+function getTierBadge(tier: LoyaltyTier) {
+  switch (tier) {
+    case 'platinum':
+      return { label: 'Platinum', style: { backgroundColor: '#757575', color: 'white' } };
+    case 'gold':
+      return { label: 'Gold', style: { backgroundColor: '#FFC107', color: '#2E2E2E' } };
+    case 'silver':
+      return { label: 'Silver', style: { backgroundColor: '#E0E0E0', color: '#2E2E2E' } };
+    default:
+      return { label: 'Bronze', style: { backgroundColor: '#D7CCC8', color: '#2E2E2E' } };
+  }
+}
+
+function getTierDotColor(tier: LoyaltyTier) {
+  switch (tier) {
+    case 'platinum':
+      return '#757575';
+    case 'gold':
+      return '#FFC107';
+    case 'silver':
+      return '#E0E0E0';
+    default:
+      return '#D7CCC8';
+  }
+}
+
 export function DashboardCustomers() {
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<DashboardCustomer[]>([]);
 
   useEffect(() => {
     void getAdminCustomers().then(setCustomers);
@@ -16,28 +65,7 @@ export function DashboardCustomers() {
   const totalOrders = customers.reduce((sum, customer) => sum + customer.orderCount, 0);
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-  const tierCounts = useMemo(
-    () => ({
-      platinum: customers.filter((customer) => customer.loyaltyTier === 'platinum').length,
-      gold: customers.filter((customer) => customer.loyaltyTier === 'gold').length,
-      silver: customers.filter((customer) => customer.loyaltyTier === 'silver').length,
-      bronze: customers.filter((customer) => customer.loyaltyTier === 'bronze').length,
-    }),
-    [customers],
-  );
-
-  const getLoyaltyTierBadge = (tier: string) => {
-    switch (tier) {
-      case 'platinum':
-        return { label: 'Platinum', style: { backgroundColor: '#757575', color: 'white' } };
-      case 'gold':
-        return { label: 'Gold', style: { backgroundColor: '#FFC107', color: '#2E2E2E' } };
-      case 'silver':
-        return { label: 'Silver', style: { backgroundColor: '#E0E0E0', color: '#2E2E2E' } };
-      default:
-        return { label: 'Bronze', style: { backgroundColor: '#D7CCC8', color: '#2E2E2E' } };
-    }
-  };
+  const tierCounts = getTierCounts(customers);
 
   const sortedCustomers = [...customers].sort((a, b) => b.totalSpend - a.totalSpend);
 
@@ -104,15 +132,12 @@ export function DashboardCustomers() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {(['platinum', 'gold', 'silver', 'bronze'] as const).map((tier) => (
+          {LOYALTY_TIERS.map((tier) => (
             <div key={tier} className="p-4 rounded-lg" style={{ backgroundColor: '#FAFAF5' }}>
               <div className="flex items-center gap-2 mb-2">
                 <div
                   className="h-3 w-3 rounded-full"
-                  style={{
-                    backgroundColor:
-                      tier === 'platinum' ? '#757575' : tier === 'gold' ? '#FFC107' : tier === 'silver' ? '#E0E0E0' : '#D7CCC8',
-                  }}
+                  style={{ backgroundColor: getTierDotColor(tier) }}
                 ></div>
                 <span className="text-sm capitalize" style={{ color: '#6B6B6B' }}>{tier}</span>
               </div>
@@ -130,7 +155,7 @@ export function DashboardCustomers() {
         </h3>
         <div className="space-y-4">
           {sortedCustomers.map((customer, index) => {
-            const tierBadge = getLoyaltyTierBadge(customer.loyaltyTier);
+            const tierBadge = getTierBadge(customer.loyaltyTier);
             return (
               <Card key={customer.id} className="p-6">
                 <div className="flex flex-col lg:flex-row lg:items-start gap-6">

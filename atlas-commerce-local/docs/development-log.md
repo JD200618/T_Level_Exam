@@ -64,6 +64,7 @@ Use this file to record iterative development changes and the reason for each ch
 - Simplified the cart page by moving the bulky cart item row markup into one small file-local component while keeping cart state, totals, and checkout behavior unchanged.
 - Simplified the checkout page by introducing a small local section-header helper and a data-driven fulfilment option list, reducing repeated UI blocks while keeping order submission behavior unchanged.
 - Simplified the account page by introducing local field-update helpers for address and card forms, reducing repeated inline state-wiring without changing the backend-backed account actions.
+- Simplified the dashboard customers page by replacing loose `any[]` usage with an explicit customer shape and moving loyalty-tier helpers into small file-local functions.
 - Trimmed the frontend dependency list to the libraries that are still needed by the working application, reducing package noise and making the stack easier to explain.
 - Added repo-local VS Code settings to hide `__pycache__`, `*.pyc`, `node_modules`, `dist`, and the backend virtual environment from normal file browsing.
 - Simplified the toast wrapper so it no longer depends on theme plumbing that the project was not otherwise using.
