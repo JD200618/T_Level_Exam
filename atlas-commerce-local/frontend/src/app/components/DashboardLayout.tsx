@@ -5,6 +5,14 @@ import { Button } from './ui/core';
 import { Logo } from './Logo';
 import { toast } from 'sonner';
 
+const DASHBOARD_NAV_ITEMS = [
+  { path: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+  { path: '/dashboard/inventory', label: 'Inventory', icon: Package },
+  { path: '/dashboard/orders', label: 'Orders', icon: ShoppingCart },
+  { path: '/dashboard/customers', label: 'Customers', icon: Users },
+  { path: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
+];
+
 export function DashboardLayout() {
   const { user, logout, isLoading } = useAuth();
   const location = useLocation();
@@ -24,13 +32,7 @@ export function DashboardLayout() {
     navigate('/');
   };
 
-  const navItems = [
-    { path: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-    { path: '/dashboard/inventory', label: 'Inventory', icon: Package },
-    { path: '/dashboard/orders', label: 'Orders', icon: ShoppingCart },
-    { path: '/dashboard/customers', label: 'Customers', icon: Users },
-    { path: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
-  ];
+  const isActivePath = (path: string) => location.pathname === path;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FAFAF5' }}>
@@ -71,9 +73,9 @@ export function DashboardLayout() {
       <div className="flex">
         <aside className="hidden lg:block w-64 min-h-[calc(100vh-80px)] bg-white border-r">
           <nav className="p-4 space-y-2">
-            {navItems.map((item) => {
+            {DASHBOARD_NAV_ITEMS.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.path;
+              const isActive = isActivePath(item.path);
 
               return (
                 <Link key={item.path} to={item.path}>
@@ -98,14 +100,14 @@ export function DashboardLayout() {
           <div className="p-4 mt-8 border-t">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: '#2E7D32' }}>
-                <span className="text-white font-medium">{user?.name?.charAt(0) || 'A'}</span>
+                <span className="text-white font-medium">{user.name.charAt(0) || 'A'}</span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm truncate" style={{ color: '#2E2E2E', fontWeight: 600 }}>
-                  {user?.name || 'Admin'}
+                  {user.name || 'Admin'}
                 </p>
                 <p className="text-xs truncate" style={{ color: '#6B6B6B' }}>
-                  {user?.role === 'admin' ? 'Administrator' : 'Staff'}
+                  {user.role === 'admin' ? 'Administrator' : 'Staff'}
                 </p>
               </div>
             </div>
@@ -114,9 +116,9 @@ export function DashboardLayout() {
 
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t z-50">
           <nav className="flex justify-around p-2">
-            {navItems.map((item) => {
+            {DASHBOARD_NAV_ITEMS.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.path;
+              const isActive = isActivePath(item.path);
 
               return (
                 <Link key={item.path} to={item.path} className="flex-1">
