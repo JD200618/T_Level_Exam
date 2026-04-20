@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, Link, useNavigate } from 'react-router';
 import { Clock3, Lock, CreditCard, MapPin, ShoppingBag, ArrowLeft, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -24,20 +24,37 @@ const DELIVERY_WINDOWS = [
   'Saturday route, 10:00 to 14:00',
 ];
 
+type FulfillmentMethod = 'collection' | 'delivery';
+
+interface CheckoutInfo {
+  fullName: string;
+  address: string;
+  city: string;
+  postcode: string;
+  country: string;
+  fulfillmentMethod: FulfillmentMethod;
+  requestedWindow: string;
+  customerNote: string;
+}
+
+function getWindowsFor(method: FulfillmentMethod) {
+  return method === 'delivery' ? DELIVERY_WINDOWS : COLLECTION_WINDOWS;
+}
+
 export function Checkout() {
   const { cart, getCartTotal, clearCart } = useCart();
   const { user, isAuthenticated, isLoading, refreshUser } = useAuth();
   const navigate = useNavigate();
   const total = getCartTotal();
 
-  const [checkoutInfo, setCheckoutInfo] = useState({
+  const [checkoutInfo, setCheckoutInfo] = useState<CheckoutInfo>({
     fullName: '',
     address: '',
     city: '',
     postcode: '',
     country: 'United Kingdom',
-    fulfillmentMethod: 'collection' as 'collection' | 'delivery',
-    requestedWindow: COLLECTION_WINDOWS[0],
+    fulfillmentMethod: 'collection',
+    requestedWindow: getWindowsFor('collection')[0],
     customerNote: '',
   });
 
@@ -55,10 +72,7 @@ export function Checkout() {
     }));
   }, [user]);
 
-  const availableWindows = useMemo(
-    () => (checkoutInfo.fulfillmentMethod === 'delivery' ? DELIVERY_WINDOWS : COLLECTION_WINDOWS),
-    [checkoutInfo.fulfillmentMethod],
-  );
+  const availableWindows = getWindowsFor(checkoutInfo.fulfillmentMethod);
 
   if (isLoading) {
     return <div className="p-6" style={{ color: '#6B6B6B' }}>Loading checkout...</div>;
@@ -72,12 +86,12 @@ export function Checkout() {
     return <Navigate to="/login" replace />;
   }
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = <Field extends keyof CheckoutInfo>(field: Field, value: CheckoutInfo[Field]) => {
     setCheckoutInfo((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleFulfillmentChange = (value: 'collection' | 'delivery') => {
-    const windows = value === 'delivery' ? DELIVERY_WINDOWS : COLLECTION_WINDOWS;
+  const handleFulfillmentChange = (value: FulfillmentMethod) => {
+    const windows = getWindowsFor(value);
     setCheckoutInfo((prev) => ({
       ...prev,
       fulfillmentMethod: value,

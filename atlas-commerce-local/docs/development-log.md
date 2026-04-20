@@ -51,6 +51,7 @@ Use this file to record iterative development changes and the reason for each ch
 - Started an `Operation_Reconstruct` pass by giving the frontend a proper local TypeScript setup, fixing the main entry import for type-checking, moving `react` and `react-dom` into normal app dependencies, and replacing the loosest dashboard `any` usage with direct domain types.
 - Continued the reconstruction pass by tightening `frontend/src/app/lib/api.ts` with practical raw response shapes instead of vague `any` values, keeping the live data flow more direct and easier to follow without changing the visible app behaviour.
 - Simplified the account page by replacing long inline delete handlers and repeated form-reset chunks with small practical local helpers, keeping the code chunky and readable without adding a new abstraction layer.
+- Simplified the checkout page by removing an unnecessary memo layer, tightening the local checkout state typing, and making the fulfilment-window flow more direct.
 - Trimmed the frontend dependency list to the libraries that are still needed by the working application, reducing package noise and making the stack easier to explain.
 - Added repo-local VS Code settings to hide `__pycache__`, `*.pyc`, `node_modules`, `dist`, and the backend virtual environment from normal file browsing.
 - Simplified the toast wrapper so it no longer depends on theme plumbing that the project was not otherwise using.
