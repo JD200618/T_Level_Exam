@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Link, useNavigate } from 'react-router';
-import { Clock3, Lock, CreditCard, MapPin, ShoppingBag, ArrowLeft, Truck } from 'lucide-react';
+import { Clock3, Lock, CreditCard, MapPin, ShoppingBag, ArrowLeft, Truck, type LucideIcon } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { Button, Input, Label, Card, Textarea } from '../components/ui/core';
@@ -26,6 +26,23 @@ const DELIVERY_WINDOWS = [
 
 type FulfillmentMethod = 'collection' | 'delivery';
 
+const FULFILLMENT_OPTIONS: {
+  value: FulfillmentMethod;
+  title: string;
+  description: string;
+}[] = [
+  {
+    value: 'collection',
+    title: 'Collection',
+    description: 'Pickup from the GLH hub point during your selected slot.',
+  },
+  {
+    value: 'delivery',
+    title: 'Delivery',
+    description: 'Local route drop-off to the saved customer address.',
+  },
+];
+
 interface CheckoutInfo {
   fullName: string;
   address: string;
@@ -39,6 +56,20 @@ interface CheckoutInfo {
 
 function getWindowsFor(method: FulfillmentMethod) {
   return method === 'delivery' ? DELIVERY_WINDOWS : COLLECTION_WINDOWS;
+}
+
+function CheckoutSectionHeader({ icon: Icon, title, description }: { icon: LucideIcon; title: string; description?: string }) {
+  return (
+    <div className="flex items-center gap-3 mb-6">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: '#A5D6A7' }}>
+        <Icon className="h-5 w-5" style={{ color: '#2E7D32' }} />
+      </div>
+      <div>
+        <h3 style={{ color: '#2E2E2E' }}>{title}</h3>
+        {description && <p className="text-sm" style={{ color: '#6B6B6B' }}>{description}</p>}
+      </div>
+    </div>
+  );
 }
 
 export function Checkout() {
@@ -158,41 +189,31 @@ export function Checkout() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
               <Card className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: '#A5D6A7' }}>
-                    <Truck className="h-5 w-5" style={{ color: '#2E7D32' }} />
-                  </div>
-                  <div>
-                    <h3 style={{ color: '#2E2E2E' }}>Fulfilment</h3>
-                    <p className="text-sm" style={{ color: '#6B6B6B' }}>Choose collection or delivery and request a preferred time window.</p>
-                  </div>
-                </div>
+                <CheckoutSectionHeader
+                  icon={Truck}
+                  title="Fulfilment"
+                  description="Choose collection or delivery and request a preferred time window."
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => handleFulfillmentChange('collection')}
-                    className="rounded-lg border p-4 text-left transition-colors"
-                    style={{
-                      borderColor: checkoutInfo.fulfillmentMethod === 'collection' ? '#2E7D32' : '#D9D9D9',
-                      backgroundColor: checkoutInfo.fulfillmentMethod === 'collection' ? '#F0FFF4' : '#FFFFFF',
-                    }}
-                  >
-                    <p style={{ color: '#2E2E2E', fontWeight: 600 }}>Collection</p>
-                    <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>Pickup from the GLH hub point during your selected slot.</p>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFulfillmentChange('delivery')}
-                    className="rounded-lg border p-4 text-left transition-colors"
-                    style={{
-                      borderColor: checkoutInfo.fulfillmentMethod === 'delivery' ? '#2E7D32' : '#D9D9D9',
-                      backgroundColor: checkoutInfo.fulfillmentMethod === 'delivery' ? '#F0FFF4' : '#FFFFFF',
-                    }}
-                  >
-                    <p style={{ color: '#2E2E2E', fontWeight: 600 }}>Delivery</p>
-                    <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>Local route drop-off to the saved customer address.</p>
-                  </button>
+                  {FULFILLMENT_OPTIONS.map((option) => {
+                    const isSelected = checkoutInfo.fulfillmentMethod === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => handleFulfillmentChange(option.value)}
+                        className="rounded-lg border p-4 text-left transition-colors"
+                        style={{
+                          borderColor: isSelected ? '#2E7D32' : '#D9D9D9',
+                          backgroundColor: isSelected ? '#F0FFF4' : '#FFFFFF',
+                        }}
+                      >
+                        <p style={{ color: '#2E2E2E', fontWeight: 600 }}>{option.title}</p>
+                        <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>{option.description}</p>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <div className="space-y-2">
@@ -211,12 +232,7 @@ export function Checkout() {
               </Card>
 
               <Card className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: '#A5D6A7' }}>
-                    <MapPin className="h-5 w-5" style={{ color: '#2E7D32' }} />
-                  </div>
-                  <h3 style={{ color: '#2E2E2E' }}>Customer Details</h3>
-                </div>
+                <CheckoutSectionHeader icon={MapPin} title="Customer Details" />
 
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -296,12 +312,7 @@ export function Checkout() {
               </Card>
 
               <Card className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: '#A5D6A7' }}>
-                    <CreditCard className="h-5 w-5" style={{ color: '#2E7D32' }} />
-                  </div>
-                  <h3 style={{ color: '#2E2E2E' }}>Payment Method</h3>
-                </div>
+                <CheckoutSectionHeader icon={CreditCard} title="Payment Method" />
 
                 {user?.paymentMethods.length ? (
                   <div className="space-y-2">
@@ -342,12 +353,7 @@ export function Checkout() {
 
             <div className="lg:col-span-1">
               <Card className="p-6 sticky top-24">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: '#A5D6A7' }}>
-                    <ShoppingBag className="h-5 w-5" style={{ color: '#2E7D32' }} />
-                  </div>
-                  <h3 style={{ color: '#2E2E2E' }}>Order Summary</h3>
-                </div>
+                <CheckoutSectionHeader icon={ShoppingBag} title="Order Summary" />
 
                 <div className="space-y-3 mb-6 pb-6 border-b">
                   {cart.map((item) => (

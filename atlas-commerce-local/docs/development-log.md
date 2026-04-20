@@ -62,6 +62,7 @@ Use this file to record iterative development changes and the reason for each ch
 - Simplified the producers page by pulling static benefit data out of the component body, dropping an unnecessary memo layer, and making its simple stock summary more direct.
 - Simplified the shop page by moving category-building and catalogue filtering into small file-local helpers, keeping the visible catalogue flow the same while trimming logic weight from the component body.
 - Simplified the cart page by moving the bulky cart item row markup into one small file-local component while keeping cart state, totals, and checkout behavior unchanged.
+- Simplified the checkout page by introducing a small local section-header helper and a data-driven fulfilment option list, reducing repeated UI blocks while keeping order submission behavior unchanged.
 - Trimmed the frontend dependency list to the libraries that are still needed by the working application, reducing package noise and making the stack easier to explain.
 - Added repo-local VS Code settings to hide `__pycache__`, `*.pyc`, `node_modules`, `dist`, and the backend virtual environment from normal file browsing.
 - Simplified the toast wrapper so it no longer depends on theme plumbing that the project was not otherwise using.
