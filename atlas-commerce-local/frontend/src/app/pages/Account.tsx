@@ -3,11 +3,7 @@ import { Navigate, useNavigate } from 'react-router';
 import { User, MapPin, CreditCard, Package, Settings, LogOut, Plus, Trash2, RefreshCw, Save } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button, Card, Badge, Input, Label } from '../components/ui/core';
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-
-
-
 import { toast } from 'sonner';
 
 const EMPTY_ADDRESS_FORM = {
@@ -26,6 +22,23 @@ const EMPTY_CARD_FORM = {
   expiryYear: '',
   isDefault: false,
 };
+
+function freshAddressForm(name: string, isDefault: boolean) {
+  return {
+    ...EMPTY_ADDRESS_FORM,
+    fullName: name,
+    country: 'United Kingdom',
+    isDefault,
+  };
+}
+
+function freshCardForm(isDefault: boolean) {
+  return {
+    ...EMPTY_CARD_FORM,
+    brand: 'Visa',
+    isDefault,
+  };
+}
 
 export function Account() {
   const {
@@ -52,15 +65,8 @@ export function Account() {
   useEffect(() => {
     if (!user) return;
     setProfileName(user.name);
-    setAddressForm((prev) => ({
-      ...prev,
-      fullName: user.name,
-      isDefault: user.addresses.length === 0,
-    }));
-    setCardForm((prev) => ({
-      ...prev,
-      isDefault: user.paymentMethods.length === 0,
-    }));
+    setAddressForm((prev) => ({ ...prev, fullName: user.name, isDefault: user.addresses.length === 0 }));
+    setCardForm((prev) => ({ ...prev, isDefault: user.paymentMethods.length === 0 }));
   }, [user]);
 
   if (isLoading) {
@@ -110,12 +116,7 @@ export function Account() {
     setIsSavingAddress(true);
     try {
       await addAddress(addressForm);
-      setAddressForm({
-        ...EMPTY_ADDRESS_FORM,
-        fullName: user.name,
-        country: 'United Kingdom',
-        isDefault: false,
-      });
+      setAddressForm(freshAddressForm(user.name, false));
       toast.success('Address added');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to add address');
@@ -147,16 +148,30 @@ export function Account() {
         expiryYear: cardForm.expiryYear,
         isDefault: cardForm.isDefault,
       });
-      setCardForm({
-        ...EMPTY_CARD_FORM,
-        brand: 'Visa',
-        isDefault: false,
-      });
+      setCardForm(freshCardForm(false));
       toast.success('Payment method added');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to add payment method');
     } finally {
       setIsSavingCard(false);
+    }
+  };
+
+  const handleDeleteAddress = async (addressId: string) => {
+    try {
+      await deleteAddress(addressId);
+      toast.success('Address deleted');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to delete address');
+    }
+  };
+
+  const handleDeletePaymentMethod = async (paymentMethodId: string) => {
+    try {
+      await deletePaymentMethod(paymentMethodId);
+      toast.success('Payment method deleted');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to delete payment method');
     }
   };
 
@@ -431,7 +446,7 @@ export function Account() {
                       variant="ghost"
                       size="sm"
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => void deleteAddress(address.id).then(() => toast.success('Address deleted')).catch((error) => toast.error(error instanceof Error ? error.message : 'Unable to delete address'))}
+                      onClick={() => void handleDeleteAddress(address.id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -529,7 +544,7 @@ export function Account() {
                       variant="ghost"
                       size="sm"
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => void deletePaymentMethod(method.id).then(() => toast.success('Payment method deleted')).catch((error) => toast.error(error instanceof Error ? error.message : 'Unable to delete payment method'))}
+                      onClick={() => void handleDeletePaymentMethod(method.id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
