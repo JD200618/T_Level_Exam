@@ -88,6 +88,14 @@ export function Account() {
     toast.success('Account refreshed from backend');
   };
 
+  const updateAddressField = <Field extends keyof typeof EMPTY_ADDRESS_FORM>(field: Field, value: (typeof EMPTY_ADDRESS_FORM)[Field]) => {
+    setAddressForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateCardField = <Field extends keyof typeof EMPTY_CARD_FORM>(field: Field, value: (typeof EMPTY_CARD_FORM)[Field]) => {
+    setCardForm((prev) => ({ ...prev, [field]: value }));
+  };
+
   const handleSaveProfile = async () => {
     if (!profileName.trim()) {
       toast.error('Please enter a profile name');
@@ -372,7 +380,7 @@ export function Account() {
                   <Input
                     id="address-full-name"
                     value={addressForm.fullName}
-                    onChange={(e) => setAddressForm((prev) => ({ ...prev, fullName: e.target.value }))}
+                    onChange={(e) => updateAddressField('fullName', e.target.value)}
                     style={{ borderColor: '#A5D6A7' }}
                   />
                 </div>
@@ -381,7 +389,7 @@ export function Account() {
                   <Input
                     id="address-line"
                     value={addressForm.address}
-                    onChange={(e) => setAddressForm((prev) => ({ ...prev, address: e.target.value }))}
+                    onChange={(e) => updateAddressField('address', e.target.value)}
                     style={{ borderColor: '#A5D6A7' }}
                   />
                 </div>
@@ -390,7 +398,7 @@ export function Account() {
                   <Input
                     id="address-city"
                     value={addressForm.city}
-                    onChange={(e) => setAddressForm((prev) => ({ ...prev, city: e.target.value }))}
+                    onChange={(e) => updateAddressField('city', e.target.value)}
                     style={{ borderColor: '#A5D6A7' }}
                   />
                 </div>
@@ -399,7 +407,7 @@ export function Account() {
                   <Input
                     id="address-postcode"
                     value={addressForm.postcode}
-                    onChange={(e) => setAddressForm((prev) => ({ ...prev, postcode: e.target.value }))}
+                    onChange={(e) => updateAddressField('postcode', e.target.value)}
                     style={{ borderColor: '#A5D6A7' }}
                   />
                 </div>
@@ -408,7 +416,7 @@ export function Account() {
                   <Input
                     id="address-country"
                     value={addressForm.country}
-                    onChange={(e) => setAddressForm((prev) => ({ ...prev, country: e.target.value }))}
+                    onChange={(e) => updateAddressField('country', e.target.value)}
                     style={{ borderColor: '#A5D6A7' }}
                   />
                 </div>
@@ -416,7 +424,7 @@ export function Account() {
                   <Button
                     type="button"
                     variant={addressForm.isDefault ? 'default' : 'outline'}
-                    onClick={() => setAddressForm((prev) => ({ ...prev, isDefault: !prev.isDefault }))}
+                    onClick={() => updateAddressField('isDefault', !addressForm.isDefault)}
                     style={addressForm.isDefault ? { backgroundColor: '#2E7D32' } : { borderColor: '#2E7D32', color: '#2E7D32' }}
                   >
                     {addressForm.isDefault ? 'Default address' : 'Set as default'}
@@ -476,7 +484,7 @@ export function Account() {
                   <Input
                     id="card-brand"
                     value={cardForm.brand}
-                    onChange={(e) => setCardForm((prev) => ({ ...prev, brand: e.target.value }))}
+                    onChange={(e) => updateCardField('brand', e.target.value)}
                     style={{ borderColor: '#A5D6A7' }}
                   />
                 </div>
@@ -486,7 +494,7 @@ export function Account() {
                     id="card-last4"
                     maxLength={4}
                     value={cardForm.last4}
-                    onChange={(e) => setCardForm((prev) => ({ ...prev, last4: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                    onChange={(e) => updateCardField('last4', e.target.value.replace(/\D/g, '').slice(0, 4))}
                     style={{ borderColor: '#A5D6A7' }}
                   />
                 </div>
@@ -496,7 +504,7 @@ export function Account() {
                     id="card-expiry-month"
                     maxLength={2}
                     value={cardForm.expiryMonth}
-                    onChange={(e) => setCardForm((prev) => ({ ...prev, expiryMonth: e.target.value.replace(/\D/g, '').slice(0, 2) }))}
+                    onChange={(e) => updateCardField('expiryMonth', e.target.value.replace(/\D/g, '').slice(0, 2))}
                     style={{ borderColor: '#A5D6A7' }}
                   />
                 </div>
@@ -506,7 +514,7 @@ export function Account() {
                     id="card-expiry-year"
                     maxLength={4}
                     value={cardForm.expiryYear}
-                    onChange={(e) => setCardForm((prev) => ({ ...prev, expiryYear: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                    onChange={(e) => updateCardField('expiryYear', e.target.value.replace(/\D/g, '').slice(0, 4))}
                     style={{ borderColor: '#A5D6A7' }}
                   />
                 </div>
@@ -514,7 +522,7 @@ export function Account() {
                   <Button
                     type="button"
                     variant={cardForm.isDefault ? 'default' : 'outline'}
-                    onClick={() => setCardForm((prev) => ({ ...prev, isDefault: !prev.isDefault }))}
+                    onClick={() => updateCardField('isDefault', !cardForm.isDefault)}
                     style={cardForm.isDefault ? { backgroundColor: '#2E7D32' } : { borderColor: '#2E7D32', color: '#2E7D32' }}
                   >
                     {cardForm.isDefault ? 'Default card' : 'Set as default'}
