@@ -14,6 +14,20 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isAdmin = user?.role === 'admin' || user?.role === 'staff';
+  const accountPath = isAuthenticated ? '/account' : '/login';
+  const accountLabel = isAuthenticated ? 'Account' : 'Login';
+  const navLinks = [
+    { to: '/', label: 'Home' },
+    { to: '/shop', label: 'Shop' },
+    { to: '/producers', label: 'Producers' },
+    ...(isAdmin ? [{ to: '/dashboard', label: 'Dashboard' }] : []),
+  ];
+
+  const isActive = (path: string) => path === '/dashboard'
+    ? location.pathname.startsWith('/dashboard')
+    : location.pathname === path;
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white shadow-sm">
@@ -24,48 +38,19 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <Link
-              to="/"
-              className={`transition-colors ${
-                location.pathname === '/'
-                  ? 'text-[#2E7D32] font-medium'
-                  : 'text-[#6B6B6B] hover:text-[#2E7D32]'
-              }`}
-            >
-              Home
-            </Link>
-            <Link
-              to="/shop"
-              className={`transition-colors ${
-                location.pathname === '/shop'
-                  ? 'text-[#2E7D32] font-medium'
-                  : 'text-[#6B6B6B] hover:text-[#2E7D32]'
-              }`}
-            >
-              Shop
-            </Link>
-            <Link
-              to="/producers"
-              className={`transition-colors ${
-                location.pathname === '/producers'
-                  ? 'text-[#2E7D32] font-medium'
-                  : 'text-[#6B6B6B] hover:text-[#2E7D32]'
-              }`}
-            >
-              Producers
-            </Link>
-            {isAdmin && (
+            {navLinks.map((link) => (
               <Link
-                to="/dashboard"
+                key={link.to}
+                to={link.to}
                 className={`transition-colors ${
-                  location.pathname.startsWith('/dashboard')
+                  isActive(link.to)
                     ? 'text-[#2E7D32] font-medium'
                     : 'text-[#6B6B6B] hover:text-[#2E7D32]'
                 }`}
               >
-                Dashboard
+                {link.label}
               </Link>
-            )}
+            ))}
           </nav>
 
           {/* Right Side: Login/Account & Cart */}
@@ -89,7 +74,7 @@ export function Header() {
             )}
 
             {/* Login / Account Button */}
-            <Link to={isAuthenticated ? '/account' : '/login'} className="hidden md:block">
+            <Link to={accountPath} className="hidden md:block">
               <Button
                 variant={location.pathname === '/account' || location.pathname === '/login' ? 'default' : 'ghost'}
                 className="gap-2"
@@ -100,7 +85,7 @@ export function Header() {
                 }
               >
                 <User className="h-4 w-4" />
-                {isAuthenticated ? 'Account' : 'Login'}
+                {accountLabel}
               </Button>
             </Link>
 
@@ -146,55 +131,23 @@ export function Header() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <nav className="md:hidden mt-4 pt-4 border-t flex flex-col gap-4">
-            <Link
-              to="/"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`transition-colors ${
-                location.pathname === '/'
-                  ? 'text-[#2E7D32] font-medium'
-                  : 'text-[#6B6B6B]'
-              }`}
-            >
-              Home
-            </Link>
-            <Link
-              to="/shop"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`transition-colors ${
-                location.pathname === '/shop'
-                  ? 'text-[#2E7D32] font-medium'
-                  : 'text-[#6B6B6B]'
-              }`}
-            >
-              Shop
-            </Link>
-            <Link
-              to="/producers"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`transition-colors ${
-                location.pathname === '/producers'
-                  ? 'text-[#2E7D32] font-medium'
-                  : 'text-[#6B6B6B]'
-              }`}
-            >
-              Producers
-            </Link>
-            {isAdmin && (
+            {navLinks.map((link) => (
               <Link
-                to="/dashboard"
-                onClick={() => setMobileMenuOpen(false)}
+                key={link.to}
+                to={link.to}
+                onClick={closeMobileMenu}
                 className={`transition-colors ${
-                  location.pathname.startsWith('/dashboard')
+                  isActive(link.to)
                     ? 'text-[#2E7D32] font-medium'
                     : 'text-[#6B6B6B]'
                 }`}
               >
-                Dashboard
+                {link.label}
               </Link>
-            )}
+            ))}
             <Link
-              to={isAuthenticated ? '/account' : '/login'}
-              onClick={() => setMobileMenuOpen(false)}
+              to={accountPath}
+              onClick={closeMobileMenu}
               className={`transition-colors ${
                 location.pathname === '/account' || location.pathname === '/login'
                   ? 'text-[#2E7D32] font-medium'
