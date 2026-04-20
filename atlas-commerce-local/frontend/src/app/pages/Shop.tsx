@@ -5,23 +5,17 @@ import { Button, Input } from '../components/ui/core';
 import { Search } from 'lucide-react';
 import { StoreProduct, getProducts } from '../lib/api';
 
-export function Shop() {
-  const [products, setProducts] = useState<StoreProduct[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+const ALL_CATEGORY = 'All';
 
-  useEffect(() => {
-    void getProducts()
-      .then((items) => setProducts(items))
-      .finally(() => setIsLoading(false));
-  }, []);
+function getCategories(products: StoreProduct[]) {
+  return [ALL_CATEGORY, ...Array.from(new Set(products.map((product) => product.category)))];
+}
 
-  const categories = ['All', ...Array.from(new Set(products.map((product) => product.category)))];
+function filterProducts(products: StoreProduct[], selectedCategory: string, searchQuery: string) {
   const normalizedSearch = searchQuery.trim().toLowerCase();
 
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
+  return products.filter((product) => {
+    const matchesCategory = selectedCategory === ALL_CATEGORY || product.category === selectedCategory;
     if (!matchesCategory) {
       return false;
     }
@@ -40,6 +34,22 @@ export function Shop() {
 
     return searchText.includes(normalizedSearch);
   });
+}
+
+export function Shop() {
+  const [products, setProducts] = useState<StoreProduct[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    void getProducts()
+      .then((items) => setProducts(items))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const categories = getCategories(products);
+  const filteredProducts = filterProducts(products, selectedCategory, searchQuery);
 
   const inStockCount = products.filter((product) => product.inStock).length;
   const localProducerCount = new Set(products.map((product) => product.producerName)).size;
