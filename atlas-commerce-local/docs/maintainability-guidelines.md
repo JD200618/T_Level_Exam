@@ -37,6 +37,23 @@ Avoid vague names where a more meaningful name is possible.
 - remove or archive unused UI files instead of leaving generated component kits in the active app
 - keep the visible dependency stack small enough that a new developer can explain why each package exists
 
+## Human-coded style guardrails
+The goal is readable, believable project code, not tutorial-perfect code.
+
+### Avoid
+- heavy comments or docstrings for obvious code
+- variable names that are so long they become awkward to scan
+- abstraction layers added only to look clean rather than solve a real problem
+- splitting every small action into a perfectly balanced helper when local page logic is easier to follow
+- over-polished defensive code for tiny flows that do not need it
+
+### Prefer
+- short, meaningful names that still match the domain
+- practical page-level logic when the feature is small and local
+- service helpers only when the logic is reused or clearly benefits from separation
+- straightforward control flow that a student can explain line by line
+- normal trade-offs and a little natural unevenness where real projects are usually uneven
+
 ## Backend guidance
 - keep request transport handling in views or endpoints
 - keep workflow and business rules in service files
