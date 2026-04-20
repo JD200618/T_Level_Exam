@@ -1,19 +1,6 @@
 import { createBrowserRouter } from 'react-router';
 import { Layout } from './components/Layout';
 import { DashboardLayout } from './components/DashboardLayout';
-import { Home } from './pages/Home';
-import { Shop } from './pages/Shop';
-import { Producers } from './pages/Producers';
-import { Cart } from './pages/Cart';
-import { Login } from './pages/Login';
-import { Account } from './pages/Account';
-import { Checkout } from './pages/Checkout';
-import { AdminLogin } from './pages/AdminLogin';
-import { DashboardOverview } from './pages/dashboard/Overview';
-import { DashboardInventory } from './pages/dashboard/Inventory';
-import { DashboardOrders } from './pages/dashboard/Orders';
-import { DashboardCustomers } from './pages/dashboard/Customers';
-import { DashboardAnalytics } from './pages/dashboard/Analytics';
 
 export const router = createBrowserRouter(
   [
@@ -21,31 +8,31 @@ export const router = createBrowserRouter(
       path: '/',
       Component: Layout,
       children: [
-        { index: true, Component: Home },
-        { path: 'shop', Component: Shop },
-        { path: 'producers', Component: Producers },
-        { path: 'cart', Component: Cart },
-        { path: 'checkout', Component: Checkout },
-        { path: 'account', Component: Account },
+        { index: true, lazy: async () => ({ Component: (await import('./pages/Home')).Home }) },
+        { path: 'shop', lazy: async () => ({ Component: (await import('./pages/Shop')).Shop }) },
+        { path: 'producers', lazy: async () => ({ Component: (await import('./pages/Producers')).Producers }) },
+        { path: 'cart', lazy: async () => ({ Component: (await import('./pages/Cart')).Cart }) },
+        { path: 'checkout', lazy: async () => ({ Component: (await import('./pages/Checkout')).Checkout }) },
+        { path: 'account', lazy: async () => ({ Component: (await import('./pages/Account')).Account }) },
       ],
     },
     {
       path: '/login',
-      Component: Login,
+      lazy: async () => ({ Component: (await import('./pages/Login')).Login }),
     },
     {
       path: '/admin-login',
-      Component: AdminLogin,
+      lazy: async () => ({ Component: (await import('./pages/AdminLogin')).AdminLogin }),
     },
     {
       path: '/dashboard',
       Component: DashboardLayout,
       children: [
-        { index: true, Component: DashboardOverview },
-        { path: 'inventory', Component: DashboardInventory },
-        { path: 'orders', Component: DashboardOrders },
-        { path: 'customers', Component: DashboardCustomers },
-        { path: 'analytics', Component: DashboardAnalytics },
+        { index: true, lazy: async () => ({ Component: (await import('./pages/dashboard/Overview')).DashboardOverview }) },
+        { path: 'inventory', lazy: async () => ({ Component: (await import('./pages/dashboard/Inventory')).DashboardInventory }) },
+        { path: 'orders', lazy: async () => ({ Component: (await import('./pages/dashboard/Orders')).DashboardOrders }) },
+        { path: 'customers', lazy: async () => ({ Component: (await import('./pages/dashboard/Customers')).DashboardCustomers }) },
+        { path: 'analytics', lazy: async () => ({ Component: (await import('./pages/dashboard/Analytics')).DashboardAnalytics }) },
       ],
     },
   ],
