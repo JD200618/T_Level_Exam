@@ -54,6 +54,7 @@ Use this file to record iterative development changes and the reason for each ch
 - Simplified the checkout page by removing an unnecessary memo layer, tightening the local checkout state typing, and making the fulfilment-window flow more direct.
 - Simplified the shop page by dropping an unnecessary memo, reducing repeated search normalization work, and making the product filter flow more direct.
 - Simplified the dashboard overview by typing the main admin state directly and replacing a few presentation-oriented memo layers with straightforward derived values.
+- Simplified the shared product card by removing a hardcoded seasonal badge that was not really driven by live data and tightening the component imports/click handler.
 - Trimmed the frontend dependency list to the libraries that are still needed by the working application, reducing package noise and making the stack easier to explain.
 - Added repo-local VS Code settings to hide `__pycache__`, `*.pyc`, `node_modules`, `dist`, and the backend virtual environment from normal file browsing.
 - Simplified the toast wrapper so it no longer depends on theme plumbing that the project was not otherwise using.

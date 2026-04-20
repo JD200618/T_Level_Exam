@@ -1,9 +1,8 @@
 import { ShoppingCart } from 'lucide-react';
-import { StoreProduct } from '../lib/api';
-import { useCart } from '../context/CartContext';
-import { Button } from './ui/core';
-import { Card } from './ui/core';
 import { toast } from 'sonner';
+import { useCart } from '../context/CartContext';
+import { StoreProduct } from '../lib/api';
+import { Button, Card } from './ui/core';
 
 interface ProductCardProps {
   product: StoreProduct;
@@ -11,7 +10,6 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
-  const isSeasonal = ['1', '2', '3'].includes(product.id);
   const stockLabel = !product.inStock
     ? 'Sold out'
     : product.stockLevel <= product.lowStockThreshold
@@ -37,14 +35,6 @@ export function ProductCard({ product }: ProductCardProps) {
           alt={product.name}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        {isSeasonal && (
-          <div
-            className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs uppercase tracking-wider"
-            style={{ backgroundColor: '#FF9800', color: 'white', fontWeight: 600 }}
-          >
-            Seasonal
-          </div>
-        )}
       </div>
 
       <div className="p-4 space-y-3">
@@ -87,7 +77,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           <Button
-            onClick={() => void handleAddToCart()}
+            onClick={handleAddToCart}
             size="sm"
             className="gap-2"
             disabled={!product.inStock}
